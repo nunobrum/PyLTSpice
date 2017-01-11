@@ -1,12 +1,16 @@
 #-------------------------------------------------------------------------------
-# Name:        module2
-# Purpose:
+# Name:        LTSteps.py
+# Purpose:     Process LTSpice output files and align data for usage in a spread-
+#              sheet tool such as Excel, or Calc.
 #
-# Author:      Nuno Brum
+# Author:      Nuno Brum (nuno.brum@gmail.com)
 #
 # Created:     19-05-2014
 # Licence:     Free
 #-------------------------------------------------------------------------------
+
+__author__ = "Nuno Canto Brum <me@nunobrum.com>"
+__copyright__ = "Copyright 2017, Fribourg Switzerland"
 
 import re
 import os

@@ -1,6 +1,17 @@
 #!/usr/bin/env python
 
-"""LTSpice_RawRead.py : A pure python implementation of an LTSpice RAW file reader.
+#-------------------------------------------------------------------------------
+# Name:        LTSpice_RawRead.py
+# Purpose:     Process LTSpice output files and align data for usage in a spread-
+#              sheet tool such as Excel, or Calc.
+#
+# Author:      Nuno Brum (nuno.brum@gmail.com)
+#
+# Created:     23-12-2016
+# Licence:     Free
+#-------------------------------------------------------------------------------
+
+""" A pure python implementation of an LTSpice RAW file reader.
 The reader returns a class containing all the traces read from the RAW File.
 In case there there stepped data detected, it will try to open the simulation LOG file and
 read the stepping information.
@@ -15,10 +26,9 @@ the class will return a single element list.
 NOTE: This module tries to import the numpy if exists on the system.
 If it finds numpy all data is later provided as an array. If not it will use a standard list of floats.
 
-
 """
 
-__author__ = "Nuno Canto Brum <me@nunobrum.com>"
+__author__ = "Nuno Canto Brum <nuno.brum@gmail.com>"
 __copyright__ = "Copyright 2017, Fribourg Switzerland"
 
 
