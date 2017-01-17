@@ -23,6 +23,10 @@ def valid_extension(f):
 
 if len(sys.argv) > 1:
     filename = sys.argv[1]
+    if not valid_extension(filename):
+        print("Invalid extension in filename '%s'" % filename)
+        print("This tool only supports the following extensions :'.txt','.log','.mout'")
+        exit(-1)
 else:
     newer_date = 0
     for f in os.listdir():
@@ -40,6 +44,7 @@ elif filename.endswith('.mout'):
     fname_out = filename[:-4] + 'tmout'
 else:
     print("Error in file type")
+    print("This tool only supports the following extensions :'.txt','.log','.mout'")
     exit(-1)
 
 print("Processing File %s" % filename)
