@@ -10,11 +10,18 @@ An utility that extracts from LTSpice output files data, and formats it for impo
 * __LTSpiceRaw_Reader.py__
 A pure python class that serves to read raw files into a python class.
 
+* __Histogram.py__
+Uses numpy and matplotlib to create an histogram and calculate the sigma deviations. This is useful for Monte-Carlo analysis. 
+
 ### Who do I talk to? ###
 
-* Repo owner : me@nunobrum.com 
+* Tools website : [http://www.nunobrum.com/ltspicer2.html](http://www.nunobrum.com/ltspicer2.html)
+* Repo owner : [me@nunobrum.com](me@nunobrum.com) 
 * Alternative contact : nuno.brum@gmail.com
 
 ### History ###
+* Version 0.2
+Adding LTSteps.py and Histogram.py
+
 * Version 0.1 
 First commit to the bitbucket repository.
