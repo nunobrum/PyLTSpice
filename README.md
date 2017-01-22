@@ -20,6 +20,9 @@ Uses numpy and matplotlib to create an histogram and calculate the sigma deviati
 * Alternative contact : nuno.brum@gmail.com
 
 ### History ###
+* Version 0.3
+A version of LTSteps that can be imported to use in a higher level script 
+
 * Version 0.2
 Adding LTSteps.py and Histogram.py
 

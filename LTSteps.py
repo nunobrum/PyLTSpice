@@ -7,6 +7,8 @@
 #
 # Created:     19-05-2014
 # Licence:     Free
+# Version:     0.3  Transforming the procedure into a callable one in order
+#              to call them from a higher level script.
 # -------------------------------------------------------------------------------
 
 __author__ = "Nuno Canto Brum <me@nunobrum.com>"
@@ -16,46 +18,17 @@ import re
 import os
 import sys
 
+def reformat_LTSpice_export(export_file:str, tabular_file:str):
+    """Reformat an LTSpice trace export to a tabular so that the step information is part of the columns exported
+    The reformatted file is written into <tabular_file>"""
+    fin = open(filename, 'r')
+    fout = open(fname_out, 'w')
 
-def valid_extension(f):
-    return f.endswith('.txt') or f.endswith('.log') or f.endswith('.mout')
-
-
-if len(sys.argv) > 1:
-    filename = sys.argv[1]
-    if not valid_extension(filename):
-        print("Invalid extension in filename '%s'" % filename)
-        print("This tool only supports the following extensions :'.txt','.log','.mout'")
-        exit(-1)
-else:
-    newer_date = 0
-    for f in os.listdir():
-        date = os.path.getmtime(f)
-        if date > newer_date and valid_extension(f):
-            newer_date = date
-            filename = f
-
-fin = open(filename, 'r')
-if filename.endswith('.txt'):
-    fname_out = filename[:-3] + 'tsv'
-elif filename.endswith('.log'):
-    fname_out = filename[:-3] + 'tlog'
-elif filename.endswith('.mout'):
-    fname_out = filename[:-4] + 'tmout'
-else:
-    print("Error in file type")
-    print("This tool only supports the following extensions :'.txt','.log','.mout'")
-    exit(-1)
-
-print("Processing File %s" % filename)
-print("Creating File %s" % fname_out)
-fout = open(fname_out, 'w')
-
-if filename.endswith('txt'):
-    print("Processing Data File")
     headers = fin.readline()
     # writing header
     go_header = True
+    run_no = 0 # Just to avoid warning, this is later overridden by the step information
+    param_values = "" # Just to avoid warning, this is later overridden by the step information
     regx = re.compile("Step Information: ([\w=\d\. -]+) +\(Run: (\d*)/\d*\)\n")
     for line in fin:
         if line.startswith("Step Information:"):
@@ -65,32 +38,89 @@ if filename.endswith('txt'):
                 # print(match.groups())
                 step, run_no = match.groups()
                 # print(step, line, end="")
-            params = []
-            for param in step.split():
-                params.append(param.split('=')[1])
-            param_values = "\t".join(params)
-
-            if go_header:
                 params = []
                 for param in step.split():
-                    params.append(param.split('=')[0])
-                param_header = "\t".join(params)
-                fout.write("Run\t%s\t%s" % (param_header, headers))
-                print("Run\t%s\t%s" % (param_header, headers))
-                go_header = False
-                # print("%s\t%s"% (run_no, param_values))
+                    params.append(param.split('=')[1])
+                param_values = "\t".join(params)
 
+                if go_header:
+                    header_keys = []
+                    for param in step.split():
+                        header_keys.append(param.split('=')[0])
+                    param_header = "\t".join(header_keys)
+                    fout.write("Run\t%s\t%s" % (param_header, headers))
+                    print("Run\t%s\t%s" % (param_header, headers))
+                    go_header = False
+                    # print("%s\t%s"% (run_no, param_values))
         else:
             fout.write("%s\t%s\t%s" % (run_no, param_values, line))
-else:
-    dataset = {}
-    headers = []
-    measurements = []
-    dataname = None
 
-    if filename.endswith("log"):
-        step_count = 0
-        stepset = {}
+    fin.close()
+    fout.close()
+
+
+class LTSpiceExport(object):
+
+    def __init__(self, filename:str):
+        """Reads an LTSpice Export into a structured class containing all data. Data is accessible by
+        other class functions"""
+        fin = open(filename, 'r')
+        file_header = fin.readline()
+
+        self.headers =  file_header.split('\t')
+        # Set to read header
+        go_header = True
+
+        curr_dic = {}
+        self.dataset = {}
+
+        regx = re.compile("Step Information: ([\w=\d\. -]+) +\(Run: (\d*)/\d*\)\n")
+        for line in fin:
+            if line.startswith("Step Information:"):
+                match = regx.match(line)
+                # print(line, end="")
+                if match:
+                    # print(match.groups())
+                    step, run_no = match.groups()
+                    # print(step, line, end="")
+                    curr_dic['runno'] = run_no
+                    for param in step.split():
+                        key, value = param.split('=')
+                        curr_dic[key] = float(value)
+
+                    if go_header:
+                        go_header = False # This is executed only once
+                        for key in self.headers:
+                           self.dataset[key] = [] # Initializes an empty list
+
+                        for key in curr_dic:
+                           self.dataset[key] = [] # Initializes an empty list
+
+            else:
+                values = line.split('\t')
+
+                for key in curr_dic:
+                   self.dataset[key].append(curr_dic[key])
+
+                for i in range(len(values)):
+                   self.dataset[self.headers[i]].append(float(values[i]))
+
+        fin.close()
+
+
+
+class LTSpiceLogReader(object):
+
+    def __init__(self, logname:str):
+        """Reads Step data from a LTSpice log file. Data is accessible """
+        fin = open(logname, 'r')
+        self.dataset = {}
+        self.headers = [] # This is only need to keep the parameter order in the export
+        measurements = []
+        dataname = None
+
+        self.step_count = 0
+        self.stepset = {}
         steps = []
         print("Processing LOG file")
         # wait for the step information
@@ -100,68 +130,145 @@ else:
         while line:
             if line.startswith(".step"):
                 # print(line)
-                step_count += 1
+                self.step_count += 1
                 tokens = line.strip('\n').split(' ')
                 for tok in tokens[1:]:
                     lhs, rhs = tok.split("=")
-                    ll = stepset.get(lhs, None)
+                    ll = self.stepset.get(lhs, None)
                     if ll:
                         ll.append(rhs)
                     else:
-                        stepset[lhs] = [rhs]
+                        self.stepset[lhs] = [rhs]
             elif line.startswith("Measurement:"):
                 break
             line = fin.readline()
-    else:
-        print("Processing MOUT")
-        stepset = {}
 
-    # print("Reading Measurements")
-    measure_count = 0
-    while line:
-        line = line.strip('\n')
-        if line.startswith("Measurement: "):
-            if dataname:
-                # store the info
-                if len(measurements):
-                    print("Storing Measurement %s (count %d)" % (dataname, len(measurements)))
-                    headers.append(dataname)
-                    dataset[dataname] = (param, measurements)
-                measurements = []
-            dataname = line[13:]
-            print("Reading Measurement %s" % line[13:])
-        else:
-            tokens = line.split("\t")
-            if len(tokens) >= 2:
-                try:
-                    nstep = int(tokens[0])
-                    measurements.append(tokens[1:])
-                    measure_count += 1
-                except:
-                    param = "\t".join([dataname] + tokens[2:])
+
+        # print("Reading Measurements")
+        measure_count = 0
+        param = ['param'] # Initializing an emp
+        while line:
+            line = line.strip('\n')
+            if line.startswith("Measurement: "):
+                if dataname:
+                    # store the info
+                    if len(measurements):
+                        print("Storing Measurement %s (count %d)" % (dataname, len(measurements)))
+                        self.headers.append(dataname)
+                        self.dataset[dataname] = (param, measurements)
+                        param = ['param']
+                    measurements = []
+                dataname = line[13:]
+                print("Reading Measurement %s" % line[13:])
             else:
-                print("->", line)
+                tokens = line.split("\t")
+                if len(tokens) >= 2:
+                    try:
+                        int(tokens[0]) # This instruction only serves to trigger the exception
+                        if len(tokens) == 2:
+                            meas = float(tokens[1])
+                        else:
+                            meas = [float(x) for x in tokens[1:]]
+                        measurements.append(meas)
+                        measure_count += 1
+                    except:
+                        param = [dataname] + tokens[2:]
+                else:
+                    print("->", line)
 
-        line = fin.readline()  # advance to the next line
+            line = fin.readline()  # advance to the next line
 
+        # storing the last data into the dataset
+        print("Storing Measurement %s" % dataname)
+        if len(measurements):
+            self.dataset[dataname] = (param, measurements)
+        self.headers.append(dataname)
+
+        print("%d measurements" % len(self.headers))
+        print("Identified %d steps, read %d measurements" % (self.step_count, measure_count))
+        fin.close()
+
+    def get_measure(self, measure, param=0):
+        data = self.dataset[measure]
+        if len(data[0])==1:
+            return data[1]
+        else:
+            if isinstance(param, str):
+                k =  data[0].index(param)
+            else:
+                k = int(param)
+            return [x[k] for x in data[1]]
+
+    def export_data(self, export_file:str):
         # print(tokens)
-    print("Storing Measurement %s" % dataname)
-    if len(measurements):
-        dataset[dataname] = (param, measurements)
-    headers.append(dataname)
-    print("%d measurements" % len(headers))
-    print("Identified %d steps, read %d measurements" % (step_count, measure_count))
-    print("Writing Data in %s" % fname_out)
 
-    # fout.write("%s\t%s\n" % ("\t".join(stepset.keys()), "\t\t".join(headers)))
-    meas_headers = ["\t".join(dataset[param][0:1]) for param in headers]
-    fout.write("step\t%s\t%s\n" % ("\t".join(stepset.keys()), "\t".join(meas_headers)))
-    for index in range(step_count):
-        step_data = [stepset[param][index] for param in stepset.keys()]
-        meas_data = [dataset[param][1][index] for param in headers]
-        tokens = ["\t".join(tok) for tok in meas_data]
-        fout.write("%d\t%s\t%s\n" % (index + 1, "\t".join(step_data), "\t".join(tokens)))
+        print("Writing Data in %s" % fname_out)
 
-fin.close()
-fout.close()
-# input("Press Enter to Continue")
+        fout = open(fname_out, 'w')
+
+        # fout.write("%s\t%s\n" % ("\t".join(self.stepset.keys()), "\t\t".join(self.headers)))
+        meas_headers = ["\t".join(self.dataset[param][0]) for param in self.headers]
+        fout.write("step\t%s\t%s\n" % ("\t".join(self.stepset.keys()), "\t".join(meas_headers)))
+        for index in range(self.step_count):
+            step_data = [self.stepset[param][index] for param in self.stepset.keys()]
+            meas_data = [self.dataset[param][1][index] for param in self.headers]
+
+            fout.write("%d\t%s" % (index + 1, "\t".join(step_data)))
+            for tok in meas_data:
+                if isinstance(tok, list):
+                    for x in tok:
+                        fout.write('\t%e' % x)
+                else:
+                    fout.write('\t%e' % tok)
+            fout.write('\n')
+
+        fout.close()
+
+if __name__ == "__main__":
+
+    def valid_extension(f):
+        return f.endswith('.txt') or f.endswith('.log') or f.endswith('.mout')
+
+    if len(sys.argv) > 1:
+        filename = sys.argv[1]
+        if not valid_extension(filename):
+            print("Invalid extension in filename '%s'" % filename)
+            print("This tool only supports the following extensions :'.txt','.log','.mout'")
+            exit(-1)
+    else:
+        filename = None
+        newer_date = 0
+        for f in os.listdir():
+            date = os.path.getmtime(f)
+            if date > newer_date and valid_extension(f):
+                newer_date = date
+                filename = f
+    if filename is None:
+        print("File not found")
+        print("This tool only supports the following extensions :'.txt','.log','.mout'")
+        exit(-1)
+
+    fname_out = None
+    if filename.endswith('.txt'):
+        fname_out = filename.rstrip('txt') + 'tsv'
+    elif filename.endswith('.log'):
+        fname_out = filename.rstrip('log') + 'tlog'
+    elif filename.endswith('.mout'):
+        fname_out = filename.rstrip('mout') + 'tmout'
+    else:
+        print("Error in file type")
+        print("This tool only supports the following extensions :'.txt','.log','.mout'")
+        exit(-1)
+
+    if fname_out is not None:
+        print("Processing File %s" % filename)
+        print("Creating File %s" % fname_out)
+        if filename.endswith('txt'):
+            print("Processing Data File")
+            read_LTSpice_export(filename, fname_out)
+        elif filename.endswith("log") or filename.endswith(".mout"):
+            data = LTSpiceLogReader(filename)
+            data.export_data(fname_out)
+
+
+    # input("Press Enter to Continue")
