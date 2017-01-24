@@ -18,26 +18,41 @@ import re
 import os
 import sys
 
+if __name__ == "__main__":
+    def message(*strs):
+        for string in strs:
+            print(string)
+else:
+    def message(*strs):
+        pass
+
+def enc_norm(line):
+    if line[0]== '\0': # This is the stupid encoding of LTspice XVII
+        return line[1::2]  # Removes zeros from the encoding
+    else:
+        return line  # Return as is
+
 def reformat_LTSpice_export(export_file:str, tabular_file:str):
     """Reformat an LTSpice trace export to a tabular so that the step information is part of the columns exported
     The reformatted file is written into <tabular_file>"""
-    fin = open(filename, 'r')
-    fout = open(fname_out, 'w')
+    fin = open(export_file, 'r')
+    fout = open(tabular_file, 'w')
 
-    headers = fin.readline()
+    headers = enc_norm(fin.readline())
     # writing header
     go_header = True
-    run_no = 0 # Just to avoid warning, this is later overridden by the step information
-    param_values = "" # Just to avoid warning, this is later overridden by the step information
+    run_no = 0  # Just to avoid warning, this is later overridden by the step information
+    param_values = ""  # Just to avoid warning, this is later overridden by the step information
     regx = re.compile("Step Information: ([\w=\d\. -]+) +\(Run: (\d*)/\d*\)\n")
     for line in fin:
+        line = enc_norm(line)
         if line.startswith("Step Information:"):
             match = regx.match(line)
-            # print(line, end="")
+            # message(line, end="")
             if match:
-                # print(match.groups())
+                # message(match.groups())
                 step, run_no = match.groups()
-                # print(step, line, end="")
+                # message(step, line, end="")
                 params = []
                 for param in step.split():
                     params.append(param.split('=')[1])
@@ -49,9 +64,9 @@ def reformat_LTSpice_export(export_file:str, tabular_file:str):
                         header_keys.append(param.split('=')[0])
                     param_header = "\t".join(header_keys)
                     fout.write("Run\t%s\t%s" % (param_header, headers))
-                    print("Run\t%s\t%s" % (param_header, headers))
+                    message("Run\t%s\t%s" % (param_header, headers))
                     go_header = False
-                    # print("%s\t%s"% (run_no, param_values))
+                    # message("%s\t%s"% (run_no, param_values))
         else:
             fout.write("%s\t%s\t%s" % (run_no, param_values, line))
 
@@ -65,7 +80,7 @@ class LTSpiceExport(object):
         """Reads an LTSpice Export into a structured class containing all data. Data is accessible by
         other class functions"""
         fin = open(filename, 'r')
-        file_header = fin.readline()
+        file_header = enc_norm(fin.readline())
 
         self.headers =  file_header.split('\t')
         # Set to read header
@@ -76,13 +91,14 @@ class LTSpiceExport(object):
 
         regx = re.compile("Step Information: ([\w=\d\. -]+) +\(Run: (\d*)/\d*\)\n")
         for line in fin:
+            line = enc_norm(line)
             if line.startswith("Step Information:"):
                 match = regx.match(line)
-                # print(line, end="")
+                # message(line, end="")
                 if match:
-                    # print(match.groups())
+                    # message(match.groups())
                     step, run_no = match.groups()
-                    # print(step, line, end="")
+                    # message(step, line, end="")
                     curr_dic['runno'] = run_no
                     for param in step.split():
                         key, value = param.split('=')
@@ -122,14 +138,15 @@ class LTSpiceLogReader(object):
         self.step_count = 0
         self.stepset = {}
         steps = []
-        print("Processing LOG file")
+        message("Processing LOG file")
         # wait for the step information
         for line in fin:
+            line = enc_norm(line)
             if line.startswith(".step "):
                 break
         while line:
             if line.startswith(".step"):
-                # print(line)
+                # message(line)
                 self.step_count += 1
                 tokens = line.strip('\n').split(' ')
                 for tok in tokens[1:]:
@@ -141,10 +158,10 @@ class LTSpiceLogReader(object):
                         self.stepset[lhs] = [rhs]
             elif line.startswith("Measurement:"):
                 break
-            line = fin.readline()
+            line = enc_norm(fin.readline())
 
 
-        # print("Reading Measurements")
+        # message("Reading Measurements")
         measure_count = 0
         param = ['param'] # Initializing an emp
         while line:
@@ -153,13 +170,13 @@ class LTSpiceLogReader(object):
                 if dataname:
                     # store the info
                     if len(measurements):
-                        print("Storing Measurement %s (count %d)" % (dataname, len(measurements)))
+                        message("Storing Measurement %s (count %d)" % (dataname, len(measurements)))
                         self.headers.append(dataname)
                         self.dataset[dataname] = (param, measurements)
                         param = ['param']
                     measurements = []
                 dataname = line[13:]
-                print("Reading Measurement %s" % line[13:])
+                message("Reading Measurement %s" % line[13:])
             else:
                 tokens = line.split("\t")
                 if len(tokens) >= 2:
@@ -174,18 +191,18 @@ class LTSpiceLogReader(object):
                     except:
                         param = [dataname] + tokens[2:]
                 else:
-                    print("->", line)
+                    message("->", line)
 
-            line = fin.readline()  # advance to the next line
+            line = enc_norm(fin.readline())  # advance to the next line
 
         # storing the last data into the dataset
-        print("Storing Measurement %s" % dataname)
+        message("Storing Measurement %s" % dataname)
         if len(measurements):
             self.dataset[dataname] = (param, measurements)
         self.headers.append(dataname)
 
-        print("%d measurements" % len(self.headers))
-        print("Identified %d steps, read %d measurements" % (self.step_count, measure_count))
+        message("%d measurements" % len(self.headers))
+        message("Identified %d steps, read %d measurements" % (self.step_count, measure_count))
         fin.close()
 
     def get_measure(self, measure, param=0):
@@ -199,21 +216,27 @@ class LTSpiceLogReader(object):
                 k = int(param)
             return [x[k] for x in data[1]]
 
-    def export_data(self, export_file:str):
-        # print(tokens)
+    def export_data(self, export_file:str, append_loginfo=None):
+        # message(tokens)
+        if append_loginfo is None:
+            mode = 'w' # rewrites the file
+        else:
+            mode = 'a' # Appends an existing file
 
-        print("Writing Data in %s" % fname_out)
-
-        fout = open(fname_out, 'w')
-
+        fout = open(export_file, mode)
         # fout.write("%s\t%s\n" % ("\t".join(self.stepset.keys()), "\t\t".join(self.headers)))
         meas_headers = ["\t".join(self.dataset[param][0]) for param in self.headers]
+        if append_loginfo is not None:  # if an append it will write the filename first
+            fout.write('long information\t')
+
         fout.write("step\t%s\t%s\n" % ("\t".join(self.stepset.keys()), "\t".join(meas_headers)))
         for index in range(self.step_count):
             step_data = [self.stepset[param][index] for param in self.stepset.keys()]
             meas_data = [self.dataset[param][1][index] for param in self.headers]
 
-            fout.write("%d\t%s" % (index + 1, "\t".join(step_data)))
+            if append_loginfo is not None:  # if an append it will write the filename first
+                fout.write(append_loginfo + '\t')
+            fout.write("%d\t%s" % (index + 1, '\t'.join(step_data)))
             for tok in meas_data:
                 if isinstance(tok, list):
                     for x in tok:
