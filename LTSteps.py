@@ -27,7 +27,7 @@ else:
         pass
 
 def enc_norm(line):
-    if line[0]== '\0': # This is the stupid encoding of LTspice XVII
+    if len(line) > 1 and line[0]== '\0': # This is the stupid encoding of LTspice XVII
         return line[1::2]  # Removes zeros from the encoding
     else:
         return line  # Return as is
@@ -223,6 +223,9 @@ class LTSpiceLogReader(object):
         else:
             mode = 'a' # Appends an existing file
 
+        if len(self.dataset) == 0:
+            print("Empty data set. Exiting without writing file.")
+            return
         fout = open(export_file, mode)
         # fout.write("%s\t%s\n" % ("\t".join(self.stepset.keys()), "\t\t".join(self.headers)))
         meas_headers = ["\t".join(self.dataset[param][0]) for param in self.headers]
@@ -288,7 +291,7 @@ if __name__ == "__main__":
         print("Creating File %s" % fname_out)
         if filename.endswith('txt'):
             print("Processing Data File")
-            read_LTSpice_export(filename, fname_out)
+            reformat_LTSpice_export(filename, fname_out)
         elif filename.endswith("log") or filename.endswith(".mout"):
             data = LTSpiceLogReader(filename)
             data.export_data(fname_out)
