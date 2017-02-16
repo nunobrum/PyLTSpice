@@ -42,6 +42,7 @@ else:
     USE_NNUMPY = True
     print("Found Numpy. WIll be used for storing data")
 
+
 class DataSet(object):
     """Class for storing Traces."""
 
@@ -54,7 +55,6 @@ class DataSet(object):
             self.data = zeros(datalen)
         else:
             self.data = [None for x in range(datalen)]
-
 
     def set_pointA(self, n, value):
         """function to be used on ASCII RAW Files.
@@ -112,10 +112,10 @@ class DataSet(object):
 
 class Axis(DataSet):
     """This class is used to represent the horizontal axis like on a Transient or DC Sweep Simulation."""
+
     def __init__(self, name, datatype, datalen):
         super().__init__(name, datatype, datalen)
         self.step_info = None
-
 
     def set_pointB(self, n, value):
         """Function that converts the variable 0, normally associated with the plot X axis.
@@ -154,10 +154,7 @@ class Axis(DataSet):
     def _set_steps(self, step_info):
         self.step_info = step_info
 
-        if USE_NNUMPY:
-            self.step_offsets = zeros(len(step_info))
-        else:
-            self.step_offsets = [None for x in range(len(step_info))]
+        self.step_offsets = [None for x in range(len(step_info))]
 
         # Now going to calculate the point offset for each step
         self.step_offsets[0] = 0
@@ -166,8 +163,9 @@ class Axis(DataSet):
         while i < len(self.data):
             if self.data[i] == self.data[0]:
                 print(k, i, self.data[i], self.data[i+1])
+                if self.data[i] == self.data[i+1]:
+                    i += 1  # Needs to add one here because the data will be repeated
                 self.step_offsets[k] = i
-                i += 1 # Needs to add one here because the data will be repeated
                 k += 1
             i += 1
 
@@ -186,7 +184,6 @@ class Axis(DataSet):
 
     def get_wave(self, step=0):
         return self.data[self.step_offset(step):self.step_offset(step + 1)]
-
 
 
 class Trace(DataSet):
@@ -211,6 +208,7 @@ class Trace(DataSet):
 
 class DummyTrace(object):
     """Dummy Trace for bypassing traces while reading"""
+
     def __init__(self, name, datatype):
         """Base Class for both Axis and Trace Classes.
         Defines the common operations between both."""
@@ -250,6 +248,8 @@ class LTSpiceRawRead(object):
     raw_filename   - The file containing the RAW data to be read
     traces_to_read - A string containing the list of traces to be read. If None is provided, only the header is read
                      and all trace data is discarded. If a '*' wildcard is given, all traces are read.
+    kwargs         - Keyword parameters that define the options for the loading. Options are:
+                        loadmem - If true, the file will only read waveforms to memory
     """
         assert isinstance(raw_filename, str)
         if not traces_to_read is None:
@@ -258,10 +258,15 @@ class LTSpiceRawRead(object):
         raw_file = open(raw_filename, "rb")
 
         # Storing the filename as part of the dictionary
-        self.raw_params = {"Filename": raw_filename}
+        self.raw_params = { "Filename" : raw_filename } # Initializing the dictionary that contains all raw file info
+
+        startpos = 0  # counter of bytes for
 
         line = raw_file.readline().decode()
+
         while line:
+            startpos += len(line)
+
             for tag in self.header_lines:
                 if line.startswith(tag):
                     self.raw_params[tag] = line[len(tag) + 1:-1]  # Adding 1 to account with the colon after the tag
@@ -270,7 +275,7 @@ class LTSpiceRawRead(object):
             else:
                 raw_file.close()
                 raise LTSPiceReadException(("Error reading Raw File !\n " +
-                                            "Unrecognized tag in line %s") % (line))
+                                            "Unrecognized tag in line %s") % line)
 
             line = raw_file.readline().decode()
             if line.startswith("Variables"):
@@ -289,7 +294,7 @@ class LTSpiceRawRead(object):
         self.nVariables = int(self.raw_params["No. Variables"], 10)
         self._traces = []
         self.steps = None
-        self.axis = None # Creating the axis
+        self.axis = None  # Creating the axis
         # print("Reading Variables")
 
         for ivar in range(self.nVariables):
@@ -300,8 +305,8 @@ class LTSpiceRawRead(object):
                 self.axis = Axis(name, var_type, self.nPoints)
                 self._traces.append(self.axis)
             elif ((traces_to_read == "*") or
-                    (name in traces_to_read) or
-                    (ivar == 0)):
+                      (name in traces_to_read) or
+                      (ivar == 0)):
                 # TODO: Add wildcards to the waveform matching
                 self._traces.append(Trace(name, var_type, self.nPoints, self.axis))
             else:
@@ -312,8 +317,17 @@ class LTSpiceRawRead(object):
             raw_file.close()
             return
 
+        self.binary_start = startpos
+
+        # This will make a lazy loading. That means, only the Axis is read. The traces are only read when the user
+        # makes a get_trace()
+        self.in_memory = False  # point to set it to true at the end of the load
+
         if kwargs.get("headeronly", False):
+            raw_file.close()
             return
+
+
 
         raw_type = raw_file.readline().decode()
 
@@ -330,8 +344,8 @@ class LTSpiceRawRead(object):
                             var.set_pointB(point, value)
                     else:
                         if isinstance(var, DummyTrace):
-                            #TODO: replace this by a seek
-                            raw_file.read(self.nPoints*4)
+                            # TODO: replace this by a seek
+                            raw_file.read(self.nPoints * 4)
                         else:
                             for point in range(self.nPoints):
                                 value = raw_file.read(4)
@@ -408,7 +422,7 @@ class LTSpiceRawRead(object):
         if isinstance(trace_ref, str):
             for trace in self._traces:
                 if trace_ref == trace.name:
-                   #assert isinstance(trace, DataSet)
+                    # assert isinstance(trace, DataSet)
                     return trace
             return None
         else:
@@ -429,7 +443,7 @@ class LTSpiceRawRead(object):
                 step_dict = {}
                 for tok in line[6:-1].split(' '):
                     key, value = tok.split('=')
-                    step_dict[key] = value
+                    step_dict[key] = float(value)
 
                 if self.steps is None:
                     self.steps = [step_dict]
@@ -446,11 +460,26 @@ class LTSpiceRawRead(object):
         """Helper function to access traces by using the [ ] operator."""
         return self.get_trace(item)
 
-    def get_steps(self):
+    def get_steps(self, **kwargs):
         if self.steps is None:
-            return ["No Step"]
+            return [0]  # returns an single step
         else:
-            return self.steps
+            if len(kwargs) > 0:
+                ret_steps = []  # Initializing an empty array
+                i = 0
+                for step_dict in self.steps:
+                    for key in kwargs:
+                        ll = step_dict.get(key, None)
+                        if ll is None:
+                            break
+                        elif kwargs[key] != ll:
+                            break
+                    else:
+                        ret_steps.append(i)  # All the step parameters match
+                    i += 1
+                return ret_steps
+            else:
+                return range(len(self.steps))  # Returns all the steps
 
 
 if __name__ == "__main__":
@@ -473,12 +502,12 @@ if __name__ == "__main__":
 
     y = LTR.get_trace('V(out)')
     x = LTR.get_trace(0)  # Zero is always the X axis
-    steps = LTR.get_steps()
-    for step in range(len(steps)):
+    steps = LTR.get_steps(ana=4.0)
+    for step in steps:
         # print(steps[step])
-        plt.plot(x.get_wave(step), y.get_wave(step), label=steps[step])
+        plt.plot(x.get_wave(step), y.get_wave(step), label=LTR.steps[step])
 
-    plt.legend() # order a legend.
+    plt.legend()  # order a legend.
     plt.show()
 
 
