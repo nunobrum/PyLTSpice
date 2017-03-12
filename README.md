@@ -15,16 +15,21 @@ Uses numpy and matplotlib to create an histogram and calculate the sigma deviati
 
 * __LTSpiceBatch.py__
 This is a script to launch LTSpice Simulations. This is useful because:
-** Can overcome the limitation of only stepping 3 parameters
-** Different types of simulations .TRAN .AC .NOISE can be run in a single batch
-** The RAW Files are smaller and easier to treat
-** When used with the LTSpiceRaw_Reader.py and LTSteps.py, validattion of the circuit can be done automatically
-** Different models can be simulation in a single batch.
+
+- Can overcome the limitation of only stepping 3 parameters
+- Different types of simulations .TRAN .AC .NOISE can be run in a single batch
+- The RAW Files are smaller and easier to treat
+- When used with the LTSpiceRaw_Reader.py and LTSteps.py, validattion of the circuit can be done automatically
+
+Different models can be simulation in a single batch.
 
 The principle of operation is the following,:
-  1) Add to the Spice circuit a .INC sim_settings.lib  . In this include simulation directives are written by the script per each simulation call
-  2) Use the python script to update the simulation directives and call LTSpice to run the simulation in command line
-  3) When the simulation is complete, the simulation results are renamed according to user guidance.
+  1. Add to the Spice circuit a .INC sim_settings.lib  . In this include simulation directives are written by the script per each simulation call.
+
+  2. Use the python script to update the simulation directives and call LTSpice to run the simulation in command line.
+
+  3. When the simulation is complete, the simulation results are renamed according to user guidance.
+
 Note: It only works with Windows based installations.
 
 ### To whom do I talk to? ###
