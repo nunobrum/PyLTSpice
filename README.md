@@ -24,10 +24,8 @@ This is a script to launch LTSpice Simulations. This is useful because:
     Different models can be simulation in a single batch.
     The principle of operation is the following,:
         1. Add to the Spice circuit a .INC sim_settings.lib  . In this include simulation directives are written by the script per each simulation call.
-
-        2. Use the python script to update the simulation directives and call LTSpice to run the simulation in command line.
-
-        3. When the simulation is complete, the simulation results are renamed according to user guidance.
+        1. Use the python script to update the simulation directives and call LTSpice to run the simulation in command line.
+        1. When the simulation is complete, the simulation results are renamed according to user guidance.
 
     Note: It only works with Windows based installations.
 
