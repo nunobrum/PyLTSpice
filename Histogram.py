@@ -33,7 +33,7 @@ opts.add_option('-r', "--range", action="store", type="string", dest="range", he
 (options, args) = opts.parse_args()
 
 if not options.filters is None:
-    print(options.filters)
+    print("Filters Applied:", options.filters)
 else:
     print("No filters defined")
 
@@ -84,7 +84,7 @@ else:
             if test == False:
                 break
         else:
-            values.append(env[TRACE])
+            values.append(float(env[TRACE]))
 
 log.close()
 if len(values) == 0:
