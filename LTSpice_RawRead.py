@@ -33,7 +33,7 @@ __copyright__ = "Copyright 2017, Fribourg Switzerland"
 
 
 from binascii import b2a_hex
-
+from struct import unpack
 try:
     from numpy import zeros, array
 except ImportError:
@@ -76,24 +76,7 @@ class DataSet(object):
         :param n:     the point to set
         :param value: the Value of the point being set."""
 
-        if value[3] & 0x80 == 0:
-            sign = 1
-        else:
-            sign = -1
-
-        exp = (value[3] & 0x3F) * 2
-        exp += (value[2] >> 7)
-
-        if value[3] & 0x40 == 0:
-            exp -= 128
-
-        mts = ((value[2] & 0x7F) / 64.0) + (value[1] / 16384.0) + (value[0] / 4194304.0)
-        if mts == 0 and exp == -128:
-            self.data[n] = 0.0
-        else:
-            self.data[n] = sign * (2 + mts) * (2 ** exp)
-
-            # print(b2a_hex(value), self.data[n])
+        self.data[n] = unpack("f", value)[0]
 
     def __str__(self):
         if isinstance(self.data[0], float):
@@ -130,26 +113,8 @@ class Axis(DataSet):
         Byte1  M15 M14 M13 M12   M11 M10 M9  M8
         Byte0  M7  M6  M5  M4    M3  M2  M1  M0
         """
-        if value[7] & 0x80 == 0:
-            sign = 1
-        else:
-            sign = -1
+        self.data[n] = unpack("d", value)[0]
 
-        exp = (value[7] & 0x3F) * 16
-        exp += (value[6] >> 4)
-
-        if value[7] & 0x40 == 0:
-            exp -= 1024
-
-        mts = (((value[6] & 0x0F) / 8.0) + (value[5] / 2048.0) +
-               (value[4] / 524288.0) + (value[3] / 134217728.0) +
-               (value[2] / 34359738368.0) + (value[1] / 8796093022208.0) + (value[0] / 2.25179981368525E15))
-
-        if (mts == 0) and exp == -1024:
-            self.data[n] = 0.0
-        else:
-            self.data[n] = sign * (2 + mts) * (2 ** exp)
-            # print (b2a_hex(value), self.data[n])
 
     def _set_steps(self, step_info):
         self.step_info = step_info
