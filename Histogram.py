@@ -29,19 +29,35 @@ opts.add_option('-c', "--condition", action="append", type="string", dest="filte
 #opts.add_option('-p', "--scaling",action="store", type="string", dest="prescaling", help="Prescaling function to be applied to the input value.")
 opts.add_option('-t', "--title", action="store", type="string", dest="title", help="Title to appear on the top of the histogram.")
 opts.add_option('-r', "--range", action="store", type="string", dest="range", help="Range of the X axis to use for the histogram in the form min:max. Example: -r -1:1")
+opts.add_option('-C', "--clipboard", action="store_true", dest="clipboard", help="If the data from the clipboard is to be used.")
+#opts.add_option('-x', "--xname", action="store", dest="xname", help="Name for the variable displayed")
 
 (options, args) = opts.parse_args()
 
-if not options.filters is None:
-    print("Filters Applied:", options.filters)
+values = []
+if options.clipboard:
+    try:
+        import clipboard
+    except ImportError:
+        print("Failed to load clipboard package. Use PiP to install it.")
+        exit(1)
+    if len(args) > 0:
+        TRACE = args[-1]
+    else:
+        TRACE = "var"
+    text = clipboard.paste()
+    for line in text.split('\n'):
+        try:
+            values.append(float(line))
+        except ValueError:
+            print("Failed to process ")
+            print(line)
 else:
-    print("No filters defined")
-
-if len(args)==2:
+    if len(args) == 2:
     TRACE = args[1]
     logfile = args[0]
 
-else :
+    else:
     opts.error("Wrong number of parameters")
     exit(-1)
     # if (len(args)==1): # This will search for the most recent file
@@ -55,26 +71,29 @@ else :
     #     if filename == None:
     #         opts.error("A LOG_FILE should be given")
 
+    if not options.filters is None:
+        print("Filters Applied:", options.filters)
+    else:
+        print("No filters defined")
 
-log = open(logfile,'r')
-header = log.readline().rstrip('\n')
-vars = header.split('\t')
-try:
+    log = open(logfile,'r')
+    header = log.readline().rstrip('\n')
+    vars = header.split('\t')
+    try:
     sav_col = vars.index(TRACE)
-except ValueError:
+    except ValueError:
     log.close()
     print("File '%s' doesn't have trace '%s'" % (logfile, TRACE))
     print("LOG FILE contains %s" % vars)
     exit(-1)
 
 
-values = []
-if (options.filters is None) or (len(options.filters) == 0):
+    if (options.filters is None) or (len(options.filters) == 0):
     for line in log:
         #print(line)
         vs = line.split('\t')
         values.append(float(vs[sav_col]))
-else:
+    else:
     for line in log:
         vs = map(float,line.split('\t'))
         env = dict(zip(vars,vs))
@@ -86,7 +105,7 @@ else:
         else:
             values.append(float(env[TRACE]))
 
-log.close()
+    log.close()
 if len(values) == 0:
     print("No elements found")
 elif len(values) < options.nbins:
@@ -119,6 +138,7 @@ else:
             opts.error("Invalid range setting")
             exit(-1)
 
+    print("Collected %d elements" % len(values))
     print("Distributing in %d bins" % options.nbins)
     print("Minimum is %f" % mn)
     print("Maximum is %f" % mx)
