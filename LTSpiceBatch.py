@@ -10,15 +10,19 @@ Advantages towards the range python built-in functions_
     - Supports floating point arguments
     - Supports both up and down sweeps
     - Less memory footprint for large sweeps"""
-    stp = abs(step)
+    inc = 0
+    val = start
     if start < stop:
-        while start <= stop:
-            yield start
-            start += stp
+        while val <= stop:
+            yield val
+            inc += 1
+            val = start + inc * step
+
     elif start > stop:
         while start >= stop:
-            yield start
-            start -= stp
+            yield val
+            inc += 1
+            val = start + inc * step
 
 
 def sweep_log(start, stop, step=10):
