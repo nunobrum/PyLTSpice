@@ -34,6 +34,9 @@ This is a script to launch LTSpice Simulations. This is useful because:
 * Alternative contact : nuno.brum@gmail.com
 
 ### History ###
+* Version 0.6
+Histogram.py now has an option to make the histogram directly from values stored in the clipboard
+
 * Version 0.5
 The LTSpice_RawReader.py now uses the struc.unpack function for a faster execution
 
