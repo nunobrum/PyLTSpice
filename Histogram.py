@@ -25,7 +25,7 @@ opts.add_option('-n', "--nbins", action="store",  type="int", dest="nbins", defa
 opts.add_option('-c', "--condition", action="append", type="string", dest="filters",
                 help="Filter condition writen in python. More than one expression can be added but each expression should be preceded by -f.\n" +
                      "EXAMPLE: -c V(N001)>4 -c parameter==1 -c  I(V1)<0.5" )
-#opts.add_option('-f', "--format", action="store", type="string", dest="format", help="Format string for the X axis. Example: -f %3.4f")
+opts.add_option('-f', "--format", action="store", type="string", dest="format", help="Format string for the X axis. Example: -f %3.4f")
 #opts.add_option('-p', "--scaling",action="store", type="string", dest="prescaling", help="Prescaling function to be applied to the input value.")
 opts.add_option('-t', "--title", action="store", type="string", dest="title", help="Title to appear on the top of the histogram.")
 opts.add_option('-r', "--range", action="store", type="string", dest="range", help="Range of the X axis to use for the histogram in the form min:max. Example: -r -1:1")
@@ -137,14 +137,18 @@ else:
         except:
             opts.error("Invalid range setting")
             exit(-1)
+    if options.format:
+        fmt = options.format
+    else:
+        fmt = "%f"
 
     print("Collected %d elements" % len(values))
     print("Distributing in %d bins" % options.nbins)
-    print("Minimum is %f" % mn)
-    print("Maximum is %f" % mx)
-    print("Mean is %f", mu)
-    print("Standard Deviation is %f" % sd)
-    print("Sigma %d boundaries are %f and %f" % (options.sigma, sigmin, sigmax))
+    print("Minimum is " + fmt % mn)
+    print("Maximum is " + fmt % mx)
+    print("Mean is " + fmt % mu)
+    print("Standard Deviation is " + fmt % sd)
+    print(("Sigma %d boundaries are " + fmt + " and " + fmt) % (options.sigma, sigmin, sigmax))
     n, bins, patches = plt.hist(x, options.nbins, normed=True, facecolor='green', alpha=0.75, range=(axisXmin, axisXmax))
     axisYmax = n.max() * 1.1
 
@@ -156,7 +160,7 @@ else:
     plt.ylabel('Probability [normalized]')
 
     if options.title is None:
-        title = r'$\mathrm{Histogram\ of\ %s:}\ \mu=%f,\ stdev=%f,\ \sigma=%d$' % (TRACE, mu, sd, options.sigma)
+        title = (r'$\mathrm{Histogram\ of\ %s:}\ \mu='+fmt+r',\ stdev='+fmt+r',\ \sigma=%d$') % (TRACE, mu, sd, options.sigma)
     else:
         title = options.title
     plt.title(title)
