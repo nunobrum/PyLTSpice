@@ -31,10 +31,13 @@ opts.add_option('-t', "--title", action="store", type="string", dest="title", he
 opts.add_option('-r', "--range", action="store", type="string", dest="range", help="Range of the X axis to use for the histogram in the form min:max. Example: -r -1:1")
 opts.add_option('-C', "--clipboard", action="store_true", dest="clipboard", help="If the data from the clipboard is to be used.")
 #opts.add_option('-x', "--xname", action="store", dest="xname", help="Name for the variable displayed")
+opts.add_option('-i', "--image", action="store", type="string", dest="imagefile", help="Name of the image File. extension 'png'")
 
 (options, args) = opts.parse_args()
 
 values = []
+
+
 if options.clipboard:
     try:
         import clipboard
@@ -52,14 +55,14 @@ if options.clipboard:
         except ValueError:
             print("Failed to process ")
             print(line)
-else:
-    if len(args) == 2:
-    TRACE = args[1]
-    logfile = args[0]
-
-    else:
-    opts.error("Wrong number of parameters")
+elif len(args)==0:
+    opts.print_help()
     exit(-1)
+else:
+    if len(args) < 2:
+        opts.error("Wrong number of parameters.")
+        opts.print_help()
+        exit(-1)
     # if (len(args)==1): # This will search for the most recent file
     #     newer_date = 0
     #     filename = None
@@ -70,6 +73,8 @@ else:
     #             filename = f
     #     if filename == None:
     #         opts.error("A LOG_FILE should be given")
+    TRACE = args[1]
+    logfile = args[0]
 
     if not options.filters is None:
         print("Filters Applied:", options.filters)
@@ -80,32 +85,33 @@ else:
     header = log.readline().rstrip('\n')
     vars = header.split('\t')
     try:
-    sav_col = vars.index(TRACE)
+        sav_col = vars.index(TRACE)
     except ValueError:
-    log.close()
-    print("File '%s' doesn't have trace '%s'" % (logfile, TRACE))
-    print("LOG FILE contains %s" % vars)
-    exit(-1)
+        log.close()
+        print("File '%s' doesn't have trace '%s'" % (logfile, TRACE))
+        print("LOG FILE contains %s" % vars)
+        exit(-1)
 
 
     if (options.filters is None) or (len(options.filters) == 0):
-    for line in log:
-        #print(line)
-        vs = line.split('\t')
-        values.append(float(vs[sav_col]))
+        for line in log:
+            #print(line)
+            vs = line.split('\t')
+            values.append(float(vs[sav_col]))
     else:
-    for line in log:
-        vs = map(float,line.split('\t'))
-        env = dict(zip(vars,vs))
+        for line in log:
+            vs = map(float,line.split('\t'))
+            env = dict(zip(vars,vs))
 
-        for expression in options.filters:
-            test = eval(expression, None, env)
-            if test == False:
-                break
-        else:
-            values.append(float(env[TRACE]))
+            for expression in options.filters:
+                test = eval(expression, None, env)
+                if test == False:
+                    break
+            else:
+                values.append(float(env[TRACE]))
 
     log.close()
+
 if len(values) == 0:
     print("No elements found")
 elif len(values) < options.nbins:
@@ -157,7 +163,7 @@ else:
     l = plt.plot(bins, y, 'r--', linewidth=1)
     plt.axvspan(mu - options.sigma*sd, mu + options.sigma*sd, alpha=0.2, color="cyan")
     plt.xlabel(TRACE)
-    plt.ylabel('Probability [normalized]')
+    plt.ylabel('Distribution [Normalised]')
 
     if options.title is None:
         title = (r'$\mathrm{Histogram\ of\ %s:}\ \mu='+fmt+r',\ stdev='+fmt+r',\ \sigma=%d$') % (TRACE, mu, sd, options.sigma)
@@ -167,4 +173,7 @@ else:
 
     plt.axis([axisXmin, axisXmax, 0, axisYmax ])
     plt.grid(True)
-    plt.show()
+    if options.imagefile is not None:
+        plt.savefig(options.imagefile)
+    else:
+        plt.show()
