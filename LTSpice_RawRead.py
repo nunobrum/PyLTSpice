@@ -113,8 +113,10 @@ class Axis(DataSet):
         Byte1  M15 M14 M13 M12   M11 M10 M9  M8
         Byte0  M7  M6  M5  M4    M3  M2  M1  M0
         """
+        
         self.data[n] = unpack("d", value)[0]
-
+        #print(value)
+        #print('converted %f' % self.data[n])
 
     def _set_steps(self, step_info):
         self.step_info = step_info
@@ -148,7 +150,13 @@ class Axis(DataSet):
                 return self.step_offsets[step]
 
     def get_wave(self, step=0):
-        return self.data[self.step_offset(step):self.step_offset(step + 1)]
+        #print(self.data)
+        print('step offset %d' % self.step_offset(step))
+        print(self.data[self.step_offset(step):self.step_offset(step + 1)])
+        if step==0:
+            return self.data
+        else:
+            return self.data[self.step_offset(step):self.step_offset(step + 1)]
 
 
 class Trace(DataSet):
@@ -165,10 +173,17 @@ class Trace(DataSet):
             return self.data[self.axis.step_offset(step) + n]
 
     def get_wave(self, step=0):
+        print('step size %d' % step)
+        print(self.data[self.axis.step_offset(step):self.axis.step_offset(step + 1)])
         if self.axis is None:
+            print('reached4')
             return super().get_wave()
         else:
-            return self.data[self.axis.step_offset(step):self.axis.step_offset(step + 1)]
+            print('reached5')
+            if step==0:
+                return self.data
+            else:
+                return self.data[self.axis.step_offset(step):self.axis.step_offset(step + 1)]
 
 
 class DummyTrace(object):
@@ -452,6 +467,9 @@ class LTSpiceRawRead(object):
             else:
                 return range(len(self.steps))  # Returns all the steps
 
+'''
+This section is for testing your code
+'''
 
 if __name__ == "__main__":
     import sys
@@ -460,29 +478,35 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         raw_filename = sys.argv[1]
     else:
-        raw_filename = "CSL2_kevin_Test.raw"
-        # raw_filename = "teste.raw"
+        raw_filename = 'C:/Users/yyongkeo/Documents/GitHub/test_data/example_ltspice_circuit.raw'
+        #raw_filename = "CSL2_kevin_Test.raw"
 
-    LTR = LTSpiceRawRead(raw_filename,'V(out)')
+    #LTR = LTSpiceRawRead(raw_filename,'V(sig_in)')
+    LTR = LTSpiceRawRead(raw_filename)
 
     print(LTR.get_trace_names())
-    # for trace in LTR.get_trace_names():
-    #     print(LTR.get_trace(trace))
-
     print(LTR.get_raw_property())
+    plt.figure()
 
-    y = LTR.get_trace('V(out)')
+    curr = LTR.get_trace('I(V3)')
+    volt = LTR.get_trace('V(sig_iso)')
     x = LTR.get_trace(0)  # Zero is always the X axis
-    steps = LTR.get_steps(ana=4.0)
+    #steps = LTR.get_steps(ana=4.0)
+    steps = LTR.get_steps()
     for step in steps:
-        # print(steps[step])
-        plt.plot(x.get_wave(step), y.get_wave(step), label=LTR.steps[step])
+        plt.subplot(2,1,1)
+        plt.grid(True)
+        plt.plot(x.get_wave(step), curr.get_wave(step))
+        plt.subplot(2,1,2)
+        plt.plot(x.get_wave(step), volt.get_wave(step))
+        plt.grid(True)
+        #plt.plot(y.get_wave(step))
+        #plt.plot(x.get_wave(step),marker='x')
+        #plt.plot(x.get_wave(step), y.get_wave(step), label=LTR.steps[step])
+    
 
-    plt.legend()  # order a legend.
-    plt.show()
-
-
-
+'''
+'''
     # out = open("RAW_TEST_out_test1.txt", 'w')
     #
     # for step in LTR.get_steps():
