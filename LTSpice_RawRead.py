@@ -227,22 +227,25 @@ class LTSpiceRawRead(object):
 
         startpos = 0  # counter of bytes for
 
-        line = raw_file.readline().decode()
+        # LTSpice raw_files are encoded in UTF-16-le. We ignore errors because
+        # readline stops reading lines after the '\n' and doesn't include 0x00
+        # that occurs after
+        line = raw_file.readline().decode(encoding='utf_16_le', errors='ignore')
+        raw_file.seek(raw_file.tell() + 1) # Move past 0x00 from prev. line
 
         while line:
             startpos += len(line)
-
             for tag in self.header_lines:
                 if line.startswith(tag):
-                    self.raw_params[tag] = line[len(tag) + 1:-1]  # Adding 1 to account with the colon after the tag
-                    # print(ftag)
+                    self.raw_params[tag] = line[len(tag) + 1:]  # Adding 1 to account with the colon after the tag
                     break
             else:
                 raw_file.close()
                 raise LTSPiceReadException(("Error reading Raw File !\n " +
                                             "Unrecognized tag in line %s") % line)
 
-            line = raw_file.readline().decode()
+            line = raw_file.readline().decode(encoding='utf_16_le', errors='ignore')
+            raw_file.seek(raw_file.tell() + 1) # Move past 0x00 from prev. line
             if line.startswith("Variables"):
                 break
         else:
@@ -263,7 +266,9 @@ class LTSpiceRawRead(object):
         # print("Reading Variables")
 
         for ivar in range(self.nVariables):
-            line = raw_file.readline().decode()[:-1]
+            line = raw_file.readline()\
+                    .decode(encoding='utf_16_le', errors='ignore')[:-1]
+            raw_file.seek(raw_file.tell() + 1) # Move past 0x00 from prev. line
             # print(line)
             dummy, n, name, var_type = line.split("\t")
             if ivar == 0 and self.nVariables > 1:
@@ -292,9 +297,8 @@ class LTSpiceRawRead(object):
             raw_file.close()
             return
 
-
-
-        raw_type = raw_file.readline().decode()
+        raw_type = raw_file.readline().decode(encoding='utf_16_le', errors='ignore')
+        raw_file.seek(raw_file.tell() + 1) # Move past 0x00 from prev. line
 
         if raw_type.startswith("Binary:"):
             # Will start the reading of binary values
@@ -333,7 +337,9 @@ class LTSpiceRawRead(object):
             for point in range(self.nPoints):
                 first_var = True
                 for var in self._traces:
-                    line = raw_file.readline().decode()
+                    line = raw_file.readline()\
+                            .decode(encoding='utf_16_le', errors='ignore')
+                    raw_file.seek(raw_file.tell() + 1) # Move past 0x00 from prev. line
                     # print(line)
 
                     if first_var:
