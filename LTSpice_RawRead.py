@@ -15,17 +15,13 @@
 The reader returns a class containing all the traces read from the RAW File.
 In case there there stepped data detected, it will try to open the simulation LOG file and
 read the stepping information.
-
 Traces are accessible by the method <LTSpiceReader instance>.get_trace(trace_ref) where trace_ref is either
 the name of the net on the LTSPice Simulation. Normally trace references are stored with the format V(<node_name>)
 for voltages or I(device_reference). For example V(n001) or I(R1) or Ib(Q1).
-
 For checking step, the method <LTSpiceReader instance>.get_steps() is used. In case there are no steps in the simulation,
 the class will return a single element list.
-
 NOTE: This module tries to import the numpy if exists on the system.
 If it finds numpy all data is later provided as an array. If not it will use a standard list of floats.
-
 """
 
 __author__ = "Nuno Canto Brum <nuno.brum@gmail.com>"
@@ -58,7 +54,6 @@ class DataSet(object):
 
     def set_pointA(self, n, value):
         """function to be used on ASCII RAW Files.
-
         :param n:     the point to set
         :param value: the Value of the point being set."""
         assert isinstance(value, float)
@@ -72,7 +67,6 @@ class DataSet(object):
         Byte2  E0  M22 M21 M20   M19 M18 M17 M16        SGE - Signal of Exponent: 0 - Positive 1 - Negative
         Byte1  M15 M14 M13 M12   M11 M10 M9  M8         E[6:0] - Exponent
         Byte0  M7  M6  M5  M4    M3  M2  M1  M0         M[22:0] - Mantissa.
-
         :param n:     the point to set
         :param value: the Value of the point being set."""
 
@@ -227,22 +221,25 @@ class LTSpiceRawRead(object):
 
         startpos = 0  # counter of bytes for
 
-        line = raw_file.readline().decode()
+        # LTSpice raw_files are encoded in UTF-16-le. We ignore errors because
+        # readline stops reading lines after the '\n' and doesn't include 0x00
+        # that occurs after
+        line = raw_file.readline().decode(encoding='utf_16_le', errors='ignore')
+        raw_file.seek(raw_file.tell() + 1) # Move past 0x00 from prev. line
 
         while line:
             startpos += len(line)
-
             for tag in self.header_lines:
                 if line.startswith(tag):
-                    self.raw_params[tag] = line[len(tag) + 1:-1]  # Adding 1 to account with the colon after the tag
-                    # print(ftag)
+                    self.raw_params[tag] = line[len(tag) + 1:]  # Adding 1 to account with the colon after the tag
                     break
             else:
                 raw_file.close()
                 raise LTSPiceReadException(("Error reading Raw File !\n " +
                                             "Unrecognized tag in line %s") % line)
 
-            line = raw_file.readline().decode()
+            line = raw_file.readline().decode(encoding='utf_16_le', errors='ignore')
+            raw_file.seek(raw_file.tell() + 1) # Move past 0x00 from prev. line
             if line.startswith("Variables"):
                 break
         else:
@@ -263,7 +260,9 @@ class LTSpiceRawRead(object):
         # print("Reading Variables")
 
         for ivar in range(self.nVariables):
-            line = raw_file.readline().decode()[:-1]
+            line = raw_file.readline()\
+                    .decode(encoding='utf_16_le', errors='ignore')[:-1]
+            raw_file.seek(raw_file.tell() + 1) # Move past 0x00 from prev. line
             # print(line)
             dummy, n, name, var_type = line.split("\t")
             if ivar == 0 and self.nVariables > 1:
@@ -292,9 +291,8 @@ class LTSpiceRawRead(object):
             raw_file.close()
             return
 
-
-
-        raw_type = raw_file.readline().decode()
+        raw_type = raw_file.readline().decode(encoding='utf_16_le', errors='ignore')
+        raw_file.seek(raw_file.tell() + 1) # Move past 0x00 from prev. line
 
         if raw_type.startswith("Binary:"):
             # Will start the reading of binary values
@@ -333,7 +331,9 @@ class LTSpiceRawRead(object):
             for point in range(self.nPoints):
                 first_var = True
                 for var in self._traces:
-                    line = raw_file.readline().decode()
+                    line = raw_file.readline()\
+                            .decode(encoding='utf_16_le', errors='ignore')
+                    raw_file.seek(raw_file.tell() + 1) # Move past 0x00 from prev. line
                     # print(line)
 
                     if first_var:
