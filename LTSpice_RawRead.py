@@ -134,7 +134,10 @@ class Axis(DataSet):
 
     def step_offset(self, step):
         if self.step_info == None:
-            return 0
+            if step > 0:
+                return len(self.data)
+            else:
+                return 0
         else:
             if step >= len(self.step_offsets):
                 return len(self.data)
