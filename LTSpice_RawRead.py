@@ -224,6 +224,7 @@ class LTSpiceRawRead(object):
         # LTSpice raw_files are encoded in UTF-16-le. We ignore errors because
         # readline stops reading lines after the '\n' and doesn't include 0x00
         # that occurs after
+
         line = raw_file.readline().decode(encoding=self.encoding, errors='ignore')
 
         # check for correct encoding
