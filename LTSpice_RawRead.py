@@ -27,7 +27,7 @@ If it finds numpy all data is later provided as an array. If not it will use a s
 __author__ = "Nuno Canto Brum <nuno.brum@gmail.com>"
 __copyright__ = "Copyright 2017, Fribourg Switzerland"
 
-
+import os
 from binascii import b2a_hex
 from struct import unpack
 try:
@@ -59,7 +59,7 @@ class DataSet(object):
         assert isinstance(value, float)
         self.data[n] = value
 
-    def set_pointB(self, n, value):
+    def set_pointB8(self, n, value):
         """Function that converts the variable 0, normally associated with the plot X axis.
         The codification is done as follows:
                7   6   5   4     3   2   1   0
@@ -73,6 +73,17 @@ class DataSet(object):
         Byte0  M7  M6  M5  M4    M3  M2  M1  M0
         """
         self.data[n] = unpack("d", value)[0]
+
+    def set_pointB4(self, n, value):
+        """Function that converts a normal trace into float on a Binary storage. This codification uses 4 bytes.
+        The codification is done as follows:
+               7   6   5   4     3   2   1   0
+        Byte3  SGM SGE E6  E5    E4  E3  E2  E1         SGM - Signal of Mantissa: 0 - Positive 1 - Negative
+        Byte2  E0  M22 M21 M20   M19 M18 M17 M16        SGE - Signal of Exponent: 0 - Positive 1 - Negative
+        Byte1  M15 M14 M13 M12   M11 M10 M9  M8         E[6:0] - Exponent
+        Byte0  M7  M6  M5  M4    M3  M2  M1  M0         M[22:0] - Mantissa.
+        """
+        self.data[n] = unpack("f", value)[0]
 
     def __str__(self):
         if isinstance(self.data[0], float):
@@ -110,7 +121,7 @@ class Axis(DataSet):
         k = 0
         while i < len(self.data):
             if self.data[i] == self.data[0]:
-                #print(k, i, self.data[i], self.data[i+1])
+                # print(k, i, self.data[i], self.data[i+1])
                 if self.data[i] == self.data[i+1]:
                     i += 1  # Needs to add one here because the data will be repeated
                 self.step_offsets[k] = i
@@ -122,7 +133,7 @@ class Axis(DataSet):
                                        "Expecting %d got %d" % (len(self.step_offsets), k))
 
     def step_offset(self, step):
-        if self.step_info == None:
+        if self.step_info is None:
             if step > 0:
                 return len(self.data)
             else:
@@ -174,7 +185,10 @@ class DummyTrace(object):
     def set_pointA(self, n, value):
         pass
 
-    def set_pointB(self, n, value):
+    def set_pointB8(self, n, value):
+        pass
+
+    def set_pointB4(self, n, value):
         pass
 
 
@@ -214,45 +228,48 @@ class LTSpiceRawRead(object):
         self.encoding = 'utf_16_le'
         self.offset = 1
 
+        raw_file_size = os.stat(raw_filename).st_size # Get the file size in order to know the data size
         raw_file = open(raw_filename, "rb")
 
         # Storing the filename as part of the dictionary
-        self.raw_params = { "Filename" : raw_filename } # Initializing the dictionary that contains all raw file info
-
+        self.raw_params = {"Filename": raw_filename}  # Initializing the dictionary that contains all raw file info
+        self.backannotations = []  # Storing backannotations
+        
         startpos = 0  # counter of bytes for
 
         # LTSpice raw_files are encoded in UTF-16-le. We ignore errors because
         # readline stops reading lines after the '\n' and doesn't include 0x00
         # that occurs after
         line = raw_file.readline().decode(encoding=self.encoding, errors='ignore')
+        raw_file.read(self.offset)  # correct issue with utf16 decoding
 
         # check for correct encoding
         # TODO: do this better
         if not line.startswith('Title'):
             print("Ascii file")
             self.encoding = 'utf_8'
-            self.offset= 0
+            self.offset = 0
             raw_file.seek(0)
             line = raw_file.readline().decode(encoding=self.encoding, errors='ignore')
         else:
             print("Binary file")
 
-        raw_file.seek(raw_file.tell() + self.offset) # Move past 0x00 from prev. line
-
         while line:
+            # print(line)
             startpos += len(line)
-            for tag in self.header_lines:
-                if line.startswith(tag):
-                    self.raw_params[tag] = line[len(tag) + 1:]  # Adding 1 to account with the colon after the tag
-                    break
+            tag, value_str = line.split(':', 1)
+            if tag in self.header_lines:
+                if tag == 'Backannotation':
+                    self.backannotations.append(value_str)
+                else:
+                    self.raw_params[tag] = value_str
             else:
                 raw_file.close()
                 raise LTSPiceReadException(("Error reading Raw File !\n " +
                                             "Unrecognized tag in line %s") % line)
-
             line = raw_file.readline().decode(encoding=self.encoding, errors='ignore')
-            raw_file.seek(raw_file.tell() + self.offset) # Move past 0x00 from prev. line
-            if line.startswith("Variables"):
+            raw_file.read(self.offset)  # correct issue with utf16 decoding
+            if line.startswith("Variables:"):
                 break
         else:
             raw_file.close()
@@ -271,11 +288,21 @@ class LTSpiceRawRead(object):
         self.axis = None  # Creating the axis
         # print("Reading Variables")
 
-        for ivar in range(self.nVariables):
+        ivar = 0
+        while line:
             line = raw_file.readline()\
-                    .decode(encoding=self.encoding, errors='ignore')[:-1]
-            raw_file.seek(raw_file.tell() + self.offset) # Move past 0x00 from prev. line
-            # print(line)
+                    .decode(encoding=self.encoding, errors='ignore')
+            raw_file.read(self.offset)
+            print(line)
+
+            if line.startswith("Binary:") or line.startswith("Values"):
+                if ivar != self.nVariables:
+                    raw_file.close()
+                    raise LTSPiceReadException("Wrong number of variables read")
+                self.raw_type = line
+                self.binary_start = raw_file.tell()
+                break
+
             dummy, n, name, var_type = line.split("\t")
             if ivar == 0 and self.nVariables > 1 and self.nPoints != 1:
                 self.axis = Axis(name, var_type, self.nPoints)
@@ -289,13 +316,12 @@ class LTSpiceRawRead(object):
                 self._traces.append(Trace(name, var_type, self.nPoints, self.axis))
             else:
                 self._traces.append(DummyTrace(name, var_type))
+            ivar += 1
 
         if traces_to_read is None or len(self._traces) == 0:
             # The read is stopped here if there is nothing to read.
             raw_file.close()
             return
-
-        self.binary_start = startpos
 
         # This will make a lazy loading. That means, only the Axis is read. The traces are only read when the user
         # makes a get_trace()
@@ -305,32 +331,46 @@ class LTSpiceRawRead(object):
             raw_file.close()
             return
 
-        raw_type = raw_file.readline().decode(encoding=self.encoding, errors='ignore')
-        raw_file.seek(raw_file.tell() + self.offset) # Move past 0x00 from prev. line
-
-        if raw_type.startswith("Binary:"):
+        if self.raw_type.startswith("Binary:"):
             # Will start the reading of binary values
+            # But first check whether how data is stored.
+            self.block_size = (raw_file_size - self.binary_start) // self.nPoints
+            self.data_size = (self.block_size - 8) // (self.nVariables - 1)
             if "fastaccess" in self.raw_params["Flags"]:
                 print("Fast access")
                 # A fast access means that the traces are grouped together.
-                first_var = True
                 for var in self._traces:
                     if isinstance(var, DummyTrace):
                         # TODO: replace this by a seek
-                        raw_file.read(self.nPoints * 4)
+                        raw_file.read(self.nPoints * self.data_size)
                     else:
-                        for point in range(self.nPoints):
-                            value = raw_file.read(8)
-                            var.set_pointB(point, value)
+                        if self.data_size == 8 or isinstance(var, Axis):
+                            for point in range(self.nPoints):
+                                value = raw_file.read(8)
+                                var.set_pointB8(point, value)
+                        else:  # Data size is 4
+                            for point in range(self.nPoints):
+                                value = raw_file.read(4)
+                                var.set_pointB4(point, value)
+
             else:
                 print("Normal access")
                 # This is the default save after a simulation where the traces are scattered
-                for point in range(self.nPoints):
-                    for var in self._traces:
-                        value = raw_file.read(8)
-                        var.set_pointB(point, value)
+                if self.data_size == 8:
+                    for point in range(self.nPoints):
+                        for var in self._traces:
+                            value = raw_file.read(8)
+                            var.set_pointB8(point, value)
+                else:  # data size is only 4 bytes
+                    for point in range(self.nPoints):
+                        value = raw_file.read(8)  # first variable (ex:time) is always 8 bytes
+                        self._traces[0].set_pointB8(point, value)
 
-        elif raw_type.startswith("Values:"):
+                        for var in self._traces[1:]:
+                            value = raw_file.read(4)
+                            var.set_pointB4(point, value)
+
+        elif self.raw_type.startswith("Values:"):
             # Will start the reading of ASCII Values
             for point in range(self.nPoints):
                 first_var = True
@@ -476,7 +516,6 @@ if __name__ == "__main__":
     for name, value in LTR.get_raw_property().items():
         print("\t%s: %s" %(name, value))
 
-
     for trace_name in trace_names:
         #steps = LTR.get_steps(v_sig=0.1)
         steps = LTR.get_steps()
@@ -499,9 +538,6 @@ if __name__ == "__main__":
                 plt.title('Traces')
     plt.legend()  # order a legend.
     plt.show()
-
-
-
     # out = open("RAW_TEST_out_test1.txt", 'w')
     #
     # for step in LTR.get_steps():
