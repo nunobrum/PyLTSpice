@@ -452,7 +452,9 @@ class LTSpiceRawRead(object):
                 step_dict = {}
                 for tok in line[6:-1].split(' '):
                     key, value = tok.split('=')
-                    step_dict[key] = float(value)
+                    # Leave value as a string to accomodate temperature steps
+                    # Temperature steps have the form '.step temp=25°C'
+                    step_dict[key] = value
 
                 if self.steps is None:
                     self.steps = [step_dict]
