@@ -101,7 +101,7 @@ class LTCommander(object):
     def reset_params(self):
         self.logfilename = None
         for key in self.defaults:
-            self.parameters[key] = defaults[key]
+            self.parameters[key] = self.defaults[key]
 
     def set_settings(self, *settings):
         """
