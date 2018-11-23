@@ -303,7 +303,7 @@ class LTSpiceRawRead(object):
                 self.binary_start = raw_file.tell()
                 break
 
-            dummy, n, name, var_type = line.split("\t")
+            dummy, _, name, var_type = line.split("\t")
             if ivar == 0 and self.nVariables > 1 and self.nPoints != 1:
                 self.axis = Axis(name, var_type, self.nPoints)
                 self._traces.append(self.axis)
@@ -393,7 +393,7 @@ class LTSpiceRawRead(object):
                     var.set_pointA(point, value)
         else:
             raw_file.close()
-            raise LTSPiceReadException("Unsupported RAW File. ""%s""" % raw_type)
+            raise LTSPiceReadException("Unsupported RAW File. ""%s""" % self.raw_type)
 
         raw_file.close()
 
