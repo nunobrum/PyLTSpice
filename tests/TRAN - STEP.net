@@ -1,0 +1,11 @@
+* C:\Python\projects\ltsipy\tests\simulations\TRAN - STEP.asc
+Vin in 0 PWL(0 0 10n {Vin})
+R1 in out {R1}
+C1 out 0 1µ
+.tran 5m
+.step param Vin list 1 10
+.param Vin=2
+.param R1=1k
+.step param R1 list 1k 10k
+.backanno
+.end

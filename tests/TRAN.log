@@ -1,0 +1,21 @@
+Circuit: * C:\Python\projects\ltsipy\tests\simulations\TRAN.asc
+
+.OP point found by inspection.
+
+Date: Sun Nov 25 14:04:42 2018
+Total elapsed time: 0.100 seconds.
+
+tnom = 27
+temp = 27
+method = modified trap
+totiter = 2162
+traniter = 2162
+tranpoints = 1082
+accept = 1081
+rejected = 1
+matrix size = 3
+fillins = 0
+solver = Normal
+Matrix Compiler1: 50 bytes object code size  0.0/0.0/[0.0]
+Matrix Compiler2: off  [0.0]/0.1/0.1
+

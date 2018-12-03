@@ -1,0 +1,8 @@
+* C:\Python\projects\PyLTSpice\tests\AC - STEP.asc
+Vin in 0 AC 1
+R1 in out {R1}
+C1 out 0 159.1549µ
+.ac list 1 10
+.step param R1 list 1k 10k
+.backanno
+.end
