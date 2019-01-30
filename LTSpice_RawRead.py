@@ -8,7 +8,7 @@
 # Author:      Nuno Brum (nuno.brum@gmail.com)
 #
 # Created:     23-12-2016
-# Licence:     Free
+# Licence:     General Public GNU License
 #-------------------------------------------------------------------------------
 
 """ A pure python implementation of an LTSpice RAW file reader.
