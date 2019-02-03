@@ -31,7 +31,7 @@ import os
 from binascii import b2a_hex
 from struct import unpack
 try:
-    from numpy import zeros, array
+    from numpy import zeros, array, complex128
 except ImportError:
     USE_NNUMPY = False
 else:
@@ -42,13 +42,17 @@ else:
 class DataSet(object):
     """Class for storing Traces."""
 
-    def __init__(self, name, datatype, datalen):
+    def __init__(self, name, datatype, datalen, numerical_type='real'):
         """Base Class for both Axis and Trace Classes.
         Defines the common operations between both."""
         self.name = name
         self.type = datatype
+        self.numerical_type = numerical_type
         if USE_NNUMPY:
-            self.data = zeros(datalen)
+            if numerical_type == 'real':
+                self.data = zeros(datalen)
+            elif numerical_type == 'complex':
+                self.data = zeros(datalen, complex128)
         else:
             self.data = [None for x in range(datalen)]
 
@@ -74,6 +78,11 @@ class DataSet(object):
         """
         self.data[n] = unpack("d", value)[0]
 
+    def set_pointB16(self, n, value):
+        re = unpack('d', value[0])[0]
+        im = unpack('d', value[1])[0]
+        self.data[n] = complex(re, im)
+
     def set_pointB4(self, n, value):
         """Function that converts a normal trace into float on a Binary storage. This codification uses 4 bytes.
         The codification is done as follows:
@@ -89,6 +98,8 @@ class DataSet(object):
         if isinstance(self.data[0], float):
             # data = ["%e" % value for value in self.data]
             return "name:'%s'\ntype:'%s'\nlen:%d\n%s" % (self.name, self.type, len(self.data), str(self.data))
+        elif isinstance(self.data[0], complex):
+            return "name: {}\ntype: {}\nlen: {:d}\n{}".format(self.name, self.type, len(self.data), str(self.data))
         else:
             data = [b2a_hex(value) for value in self.data]
             return "name:'%s'\ntype:'%s'\nlen:%d\n%s" % (self.name, self.type, len(self.data), str(data))
@@ -106,8 +117,8 @@ class DataSet(object):
 class Axis(DataSet):
     """This class is used to represent the horizontal axis like on a Transient or DC Sweep Simulation."""
 
-    def __init__(self, name, datatype, datalen):
-        super().__init__(name, datatype, datalen)
+    def __init__(self, name, datatype, datalen, numerical_type='real'):
+        super().__init__(name, datatype, datalen, numerical_type)
         self.step_info = None
 
     def _set_steps(self, step_info):
@@ -151,8 +162,8 @@ class Axis(DataSet):
 class Trace(DataSet):
     """Class used for storing generic traces that report to a given Axis."""
 
-    def __init__(self, name, datatype, datalen, axis):
-        super().__init__(name, datatype, datalen)
+    def __init__(self, name, datatype, datalen, axis, numerical_type='real'):
+        super().__init__(name, datatype, datalen, numerical_type)
         self.axis = axis
 
     def get_point(self, n=0, step=0):
@@ -498,56 +509,164 @@ class LTSpiceRawRead(object):
                 return range(len(self.steps))  # Returns all the steps
 
 
-if __name__ == "__main__":
-    import sys
-    import matplotlib.pyplot as plt
+class RawRead(object):
 
-    if len(sys.argv) > 1:
-        raw_filename = sys.argv[1]
-    else:
-        raw_filename = "CSL2_kevin_Test.raw"
-        # raw_filename = "teste.raw"
-
-    #comment in to parse operation points
-    #raw_filename = raw_filename.replace('.raw','.op.raw')
-
-    LTR = LTSpiceRawRead(raw_filename,'*')
-
-    trace_names = LTR.get_trace_names()
-    print("\nFound traces:")
-    for trace in trace_names:
-        #print(LTR.get_trace(trace))
-        print("\t%s"%trace)
-
-    print("\nProperties:")
-    for name, value in LTR.get_raw_property().items():
-        print("\t%s: %s" %(name, value))
-
-    for trace_name in trace_names:
-        #steps = LTR.get_steps(v_sig=0.1)
-        steps = LTR.get_steps()
-        if trace_name != 'time':
-            if LTR.get_trace(0).get_len() == 1:
-                for step in steps:
-                    value = LTR.get_trace(trace_name).get_point()
-                    label = "%s: %e (step %d)" % (trace_name, value, step)
-                    #print(s)
-                    print(steps[step])
-                    plt.plot([0], [value], marker='o', label=label)
-                plt.title('Operation points')
+    header_lines = [
+        "Title",
+        "Date",
+        "Plotname",
+        "Flags",
+        "No. Variables",
+        "No. Points",
+        "Offset",
+        "Command",
+        "Variables",
+        "Backannotation"
+    ]
+    
+    def __init__(self, raw_filename, traces_to_read='*', **kwargs):
+        self.raw_params = {'Filename': raw_filename}
+        raw_file_size = os.stat(raw_filename).st_size
+        self.backannotations = []
+        raw_file = open(raw_filename, 'rb')
+        header = []
+        while True:
+            ch = raw_file.read(2).decode(encoding='utf_16_le')
+            header.append(ch)
+            if header[-8:] == ['B', 'i', 'n', 'a', 'r', 'y', ':', '\n']:
+                self.binary_start = raw_file.tell()
+                break
+        header = ''.join(header).split('\n')[:-2]
+        for line in header:
+            k, _, v = line.partition(':')
+            if k == 'Variables':
+                break
+            self.raw_params[k] = v
+        self.nPoints = int(self.raw_params['No. Points'])
+        self.nVariables = int(self.raw_params['No. Variables'])
+        self._traces = []
+        self.steps = None
+        self.axis = None
+        if 'complex' in self.raw_params['Flags']:
+            numerical_type = 'complex'
+        else:
+            numerical_type = 'real'
+        i = header.index('Variables:')
+        ivar = 0
+        for line in header[i+1:]:
+            _, name, var_type = line.lstrip().split('\t')
+            if ivar == 0:
+                self.axis = Axis(name, var_type, self.nPoints, numerical_type)
+                self._traces.append(self.axis)
             else:
-                x = LTR.get_trace('time')
-                y = LTR.get_trace(trace_name)
-                for step in steps:
-                    # print(steps[step])
-                    label = "%s (step %d)" % (trace_name, step)
-                    plt.plot(x.get_wave(step), y.get_wave(step), label=label)
-                plt.title('Traces')
-    plt.legend()  # order a legend.
-    plt.show()
-    # out = open("RAW_TEST_out_test1.txt", 'w')
-    #
-    # for step in LTR.get_steps():
-    #     for x in range(len(LTR[0].data)):
-    #         out.write("%s, %e, %e\n" % (step, LTR[0].data[x], LTR[2].data[x]))
-    # out.close()
+                trace = Trace(name, var_type, self.nPoints, self.axis, numerical_type)
+                self._traces.append(trace)
+            ivar += 1       
+        self.block_size = (raw_file_size - self.binary_start) // self.nPoints
+        self.data_size = self.block_size//self.nVariables
+        if self.data_size == 8:
+            for point in range(self.nPoints):
+                for var in self._traces:
+                    value = raw_file.read(8)
+                    var.set_pointB8(point, value)
+        elif self.data_size == 16:
+            for point in range(self.nPoints):
+                for var in self._traces:
+                    re = raw_file.read(8)
+                    im = raw_file.read(8)
+                    value = [re, im]
+                    var.set_pointB16(point, value)
+        else:
+            for point in range(self.nPoints):
+                        value = raw_file.read(8)  # first variable (ex:time) is always 8 bytes
+                        self._traces[0].set_pointB8(point, value)
+                        for var in self._traces[1:]:
+                            value = raw_file.read(4)
+                            var.set_pointB4(point, value)
+        raw_file.close()
+        self.raw_params["No. Points"] = self.nPoints
+        self.raw_params["No. Variables"] = self.nVariables
+        self.raw_params["Variables"] = [var.name for var in self._traces]
+        if "stepped" in self.raw_params["Flags"]:
+            self._load_step_information(raw_filename)
+
+    def get_raw_property(self, property_name=None):
+        """Get a property. By default it returns everything"""
+        if property_name is None:
+            return self.raw_params
+        elif property_name in self.raw_params.keys():
+            return self.raw_params[property_name]
+        else:
+            return "Invalid property. Use %s" % str(self.raw_params.keys())
+
+    def get_trace_names(self):
+        return [trace.name for trace in self._traces]
+
+    def get_trace(self, trace_ref):
+        """Retrieves the trace with the name given. """
+        if isinstance(trace_ref, str):
+            for trace in self._traces:
+                if trace_ref == trace.name:
+                    # assert isinstance(trace, DataSet)
+                    return trace
+            return None
+        else:
+            return self._traces[trace_ref]
+
+    def _load_step_information(self, filename):
+        # Find the extension of the file
+        if not filename.endswith(".raw"):
+            raise LTSPiceReadException("Invalid Filename. The file should end with '.raw'")
+        logfile = filename[:-3] + 'log'
+        try:
+            log = open(logfile, 'r')
+        except:
+            raise LTSPiceReadException("Step information needs the '.log' file generated by LTSpice")
+        for line in log:
+            if line.startswith(".step"):
+                step_dict = {}
+                for tok in line[6:-1].split(' '):
+                    key, value = tok.split('=')
+                    try:
+                        # Tries to convert to float for backward compatibility
+                        value = float(value)
+                    except:
+                        pass
+                        # Leave value as a string to accomodate cases as temperature steps
+                        # Temperature steps have the form '.step temp=25°C'
+                    step_dict[key] = value
+                if self.steps is None:
+                    self.steps = [step_dict]
+                else:
+                    self.steps.append(step_dict)
+        log.close()
+        if not (self.steps is None):
+            # Individual access to the Trace Classes, this information is stored in the Axis
+            # which is always in position 0
+            self._traces[0]._set_steps(self.steps)
+            pass
+
+    def __getitem__(self, item):
+        """Helper function to access traces by using the [ ] operator."""
+        return self.get_trace(item)
+
+    def get_steps(self, **kwargs):
+        if self.steps is None:
+            return [0]  # returns an single step
+        else:
+            if len(kwargs) > 0:
+                ret_steps = []  # Initializing an empty array
+                i = 0
+                for step_dict in self.steps:
+                    for key in kwargs:
+                        ll = step_dict.get(key, None)
+                        if ll is None:
+                            break
+                        elif kwargs[key] != ll:
+                            break
+                    else:
+                        ret_steps.append(i)  # All the step parameters match
+                    i += 1
+                return ret_steps
+            else:
+                return range(len(self.steps))  # Returns all the steps
