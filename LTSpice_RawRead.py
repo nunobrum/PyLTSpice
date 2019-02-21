@@ -79,8 +79,7 @@ class DataSet(object):
         self.data[n] = unpack("d", value)[0]
 
     def set_pointB16(self, n, value):
-        re = unpack('d', value[0])[0]
-        im = unpack('d', value[1])[0]
+        (re, im) = unpack('dd', value)
         self.data[n] = complex(re, im)
 
     def set_pointB4(self, n, value):
@@ -572,9 +571,7 @@ class RawRead(object):
         elif self.data_size == 16:
             for point in range(self.nPoints):
                 for var in self._traces:
-                    re = raw_file.read(8)
-                    im = raw_file.read(8)
-                    value = [re, im]
+                    value = raw_file.read(16)
                     var.set_pointB16(point, value)
         else:
             for point in range(self.nPoints):
