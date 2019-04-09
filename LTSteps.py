@@ -138,27 +138,30 @@ class LTSpiceLogReader(object):
         self.step_count = 0
         self.stepset = {}
         steps = []
-        message("Processing LOG file")
+        message("Processing LOG file", logname)
         # wait for the step information
         for line in fin:
             line = enc_norm(line)
-            if line.startswith(".step "):
+            print(line)
+            if line.startswith(".step ") or line.startswith("Measurement:"):
+                print(line)
                 break
-        while line:
-            if line.startswith(".step"):
-                # message(line)
-                self.step_count += 1
-                tokens = line.strip('\n').split(' ')
-                for tok in tokens[1:]:
-                    lhs, rhs = tok.split("=")
-                    ll = self.stepset.get(lhs, None)
-                    if ll:
-                        ll.append(rhs)
-                    else:
-                        self.stepset[lhs] = [rhs]
-            elif line.startswith("Measurement:"):
-                break
-            line = enc_norm(fin.readline())
+        if not line.startswith("Measurement:"):
+            while line:
+                if line.startswith(".step"):
+                    # message(line)
+                    self.step_count += 1
+                    tokens = line.strip('\n').split(' ')
+                    for tok in tokens[1:]:
+                        lhs, rhs = tok.split("=")
+                        ll = self.stepset.get(lhs, None)
+                        if ll:
+                            ll.append(rhs)
+                        else:
+                            self.stepset[lhs] = [rhs]
+                elif line.startswith("Measurement:"):
+                    break
+                line = enc_norm(fin.readline())
 
 
         # message("Reading Measurements")
@@ -233,8 +236,11 @@ class LTSpiceLogReader(object):
             fout.write('long information\t')
 
         fout.write("step\t%s\t%s\n" % ("\t".join(self.stepset.keys()), "\t".join(meas_headers)))
-        for index in range(self.step_count):
-            step_data = [self.stepset[param][index] for param in self.stepset.keys()]
+        for index in range(len(self.dataset[self.headers[0]][1])):
+            if self.step_count == 0:
+                step_data = []  # Empty step
+            else:
+                step_data = [self.stepset[param][index] for param in self.stepset.keys()]
             meas_data = [self.dataset[param][1][index] for param in self.headers]
 
             if append_loginfo is not None:  # if an append it will write the filename first
