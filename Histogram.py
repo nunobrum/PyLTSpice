@@ -60,7 +60,7 @@ elif len(args)==0:
     exit(-1)
 else:
     if len(args) < 2:
-        opts.error("Wrong number of parameters.")
+        opts.error("Wrong number of parameters. Need to give the filename and the trace.")
         opts.print_help()
         exit(-1)
     # if (len(args)==1): # This will search for the most recent file
