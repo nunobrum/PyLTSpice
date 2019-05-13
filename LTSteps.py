@@ -132,41 +132,50 @@ class LTSpiceLogReader(object):
         fin = open(logname, 'r')
         self.dataset = {}
         self.headers = [] # This is only need to keep the parameter order in the export
-        measurements = []
-        dataname = None
-
+        
         self.step_count = 0
         self.stepset = {}
-        steps = []
         message("Processing LOG file", logname)
         # wait for the step information
         for line in fin:
             line = enc_norm(line)
             print(line)
-            if line.startswith(".step ") or line.startswith("Measurement:"):
+            if line.startswith(".step "):
                 print(line)
                 break
-        if not line.startswith("Measurement:"):
-            while line:
-                if line.startswith(".step"):
-                    # message(line)
-                    self.step_count += 1
-                    tokens = line.strip('\n').split(' ')
-                    for tok in tokens[1:]:
-                        lhs, rhs = tok.split("=")
-                        ll = self.stepset.get(lhs, None)
-                        if ll:
-                            ll.append(rhs)
-                        else:
-                            self.stepset[lhs] = [rhs]
-                elif line.startswith("Measurement:"):
-                    break
-                line = enc_norm(fin.readline())
-
-
+        
+        while line:
+            if line.startswith(".step"):
+                # message(line)
+                self.step_count += 1
+                tokens = line.strip('\n').split(' ')
+                for tok in tokens[1:]:
+                    lhs, rhs = tok.split("=")
+                    ll = self.stepset.get(lhs, None)
+                    if ll:
+                        ll.append(rhs)
+                    else:
+                        self.stepset[lhs] = [rhs]
+            elif line.startswith("Measurement:"):
+                break
+            line = enc_norm(fin.readline())
+        fin.close()
+        
+    def read_measures(self, filename):   
+        fin = open(filename, 'r')
+        # self.dataset = {}  # Resets all loaded previous data
+        dataname = None
+        measurements = []
+        
+        for line in fin:
+            line = enc_norm(line)
+            print(line)
+            if line.startswith("Measurement:"):
+                break
+      
         # message("Reading Measurements")
         measure_count = 0
-        param = ['param'] # Initializing an emp
+        param = ['param'] # Initializing an empty parameters
         while line:
             line = line.strip('\n')
             if line.startswith("Measurement: "):
@@ -206,7 +215,7 @@ class LTSpiceLogReader(object):
 
         message("%d measurements" % len(self.headers))
         message("Identified %d steps, read %d measurements" % (self.step_count, measure_count))
-        fin.close()
+                
 
     def get_measure(self, measure, param=0):
         data = self.dataset[measure]
@@ -298,9 +307,15 @@ if __name__ == "__main__":
         if filename.endswith('txt'):
             print("Processing Data File")
             reformat_LTSpice_export(filename, fname_out)
-        elif filename.endswith("log") or filename.endswith(".mout"):
+        elif filename.endswith("log"):
             data = LTSpiceLogReader(filename)
+            data.read_measures(filename)  
             data.export_data(fname_out)
-
+        elif filename.endswith(".mout"):
+            # It must read first the step information
+            data = LTSpiceLogReader(filename.rstrip('mout') + 'log')
+            # Then we can read the measurement output file.
+            data.read_measures(filename)
+            data.export_data(fname_out)
 
     # input("Press Enter to Continue")
