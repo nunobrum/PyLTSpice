@@ -32,6 +32,7 @@ __author__ = "Nuno Canto Brum <nuno.brum@gmail.com>"
 __copyright__ = "Copyright 2017, Fribourg Switzerland"
 
 
+
 from binascii import b2a_hex
 from struct import unpack
 try:
@@ -474,32 +475,41 @@ This section is for testing your code
 if __name__ == "__main__":
     import sys
     import matplotlib.pyplot as plt
-
+    import os
+    directory = os.getcwd()
+    
     if len(sys.argv) > 1:
         raw_filename = sys.argv[1]
     else:
-        raw_filename = 'C:/Users/yyongkeo/Documents/GitHub/test_data/example_ltspice_circuit.raw'
-        #raw_filename = "CSL2_kevin_Test.raw"
+        test_directory = directory + '/test_files/'
+        filename = 'testfile.raw'
+        raw_filename = test_directory + filename
 
-    #LTR = LTSpiceRawRead(raw_filename,'V(sig_in)')
     LTR = LTSpiceRawRead(raw_filename)
 
     print(LTR.get_trace_names())
     print(LTR.get_raw_property())
+    
     plt.figure()
-
-    curr = LTR.get_trace('I(V3)')
-    volt = LTR.get_trace('V(sig_iso)')
-    x = LTR.get_trace(0)  # Zero is always the X axis
+    
+    volt_1 = LTR.get_trace('V(in)')
+    volt_2 = LTR.get_trace('V(out)')
+    input_curves = []
+    output_curves= []
+    x = LTR.get_trace('time')  # Zero is always the X axis
     #steps = LTR.get_steps(ana=4.0)
     steps = LTR.get_steps()
     for step in steps:
         plt.subplot(2,1,1)
         plt.grid(True)
-        plt.plot(x.get_wave(step), curr.get_wave(step))
+        plt.plot(x.get_wave(step), volt_1.get_wave(step))
+        input_curves.append(volt_1.get_wave(step))
+        plt.xlim([0.9e-3, 1.2e-3])
         plt.subplot(2,1,2)
-        plt.plot(x.get_wave(step), volt.get_wave(step))
+        plt.plot(x.get_wave(step), volt_2.get_wave(step))
+        output_curves.append(volt_2.get_wave(step))
         plt.grid(True)
+        plt.xlim([0.9e-3, 1.2e-3])
         #plt.plot(y.get_wave(step))
         #plt.plot(x.get_wave(step),marker='x')
         #plt.plot(x.get_wave(step), y.get_wave(step), label=LTR.steps[step])
