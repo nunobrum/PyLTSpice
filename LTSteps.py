@@ -197,7 +197,7 @@ class LTSpiceLogReader(object):
                         if len(tokens) == 2:
                             meas = float(tokens[1])
                         else:
-                            meas = [float(x) for x in tokens[1:]]
+                            meas = tokens[1:]  #[float(x) for x in tokens[1:]]
                         measurements.append(meas)
                         measure_count += 1
                     except:
@@ -258,9 +258,9 @@ class LTSpiceLogReader(object):
             for tok in meas_data:
                 if isinstance(tok, list):
                     for x in tok:
-                        fout.write('\t%e' % x)
+                        fout.write('\t%s' % x)
                 else:
-                    fout.write('\t%e' % tok)
+                    fout.write('\t%s' % tok)
             fout.write('\n')
 
         fout.close()
