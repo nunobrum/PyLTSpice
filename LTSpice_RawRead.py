@@ -214,6 +214,7 @@ class LTSpiceRawRead(object):
         "Title",
         "Date",
         "Plotname",
+        "Output",
         "Flags",
         "No. Variables",
         "No. Points",
