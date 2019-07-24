@@ -174,13 +174,11 @@ class Trace(DataSet):
             return self.data[self.axis.step_offset(step) + n]
 
     def get_wave(self, step=0):
-        print('step size %d' % step)
-        print(self.data[self.axis.step_offset(step):self.axis.step_offset(step + 1)])
+        #print('step size %d' % step)
+        #print(self.data[self.axis.step_offset(step):self.axis.step_offset(step + 1)])
         if self.axis is None:
-            print('reached4')
             return super().get_wave()
         else:
-            print('reached5')
             if step==0:
                 return self.data
             else:
