@@ -54,12 +54,12 @@ if options.clipboard:
             print(line)
 else:
     if len(args) == 2:
-    TRACE = args[1]
-    logfile = args[0]
+       TRACE = args[1]
+       logfile = args[0]
 
     else:
-    opts.error("Wrong number of parameters")
-    exit(-1)
+       opts.error("Wrong number of parameters")
+       exit(-1)
     # if (len(args)==1): # This will search for the most recent file
     #     newer_date = 0
     #     filename = None
@@ -80,30 +80,30 @@ else:
     header = log.readline().rstrip('\n')
     vars = header.split('\t')
     try:
-    sav_col = vars.index(TRACE)
+       sav_col = vars.index(TRACE)
     except ValueError:
-    log.close()
-    print("File '%s' doesn't have trace '%s'" % (logfile, TRACE))
-    print("LOG FILE contains %s" % vars)
-    exit(-1)
+       log.close()
+       print("File '%s' doesn't have trace '%s'" % (logfile, TRACE))
+       print("LOG FILE contains %s" % vars)
+       exit(-1)
 
 
     if (options.filters is None) or (len(options.filters) == 0):
-    for line in log:
-        #print(line)
-        vs = line.split('\t')
-        values.append(float(vs[sav_col]))
+       for line in log:
+           #print(line)
+           vs = line.split('\t')
+           values.append(float(vs[sav_col]))
     else:
-    for line in log:
-        vs = map(float,line.split('\t'))
-        env = dict(zip(vars,vs))
-
-        for expression in options.filters:
-            test = eval(expression, None, env)
-            if test == False:
-                break
-        else:
-            values.append(float(env[TRACE]))
+       for line in log:
+           vs = map(float,line.split('\t'))
+           env = dict(zip(vars,vs))
+   
+           for expression in options.filters:
+               test = eval(expression, None, env)
+               if test == False:
+                   break
+           else:
+               values.append(float(env[TRACE]))
 
     log.close()
 if len(values) == 0:
