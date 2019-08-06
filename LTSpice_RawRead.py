@@ -27,6 +27,7 @@ If it finds numpy all data is later provided as an array. If not it will use a s
 __author__ = "Nuno Canto Brum <nuno.brum@gmail.com>"
 __copyright__ = "Copyright 2017, Fribourg Switzerland"
 
+
 import os
 from binascii import b2a_hex
 from struct import unpack
@@ -155,7 +156,13 @@ class Axis(DataSet):
                 return self.step_offsets[step]
 
     def get_wave(self, step=0):
-        return self.data[self.step_offset(step):self.step_offset(step + 1)]
+        #print(self.data)
+        print('step offset %d' % self.step_offset(step))
+        print(self.data[self.step_offset(step):self.step_offset(step + 1)])
+        if step==0:
+            return self.data
+        else:
+            return self.data[self.step_offset(step):self.step_offset(step + 1)]
 
 
 class Trace(DataSet):
@@ -172,10 +179,15 @@ class Trace(DataSet):
             return self.data[self.axis.step_offset(step) + n]
 
     def get_wave(self, step=0):
+        #print('step size %d' % step)
+        #print(self.data[self.axis.step_offset(step):self.axis.step_offset(step + 1)])
         if self.axis is None:
             return super().get_wave()
         else:
-            return self.data[self.axis.step_offset(step):self.axis.step_offset(step + 1)]
+            if step==0:
+                return self.data
+            else:
+                return self.data[self.axis.step_offset(step):self.axis.step_offset(step + 1)]
 
 
 class Op(Trace):
@@ -508,6 +520,10 @@ class LTSpiceRawRead(object):
             else:
                 return range(len(self.steps))  # Returns all the steps
 
+'''
+This section is for testing your code
+'''
+
 
 class RawRead(object):
 
@@ -668,3 +684,56 @@ class RawRead(object):
                 return ret_steps
             else:
                 return range(len(self.steps))  # Returns all the steps
+
+if __name__ == "__main__":
+    import sys
+    import matplotlib.pyplot as plt
+    import os
+    directory = os.getcwd()
+    
+    if len(sys.argv) > 1:
+        raw_filename = sys.argv[1]
+    else:
+        test_directory = directory + '/test_files/'
+        filename = 'testfile.raw'
+        raw_filename = test_directory + filename
+
+    LTR = LTSpiceRawRead(raw_filename)
+
+    print(LTR.get_trace_names())
+    print(LTR.get_raw_property())
+    
+    plt.figure()
+    
+    volt_1 = LTR.get_trace('V(in)')
+    volt_2 = LTR.get_trace('V(out)')
+    input_curves = []
+    output_curves= []
+    x = LTR.get_trace('time')  # Zero is always the X axis
+    #steps = LTR.get_steps(ana=4.0)
+    steps = LTR.get_steps()
+    for step in steps:
+        plt.subplot(2,1,1)
+        plt.grid(True)
+        plt.plot(x.get_wave(step), volt_1.get_wave(step))
+        input_curves.append(volt_1.get_wave(step))
+        plt.xlim([0.9e-3, 1.2e-3])
+        plt.subplot(2,1,2)
+        plt.plot(x.get_wave(step), volt_2.get_wave(step))
+        output_curves.append(volt_2.get_wave(step))
+        plt.grid(True)
+        plt.xlim([0.9e-3, 1.2e-3])
+        #plt.plot(y.get_wave(step))
+        #plt.plot(x.get_wave(step),marker='x')
+        #plt.plot(x.get_wave(step), y.get_wave(step), label=LTR.steps[step])
+    
+
+'''
+'''
+    # out = open("RAW_TEST_out_test1.txt", 'w')
+    #
+    # for step in LTR.get_steps():
+    #     for x in range(len(LTR[0].data)):
+    #         out.write("%s, %e, %e\n" % (step, LTR[0].data[x], LTR[2].data[x]))
+    # out.close()
+

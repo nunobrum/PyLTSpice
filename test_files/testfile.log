@@ -1,0 +1,24 @@
+Circuit: * C:\Users\yyongkeo\Documents\GitHub\PyLTSpice\test_files\testfile.asc
+
+Direct Newton iteration for .op point succeeded.
+.step cap=1e-012
+.step cap=1e-011
+.step cap=1e-010
+.step cap=1e-009
+
+Date: Wed May 15 17:16:29 2019
+Total elapsed time: 0.097 seconds.
+
+tnom = 27
+temp = 27
+method = modified trap
+totiter = 2645
+traniter = 2642
+tranpoints = 1322
+accept = 1273
+rejected = 49
+matrix size = 3
+fillins = 0
+Matrix Compiler1:       3 opcodes  0.1/0.0/[0.0]
+Matrix Compiler2: 197 bytes object code size  0.1/0.1/[0.1]
+
