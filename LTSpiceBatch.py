@@ -64,7 +64,13 @@ class LTCommander(object):
         self.parameters = {}
         self.settings = []
         self.runno = 0
-        self.LTspice_exe = self.LTspiceIV_exe
+        # Sel existing LTC Kernel
+        if ( True == os.path.exists(self.LTspiceIV_exe[0]) ):
+            self.LTspice_exe = self.LTspiceIV_exe
+        elif (True == os.path.exists(self.LTspiceXVII_exe[0]) ):
+            self.LTspice_exe = self.LTspiceXVII_exe
+        else:
+            print("Error: No LTSpice installation found")
 
     def __del__(self):
         """Class Destructor : Closes Everything"""
@@ -182,20 +188,22 @@ class LTCommander(object):
 
 
 if __name__ == "__main__":
-    LTC = LTCommander(
-        "C:\\SVN\\2424_EUCLID_ADPME\\trunk\\Equipment\\WCA\\Potentiometer\\" +
-        "SimulationsFullMC\\Potentiometer_ADA4084_New.asc")
-
-    LTC.set_defaults(ANA=0, RPOT=0.5)
+    # get script absolute path
+    meAbsPath = os.path.dirname(os.path.realpath(__file__));
+    # select spice model
+    LTC = LTCommander(meAbsPath + "\\test_files\\testfile.asc")
+    # set default arguments
+    LTC.set_defaults(res=0, cap=100e-6)
+    # define simulation
     LTC.set_settings(
         "; Simulation settings",
         # [".STEP PARAM Rmotor LIST 21 28"],
-        ".TRAN 100u",
+        ".TRAN 3m",
         # ".step param run 1 2 1"
     )
-    for ANA in range(5):
+    # do parameter sweep
+    for res in range(5):
         # LTC.runs_to_do = range(2)
-
-        LTC.set_params(ANA=ANA)
-        LTC.set_logname("POT_ANA%d.log" % ANA)
+        LTC.set_params(ANA=res)
+        LTC.set_logname("R_RES%d.log" % res)
         LTC.run()
