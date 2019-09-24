@@ -43,8 +43,9 @@ Advantages towards the range python built-in functions_
 
 
 class LTCommander(object):
-    LTspiceIV_exe = [r"C:\Program Files (x86)\LTC\LTspiceIV\scad3.exe", '-b', '-Run']
-    LTspiceXVII_exe = [r"C:\Program Files\LTC\LTspiceXVII\XVIIx64.exe", '-b', '-Run']
+    LTspiceIV_exe = [r"C:\Program Files (x86)\LTC\LTspiceIV\scad3.exe"]
+    LTspiceXVII_exe = [r"C:\Program Files\LTC\LTspiceXVII\XVIIx64.exe"]
+    LTspice_arg = {'netlist': ['-netlist'], 'run': ['-b', '-Run']}
 
     def __init__(self, circuit_file: str):
         """LTspice Commander Class. It serves to start batches of simulations"""
@@ -65,9 +66,9 @@ class LTCommander(object):
         self.settings = []
         self.runno = 0
         # Sel existing LTC Kernel
-        if ( True == os.path.exists(self.LTspiceIV_exe[0]) ):
+        if ( True == os.path.isfile(self.LTspiceIV_exe[0]) ):
             self.LTspice_exe = self.LTspiceIV_exe
-        elif (True == os.path.exists(self.LTspiceXVII_exe[0]) ):
+        elif (True == os.path.isfile(self.LTspiceXVII_exe[0]) ):
             self.LTspice_exe = self.LTspiceXVII_exe
         else:
             print("Error: No LTSpice installation found")
@@ -152,12 +153,23 @@ class LTCommander(object):
             print(time.asctime(), ": Starting simulation %d\n" % self.runno)
             version = sys.version_info
             retcode = -1
+            # prepare commands, two stages used to enable load of sim_settings w/o open GUI
+            # see: https://www.mikrocontroller.net/topic/480647?goto=5965300#5965300
+            cmd_netlist = self.LTspice_exe + self.LTspice_arg.get('netlist') + [self.circuit_path + os.path.sep + self.circuit_file]
+            cmd_run     = self.LTspice_exe + self.LTspice_arg.get('run') + [self.circuit_path + os.path.sep + self.circuit_file[0:len(self.circuit_file)-4] + ".net"]
+            retcode     = 0
+            # start execution
             if version.major > 3 and version.minor >= 6:
-                result = subprocess.run(self.LTspice_exe + [self.circuit_path + os.path.sep + self.circuit_file])
-                retcode = result.returncode
+                # combine sim settings and model
+                result  = subprocess.run(cmd_netlist)    
+                retcode |= result.returncode            # logical or to collect all eros
+                # do simulation
+                result  = subprocess.run(cmd_run)
+                retcode |= result.returncode            # logical or to collect all eros
             else:
-                retcode = subprocess.call(self.LTspice_exe + [self.circuit_path + os.path.sep + self.circuit_file])
-
+                retcode |= subprocess.call(cmd_netlist) # build netlist
+                retcode |= subprocess.call(cmd_run)     # calculate
+                
             # process the logfile
 
             if self.logfilename:
