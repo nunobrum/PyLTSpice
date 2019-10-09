@@ -64,7 +64,10 @@ class LTCommander(object):
         self.defaults = {}
         self.parameters = {}
         self.settings = []
-        self.runno = 0
+        self.runno = 0      # number of total runs
+        self.failSim = 0    # number of failed simulations
+        self.okSim = 0      # number of succesfull completed simulations
+        self.failParam = [] # collects for later user investigation of failed parameter sets
         # Sel existing LTC Kernel
         if ( True == os.path.isfile(self.LTspiceIV_exe[0]) ):
             self.LTspice_exe = self.LTspiceIV_exe
@@ -145,6 +148,13 @@ class LTCommander(object):
         self.logfilename = filename
 
     def run(self):
+        """
+        @note:  writes configuration in sim_settings.lib, starts LTSpice and 
+                checks for sim errors
+        """
+        # update number of simulation
+        self.runno += 1
+        # decide sim required
         if self.if_run():
             # Write the new settings
             self.write_params()
@@ -152,7 +162,6 @@ class LTCommander(object):
             start_time = time.clock()
             print(time.asctime(), ": Starting simulation %d\n" % self.runno)
             version = sys.version_info
-            retcode = -1
             # prepare commands, two stages used to enable load of sim_settings w/o open GUI
             # see: https://www.mikrocontroller.net/topic/480647?goto=5965300#5965300
             cmd_netlist = self.LTspice_exe + self.LTspice_arg.get('netlist') + [self.circuit_path + os.path.sep + self.circuit_file]
@@ -169,34 +178,37 @@ class LTCommander(object):
             else:
                 retcode |= subprocess.call(cmd_netlist) # build netlist
                 retcode |= subprocess.call(cmd_run)     # calculate
-                
-            # process the logfile
-
+            # process the logfile, user can rename it
             if self.logfilename:
                 dest_log = self.circuit_path + os.path.sep + self.logfilename
             else:
                 dest_log = self.circuit_radic + ('%d.log' % self.runno)
-
+            # print simulation time
             sim_time = time.strftime("%H:%M:%S", time.gmtime(time.clock() - start_time))
-
+            # handle simstate
             if retcode == 0:
-                # The simulation was done successfully.
+                # simulation succesfull
                 print(time.asctime() + ": Simulation Successful. Time elapsed %s:\n" % sim_time)
                 os.replace(self.circuit_radic + '.log', dest_log)
                 self.write_log("%d, %s\n" % (self.runno, self.parameters))
+                self.okSim += 1
             else:
-                print(time.asctime() + ": Simulation Failed !\n")
+                # simulation failed
                 try:
                     os.replace(self.circuit_radic + '.log', dest_log + '.fail')
                 except:
                     pass
+                # update failed parameters and counter
+                self.failSim += 1
+                curParam = self.parameters      # prepare modify
+                curParam['runno'] = self.runno  # add run number
+                self.failParam.append(curParam) # to list
+                # raise exception for try/except construct
+                # SRC: https://stackoverflow.com/questions/2052390/manually-raising-throwing-an-exception-in-python
+                raise ValueError(time.asctime() + ': Simulation number ' + str(self.runno) + ' Failed !')
         else:
-            print("skipping simulation %d" % self.runno)
-
-        self.runno += 1
-
-        # Resets the logfilename for the next run.
-        self.logfilename = None
+            # no simulation required
+            raise UserWarning('skipping simulation ' + str(self.runno))
 
 
 if __name__ == "__main__":
@@ -217,5 +229,9 @@ if __name__ == "__main__":
     for res in range(5):
         # LTC.runs_to_do = range(2)
         LTC.set_params(ANA=res)
-        LTC.set_logname("R_RES%d.log" % res)
-        LTC.run()
+        try:
+            LTC.run()
+        except:
+            continue    # skip loop iteration
+    # Sim Statistics
+    print('Successful/Total Simulations: ' + str(LTC.okSim) + '/' + str(LTC.runno))
