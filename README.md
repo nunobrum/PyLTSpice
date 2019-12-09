@@ -48,10 +48,24 @@ If using this method it would be good to add the path where you cloned the site 
 Include the following line on your scripts
 
  `from PyLTSpice.LTSpiceRaw_Reader import LTSpiceRawRead`  
- `LTR = LTSpiceRawRead(raw_filename)`  
+ 
+ `from matplotlib import plot`  
+ 
+ 
+ `LTR = LTSpiceRawRead("Draft1.raw")`  
 
  `print(LTR.get_trace_names())`  
  `print(LTR.get_raw_property())`  
+ 
+ `IR1 = LTR.get_trace("I(R1)")`  
+ `x = LTR.get_trace(0)  # Zero is always the X axis`  
+ `steps = LT.get_steps()`  
+ `for step in range(len(steps)):`  
+    `# print(steps[step])`  
+    `plt.plot(x.get_wave(step), IR1.get_wave(step), label=steps[step])`  
+
+ `plt.legend() # order a legend.`  
+ `plt.show()`  
 
 ### LTSpice_Batch ###
 
