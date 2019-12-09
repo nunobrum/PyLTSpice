@@ -31,44 +31,44 @@ This is a script to launch LTSpice Simulations. This is useful because:
 
 ### Using PiP Installer ###
 
- pip install --upgrade PyLTSpice
+ `pip install --upgrade PyLTSpice`
 
 ### Using GITHub ###
 
- git clone https://github.com/nunobrum/PyLTSpice.git
+ `git clone https://github.com/nunobrum/PyLTSpice.git`
  
 If using this method it would be good to add the path where you cloned the site to python path.
 
- import sys
- sys.path.append(<path to PyLTSpice>)
+ `import sys`
+ `sys.path.append(<path to PyLTSpice>)`
 
 ## How to use ##
 
 ### LTSpice_RawRead.py ###
 Include the following line on your scripts
 
- from PyLTSpice.LTSpiceRaw_Reader import LTSpiceRawRead
- LTR = LTSpiceRawRead(raw_filename)
+ `from PyLTSpice.LTSpiceRaw_Reader import LTSpiceRawRead`
+ `LTR = LTSpiceRawRead(raw_filename)`
 
- print(LTR.get_trace_names())
- print(LTR.get_raw_property())
+ `print(LTR.get_trace_names())`
+ `print(LTR.get_raw_property())`
 
 ### LTSpice_Batch ###
 
- from PyLTSpice.LTSpiceBatch import *
- LTC = LTCommander("testfile.asc")
+ `from PyLTSpice.LTSpiceBatch import *`
+ `LTC = LTCommander("testfile.asc")`
 
 ### LTSteps.py ###
 
- python -m PyLTSpice.LTSteps <logfile or directory where last simulation was made>
+ `python -m PyLTSpice.LTSteps <logfile or directory where last simulation was made>`
 
 ### Histogram.py ###
 
- python -m PyLTSpice.Histogram 
+ `python -m PyLTSpice.Histogram` 
 
 ## To whom do I talk to? ##
 
-* Tools website : [http://www.nunobrum.com/ltspicer2.html](http://www.nunobrum.com/ltspicer2.html)
+* Tools website : [https://www.nunobrum.com/pyspicer.html](https://www.nunobrum.com/pyspicer.html)
 * Repo owner : [me@nunobrum.com](me@nunobrum.com) 
 * Alternative contact : nuno.brum@gmail.com
 
