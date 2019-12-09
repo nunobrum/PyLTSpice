@@ -2,16 +2,16 @@
 
 PySpicer is a toolchain of python utilities design to interact with LTSpice Electronic Simulator.
 
-### What is contained in this repository ###
+## What is contained in this repository ##
 
 * __LTSteps.py__ 
 An utility that extracts from LTSpice output files data, and formats it for import in a spreadsheet,s uch like Excel or Calc. 
 
-* __LTSpiceRaw_Reader.py__
+* __LTSpice_RawRead.py__
 A pure python class that serves to read raw files into a python class.
 
 * __Histogram.py__
-Uses numpy and matplotlib to create an histogram and calculate the sigma deviations. This is useful for Monte-Carlo analysis. 
+A python script that uses numpy and matplotlib to create an histogram and calculate the sigma deviations. This is useful for Monte-Carlo analysis. 
 
 * __LTSpiceBatch.py__
 This is a script to launch LTSpice Simulations. This is useful because:
@@ -27,23 +27,52 @@ This is a script to launch LTSpice Simulations. This is useful because:
 
     Note: It only works with Windows based installations.
 
-### How to Install ###
-## Using PiP Installer ##
-Use the following command 
-> pip install PyLTSpice
+## How to Install ##
 
-### How to use ###
+### Using PiP Installer ###
+
+ pip install --upgrade PyLTSpice
+
+### Using GITHub ###
+
+ git clone https://github.com/nunobrum/PyLTSpice.git
+ 
+If using this method it would be good to add the path where you cloned the site to python path.
+
+ import sys
+ sys.path.append(<path to PyLTSpice>)
+
+## How to use ##
+
+### LTSpice_RawRead.py ###
 Include the following line on your scripts
 
-from L
+ from PyLTSpice.LTSpiceRaw_Reader import LTSpiceRawRead
+ LTR = LTSpiceRawRead(raw_filename)
 
-### To whom do I talk to? ###
+ print(LTR.get_trace_names())
+ print(LTR.get_raw_property())
+
+### LTSpice_Batch ###
+
+ from PyLTSpice.LTSpiceBatch import *
+ LTC = LTCommander("testfile.asc")
+
+### LTSteps.py ###
+
+ python -m PyLTSpice.LTSteps <logfile or directory where last simulation was made>
+
+### Histogram.py ###
+
+ python -m PyLTSpice.Histogram 
+
+## To whom do I talk to? ##
 
 * Tools website : [http://www.nunobrum.com/ltspicer2.html](http://www.nunobrum.com/ltspicer2.html)
 * Repo owner : [me@nunobrum.com](me@nunobrum.com) 
 * Alternative contact : nuno.brum@gmail.com
 
-### History ###
+## History ##
 * Version 0.6
 Histogram.py now has an option to make the histogram directly from values stored in the clipboard
 
