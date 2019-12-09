@@ -61,8 +61,8 @@ Include the following line on your scripts
  `x = LTR.get_trace(0)  # Zero is always the X axis`  
  `steps = LT.get_steps()`  
  `for step in range(len(steps)):`  
-    `# print(steps[step])`  
-    `plt.plot(x.get_wave(step), IR1.get_wave(step), label=steps[step])`  
+ `    # print(steps[step])`  
+ `    plt.plot(x.get_wave(step), IR1.get_wave(step), label=steps[step])`  
 
  `plt.legend() # order a legend.`  
  `plt.show()`  
