@@ -27,6 +27,16 @@ This is a script to launch LTSpice Simulations. This is useful because:
 
     Note: It only works with Windows based installations.
 
+### How to Install ###
+## Using PiP Installer ##
+Use the following command 
+> pip install PyLTSpice
+
+### How to use ###
+Include the following line on your scripts
+
+from L
+
 ### To whom do I talk to? ###
 
 * Tools website : [http://www.nunobrum.com/ltspicer2.html](http://www.nunobrum.com/ltspicer2.html)
