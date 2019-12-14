@@ -156,11 +156,11 @@ class Axis(DataSet):
                 return self.step_offsets[step]
 
     def get_wave(self, step=0):
-        #print(self.data)
-        print('step offset %d' % self.step_offset(step))
-        print(self.data[self.step_offset(step):self.step_offset(step + 1)])
-        if step==0:
-            return self.data
+        # print(self.data)
+        # print('step offset %d' % self.step_offset(step))
+        # print(self.data[self.step_offset(step):self.step_offset(step + 1)])
+        if step == 0:
+            return self.data[:self.step_offset(1)]
         else:
             return self.data[self.step_offset(step):self.step_offset(step + 1)]
 
@@ -184,8 +184,8 @@ class Trace(DataSet):
         if self.axis is None:
             return super().get_wave()
         else:
-            if step==0:
-                return self.data
+            if step == 0:
+                return self.data[:self.axis.step_offset(1)]
             else:
                 return self.data[self.axis.step_offset(step):self.axis.step_offset(step + 1)]
 
@@ -213,6 +213,8 @@ class DummyTrace(object):
     def set_pointB4(self, n, value):
         pass
 
+    def set_pointB16(self, n, value):
+        pass
 
 class LTSPiceReadException(Exception):
     """Custom class for exception handling"""
@@ -236,7 +238,7 @@ class LTSpiceRawRead(object):
         "Backannotation"
     ]
 
-    def __init__(self, raw_filename, traces_to_read="*", **kwargs):
+    def __init__(self, raw_filename, traces_to_read='*', **kwargs):
         """The arguments for this class are:
     raw_filename   - The file containing the RAW data to be read
     traces_to_read - A string containing the list of traces to be read. If None is provided, only the header is read
@@ -248,87 +250,56 @@ class LTSpiceRawRead(object):
         if not traces_to_read is None:
             assert isinstance(traces_to_read, str)
 
-        self.encoding = 'utf_16_le'
-        self.offset = 1
-
         raw_file_size = os.stat(raw_filename).st_size # Get the file size in order to know the data size
         raw_file = open(raw_filename, "rb")
+
+        ch = raw_file.read(6)
+        if ch.decode(encoding='utf_8') == 'Title:':
+            self.encoding = 'utf_8'
+            sz_enc = 1
+            line = 'Title:'
+        elif ch.decode(encoding='utf_16_le') == 'Tit':
+            self.encoding = 'utf_16_le'
+            sz_enc = 2
+            line = 'Tit'
 
         # Storing the filename as part of the dictionary
         self.raw_params = {"Filename": raw_filename}  # Initializing the dictionary that contains all raw file info
         self.backannotations = []  # Storing backannotations
-        
-        startpos = 0  # counter of bytes for
-
-        # LTSpice raw_files are encoded in UTF-16-le. We ignore errors because
-        # readline stops reading lines after the '\n' and doesn't include 0x00
-        # that occurs after
-        line = raw_file.readline().decode(encoding=self.encoding, errors='ignore')
-        raw_file.read(self.offset)  # correct issue with utf16 decoding
-
-        # check for correct encoding
-        # TODO: do this better
-        if not line.startswith('Title'):
-            print("Ascii file")
-            self.encoding = 'utf_8'
-            self.offset = 0
-            raw_file.seek(0)
-            line = raw_file.readline().decode(encoding=self.encoding, errors='ignore')
-        else:
-            print("Binary file")
-
-        while line:
-            # print(line)
-            startpos += len(line)
-            tag, value_str = line.split(':', 1)
-            if tag in self.header_lines:
-                if tag == 'Backannotation':
-                    self.backannotations.append(value_str)
-                else:
-                    self.raw_params[tag] = value_str
+        header = []
+        while True:
+            ch = raw_file.read(sz_enc).decode(encoding=self.encoding)
+            if ch == '\n':
+                if self.encoding == 'utf_8':  # must remove the \r
+                    line = line.rstrip('\r')
+                header.append(line)
+                if line in ('Binary:', 'Values:'):
+                    self.binary_start = raw_file.tell()
+                    self.raw_type = line
+                    break
+                line = ""
             else:
-                raw_file.close()
-                raise LTSPiceReadException(("Error reading Raw File !\n " +
-                                            "Unrecognized tag in line %s") % line)
-            line = raw_file.readline().decode(encoding=self.encoding, errors='ignore')
-            raw_file.read(self.offset)  # correct issue with utf16 decoding
-            if line.startswith("Variables:"):
+                line += ch
+        for line in header:
+            k, _, v = line.partition(':')
+            if k == 'Variables':
                 break
-        else:
-            raw_file.close()
-            raise LTSPiceReadException("Error reading Raw File !\n " +
-                                       "Unexpected end of file")
-
-        if not ("real" in self.raw_params["Flags"]):
-            # Not Supported, an exception will be raised
-            raw_file.close()
-            raise LTSPiceReadException("The LTSpiceRead class doesn't support non real data")
-
-        self.nPoints = int(self.raw_params["No. Points"], 10)
-        self.nVariables = int(self.raw_params["No. Variables"], 10)
+            self.raw_params[k] = v
+        self.nPoints = int(self.raw_params['No. Points'], 10)
+        self.nVariables = int(self.raw_params['No. Variables'], 10)
         self._traces = []
         self.steps = None
         self.axis = None  # Creating the axis
-        # print("Reading Variables")
-
+        if 'complex' in self.raw_params['Flags']:
+            numerical_type = 'complex'
+        else:
+            numerical_type = 'real'
+        i = header.index('Variables:')
         ivar = 0
-        while line:
-            line = raw_file.readline()\
-                    .decode(encoding=self.encoding, errors='ignore')
-            raw_file.read(self.offset)
-            print(line)
-
-            if line.startswith("Binary:") or line.startswith("Values"):
-                if ivar != self.nVariables:
-                    raw_file.close()
-                    raise LTSPiceReadException("Wrong number of variables read")
-                self.raw_type = line
-                self.binary_start = raw_file.tell()
-                break
-
-            dummy, _, name, var_type = line.split("\t")
+        for line in header[i+1:-1]:
+            _, name, var_type = line.lstrip().split('\t')
             if ivar == 0 and self.nVariables > 1 and self.nPoints != 1:
-                self.axis = Axis(name, var_type, self.nPoints)
+                self.axis = Axis(name, var_type, self.nPoints, numerical_type)
                 self._traces.append(self.axis)
             elif self.nPoints == 1:
                 self._traces.append(Op(name, var_type, self.nPoints, self.axis))
@@ -336,7 +307,8 @@ class LTSpiceRawRead(object):
                       (name in traces_to_read) or
                       (ivar == 0)):
                 # TODO: Add wildcards to the waveform matching
-                self._traces.append(Trace(name, var_type, self.nPoints, self.axis))
+                trace = Trace(name, var_type, self.nPoints, self.axis, numerical_type)
+                self._traces.append(trace)
             else:
                 self._traces.append(DummyTrace(name, var_type))
             ivar += 1
@@ -346,19 +318,15 @@ class LTSpiceRawRead(object):
             raw_file.close()
             return
 
-        # This will make a lazy loading. That means, only the Axis is read. The traces are only read when the user
-        # makes a get_trace()
-        self.in_memory = False  # point to set it to true at the end of the load
-
         if kwargs.get("headeronly", False):
             raw_file.close()
             return
 
-        if self.raw_type.startswith("Binary:"):
+        if self.raw_type == "Binary:":
             # Will start the reading of binary values
             # But first check whether how data is stored.
             self.block_size = (raw_file_size - self.binary_start) // self.nPoints
-            self.data_size = (self.block_size - 8) // (self.nVariables - 1)
+            self.data_size = self.block_size // self.nVariables
             if "fastaccess" in self.raw_params["Flags"]:
                 print("Fast access")
                 # A fast access means that the traces are grouped together.
@@ -371,6 +339,10 @@ class LTSpiceRawRead(object):
                             for point in range(self.nPoints):
                                 value = raw_file.read(8)
                                 var.set_pointB8(point, value)
+                        elif self.data_size == 16:
+                            for point in range(self.nPoints):
+                                value = raw_file.read(16)
+                                var.set_pointB16(point, value)
                         else:  # Data size is 4
                             for point in range(self.nPoints):
                                 value = raw_file.read(4)
@@ -384,23 +356,27 @@ class LTSpiceRawRead(object):
                         for var in self._traces:
                             value = raw_file.read(8)
                             var.set_pointB8(point, value)
+                elif self.data_size == 16:
+                    for point in range(self.nPoints):
+                        for var in self._traces:
+                            value = raw_file.read(16)
+                            var.set_pointB16(point, value)
                 else:  # data size is only 4 bytes
                     for point in range(self.nPoints):
                         value = raw_file.read(8)  # first variable (ex:time) is always 8 bytes
                         self._traces[0].set_pointB8(point, value)
-
                         for var in self._traces[1:]:
                             value = raw_file.read(4)
                             var.set_pointB4(point, value)
 
-        elif self.raw_type.startswith("Values:"):
+        elif self.raw_type == "Values:":
             # Will start the reading of ASCII Values
             for point in range(self.nPoints):
                 first_var = True
                 for var in self._traces:
                     line = raw_file.readline()\
                             .decode(encoding=self.encoding, errors='ignore')
-                    raw_file.seek(raw_file.tell() + self.offset) # Move past 0x00 from prev. line
+                    # raw_file.seek(raw_file.tell() + self.offset)  # Move past 0x00 from prev. line
                     # print(line)
 
                     if first_var:
@@ -424,7 +400,6 @@ class LTSpiceRawRead(object):
         self.raw_params["No. Points"] = self.nPoints
         self.raw_params["No. Variables"] = self.nVariables
         self.raw_params["Variables"] = [var.name for var in self._traces]
-
         # Now Purging Dummy Traces
         i = 0
         while i < len(self._traces):
@@ -469,7 +444,6 @@ class LTSpiceRawRead(object):
             log = open(logfile, 'r')
         except:
             raise LTSPiceReadException("Step information needs the '.log' file generated by LTSpice")
-
         for line in log:
             if line.startswith(".step"):
                 step_dict = {}
@@ -483,7 +457,6 @@ class LTSpiceRawRead(object):
                         # Leave value as a string to accomodate cases as temperature steps
                         # Temperature steps have the form '.step temp=25°C'
                     step_dict[key] = value
-
                 if self.steps is None:
                     self.steps = [step_dict]
                 else:
@@ -519,186 +492,32 @@ class LTSpiceRawRead(object):
                 return ret_steps
             else:
                 return range(len(self.steps))  # Returns all the steps
+
+
+# Instruction for compatibility with modification made by other users
+RawRead = LTSpiceRawRead
 
 '''
 This section is for testing your code
 '''
 
 
-class RawRead(object):
-
-    header_lines = [
-        "Title",
-        "Date",
-        "Plotname",
-        "Flags",
-        "No. Variables",
-        "No. Points",
-        "Offset",
-        "Command",
-        "Variables",
-        "Backannotation"
-    ]
-    
-    def __init__(self, raw_filename, traces_to_read='*', **kwargs):
-        self.raw_params = {'Filename': raw_filename}
-        raw_file_size = os.stat(raw_filename).st_size
-        self.backannotations = []
-        raw_file = open(raw_filename, 'rb')
-        header = []
-        while True:
-            ch = raw_file.read(2).decode(encoding='utf_16_le')
-            header.append(ch)
-            if header[-8:] == ['B', 'i', 'n', 'a', 'r', 'y', ':', '\n']:
-                self.binary_start = raw_file.tell()
-                break
-        header = ''.join(header).split('\n')[:-2]
-        for line in header:
-            k, _, v = line.partition(':')
-            if k == 'Variables':
-                break
-            self.raw_params[k] = v
-        self.nPoints = int(self.raw_params['No. Points'])
-        self.nVariables = int(self.raw_params['No. Variables'])
-        self._traces = []
-        self.steps = None
-        self.axis = None
-        if 'complex' in self.raw_params['Flags']:
-            numerical_type = 'complex'
-        else:
-            numerical_type = 'real'
-        i = header.index('Variables:')
-        ivar = 0
-        for line in header[i+1:]:
-            _, name, var_type = line.lstrip().split('\t')
-            if ivar == 0:
-                self.axis = Axis(name, var_type, self.nPoints, numerical_type)
-                self._traces.append(self.axis)
-            else:
-                trace = Trace(name, var_type, self.nPoints, self.axis, numerical_type)
-                self._traces.append(trace)
-            ivar += 1       
-        self.block_size = (raw_file_size - self.binary_start) // self.nPoints
-        self.data_size = self.block_size//self.nVariables
-        if self.data_size == 8:
-            for point in range(self.nPoints):
-                for var in self._traces:
-                    value = raw_file.read(8)
-                    var.set_pointB8(point, value)
-        elif self.data_size == 16:
-            for point in range(self.nPoints):
-                for var in self._traces:
-                    value = raw_file.read(16)
-                    var.set_pointB16(point, value)
-        else:
-            for point in range(self.nPoints):
-                        value = raw_file.read(8)  # first variable (ex:time) is always 8 bytes
-                        self._traces[0].set_pointB8(point, value)
-                        for var in self._traces[1:]:
-                            value = raw_file.read(4)
-                            var.set_pointB4(point, value)
-        raw_file.close()
-        self.raw_params["No. Points"] = self.nPoints
-        self.raw_params["No. Variables"] = self.nVariables
-        self.raw_params["Variables"] = [var.name for var in self._traces]
-        if "stepped" in self.raw_params["Flags"]:
-            self._load_step_information(raw_filename)
-
-    def get_raw_property(self, property_name=None):
-        """Get a property. By default it returns everything"""
-        if property_name is None:
-            return self.raw_params
-        elif property_name in self.raw_params.keys():
-            return self.raw_params[property_name]
-        else:
-            return "Invalid property. Use %s" % str(self.raw_params.keys())
-
-    def get_trace_names(self):
-        return [trace.name for trace in self._traces]
-
-    def get_trace(self, trace_ref):
-        """Retrieves the trace with the name given. """
-        if isinstance(trace_ref, str):
-            for trace in self._traces:
-                if trace_ref == trace.name:
-                    # assert isinstance(trace, DataSet)
-                    return trace
-            return None
-        else:
-            return self._traces[trace_ref]
-
-    def _load_step_information(self, filename):
-        # Find the extension of the file
-        if not filename.endswith(".raw"):
-            raise LTSPiceReadException("Invalid Filename. The file should end with '.raw'")
-        logfile = filename[:-3] + 'log'
-        try:
-            log = open(logfile, 'r')
-        except:
-            raise LTSPiceReadException("Step information needs the '.log' file generated by LTSpice")
-        for line in log:
-            if line.startswith(".step"):
-                step_dict = {}
-                for tok in line[6:-1].split(' '):
-                    key, value = tok.split('=')
-                    try:
-                        # Tries to convert to float for backward compatibility
-                        value = float(value)
-                    except:
-                        pass
-                        # Leave value as a string to accomodate cases as temperature steps
-                        # Temperature steps have the form '.step temp=25°C'
-                    step_dict[key] = value
-                if self.steps is None:
-                    self.steps = [step_dict]
-                else:
-                    self.steps.append(step_dict)
-        log.close()
-        if not (self.steps is None):
-            # Individual access to the Trace Classes, this information is stored in the Axis
-            # which is always in position 0
-            self._traces[0]._set_steps(self.steps)
-            pass
-
-    def __getitem__(self, item):
-        """Helper function to access traces by using the [ ] operator."""
-        return self.get_trace(item)
-
-    def get_steps(self, **kwargs):
-        if self.steps is None:
-            return [0]  # returns an single step
-        else:
-            if len(kwargs) > 0:
-                ret_steps = []  # Initializing an empty array
-                i = 0
-                for step_dict in self.steps:
-                    for key in kwargs:
-                        ll = step_dict.get(key, None)
-                        if ll is None:
-                            break
-                        elif kwargs[key] != ll:
-                            break
-                    else:
-                        ret_steps.append(i)  # All the step parameters match
-                    i += 1
-                return ret_steps
-            else:
-                return range(len(self.steps))  # Returns all the steps
-
 if __name__ == "__main__":
     import sys
     import matplotlib.pyplot as plt
     import os
+    from os.path import split as pathsplit
+    from os.path import join as pathjoin
     directory = os.getcwd()
     
     if len(sys.argv) > 1:
         raw_filename = sys.argv[1]
     else:
-        test_directory = directory + '/test_files/'
+        test_directory = pathjoin(pathsplit(directory)[0], 'test_files')
         filename = 'testfile.raw'
-        raw_filename = test_directory + filename
+        raw_filename = pathjoin(test_directory, filename)
 
-    LTR = LTSpiceRawRead(raw_filename)
+    LTR = RawRead(raw_filename)
 
     print(LTR.get_trace_names())
     print(LTR.get_raw_property())
@@ -712,6 +531,7 @@ if __name__ == "__main__":
     x = LTR.get_trace('time')  # Zero is always the X axis
     #steps = LTR.get_steps(ana=4.0)
     steps = LTR.get_steps()
+    print (steps)
     for step in steps:
         plt.subplot(2,1,1)
         plt.grid(True)
@@ -726,8 +546,8 @@ if __name__ == "__main__":
         #plt.plot(y.get_wave(step))
         #plt.plot(x.get_wave(step),marker='x')
         #plt.plot(x.get_wave(step), y.get_wave(step), label=LTR.steps[step])
-    
 
+    plt.show()
 '''
 '''
     # out = open("RAW_TEST_out_test1.txt", 'w')

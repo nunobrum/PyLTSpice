@@ -1,4 +1,4 @@
-Circuit: * C:\Python\projects\ltsipy\tests\simulations\TRAN - STEP.asc
+Circuit: * C:\sandbox\PyLTSpice_GitHub_nunobrum\tests\TRAN - STEP.asc
 
 .OP point found by inspection.
 .step vin=1 r1=1000
@@ -6,8 +6,8 @@ Circuit: * C:\Python\projects\ltsipy\tests\simulations\TRAN - STEP.asc
 .step vin=1 r1=10000
 .step vin=10 r1=10000
 
-Date: Mon Nov 26 04:58:06 2018
-Total elapsed time: 0.140 seconds.
+Date: Sat Dec 14 23:46:38 2019
+Total elapsed time: 0.494 seconds.
 
 tnom = 27
 temp = 27
@@ -20,6 +20,6 @@ rejected = 1
 matrix size = 3
 fillins = 0
 solver = Normal
-Matrix Compiler1: off  [0.0]/0.0/0.0
-Matrix Compiler2: 175 bytes object code size  0.0/0.1/[0.0]
+Matrix Compiler1: 50 bytes object code size  0.0/0.0/[0.0]
+Matrix Compiler2: 175 bytes object code size  0.0/0.0/[0.0]
 
