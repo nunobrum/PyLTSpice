@@ -47,7 +47,7 @@ If using this method it would be good to add the path where you cloned the site 
 ### LTSpice_RawRead.py ###
 Include the following line on your scripts
 
- `from PyLTSpice.LTSpiceRaw_Reader import LTSpiceRawRead`  
+ `from PyLTSpice.LTSpice_RawRead import LTSpiceRawRead  
  
  `from matplotlib import plot`  
  
@@ -59,7 +59,7 @@ Include the following line on your scripts
  
  `IR1 = LTR.get_trace("I(R1)")`  
  `x = LTR.get_trace(0)  # Zero is always the X axis`  
- `steps = LT.get_steps()`  
+ `steps = LTR.get_steps()`  
  `for step in range(len(steps)):`  
  `    # print(steps[step])`  
  `    plt.plot(x.get_wave(step), IR1.get_wave(step), label=steps[step])`  
