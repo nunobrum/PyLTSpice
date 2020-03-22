@@ -160,7 +160,12 @@ else:
     axisYmax = n.max() * 1.1
 
     # add a 'best fit' line
-    y = mlab.normpdf( bins, mu, sd)
+    if hasattr(mlab, 'normpdf'):  # This was deprecated on version 2.2 of mlab
+        y = mlab.normpdf(bins, mu, sd)
+    else:
+        from scipy.stats import norm
+        y = norm.pdf(bins, mu, sd)
+
     l = plt.plot(bins, y, 'r--', linewidth=1)
     plt.axvspan(mu - options.sigma*sd, mu + options.sigma*sd, alpha=0.2, color="cyan")
     plt.xlabel(TRACE)
