@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Name:        LTSpice_RawRead.py
 # Purpose:     Process LTSpice output files and align data for usage in a spread-
 #              sheet tool such as Excel, or Calc.
@@ -9,7 +9,7 @@
 #
 # Created:     23-12-2016
 # Licence:     General Public GNU License
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
 """ A pure python implementation of an LTSpice RAW file reader.
 The reader returns a class containing all the traces read from the RAW File.
@@ -27,12 +27,12 @@ If it finds numpy all data is later provided as an array. If not it will use a s
 __author__ = "Nuno Canto Brum <nuno.brum@gmail.com>"
 __copyright__ = "Copyright 2017, Fribourg Switzerland"
 
-
 import os
 from binascii import b2a_hex
 from struct import unpack
+
 try:
-    from numpy import zeros, array, complex128
+    from numpy import zeros, array, complex128, abs as numpy_abs
 except ImportError:
     USE_NNUMPY = False
 else:
@@ -133,7 +133,7 @@ class Axis(DataSet):
         while i < len(self.data):
             if self.data[i] == self.data[0]:
                 # print(k, i, self.data[i], self.data[i+1])
-                if self.data[i] == self.data[i+1]:
+                if self.data[i] == self.data[i + 1]:
                     i += 1  # Needs to add one here because the data will be repeated
                 self.step_offsets[k] = i
                 k += 1
@@ -164,6 +164,16 @@ class Axis(DataSet):
         else:
             return self.data[self.step_offset(step):self.step_offset(step + 1)]
 
+    def get_time_axis(self, step=0):
+        if USE_NNUMPY:
+            return numpy_abs(self.get_wave(step))
+        else:
+            shallow_copy = self.get_wave(step).copy()
+            for i in range(len(shallow_copy)):
+                if shallow_copy[i] < 0:
+                    shallow_copy[i] = -shallow_copy[i]
+            return shallow_copy
+
 
 class Trace(DataSet):
     """Class used for storing generic traces that report to a given Axis."""
@@ -179,8 +189,8 @@ class Trace(DataSet):
             return self.data[self.axis.step_offset(step) + n]
 
     def get_wave(self, step=0):
-        #print('step size %d' % step)
-        #print(self.data[self.axis.step_offset(step):self.axis.step_offset(step + 1)])
+        # print('step size %d' % step)
+        # print(self.data[self.axis.step_offset(step):self.axis.step_offset(step + 1)])
         if self.axis is None:
             return super().get_wave()
         else:
@@ -216,6 +226,7 @@ class DummyTrace(object):
     def set_pointB16(self, n, value):
         pass
 
+
 class LTSPiceReadException(Exception):
     """Custom class for exception handling"""
 
@@ -250,7 +261,7 @@ class LTSpiceRawRead(object):
         if not traces_to_read is None:
             assert isinstance(traces_to_read, str)
 
-        raw_file_size = os.stat(raw_filename).st_size # Get the file size in order to know the data size
+        raw_file_size = os.stat(raw_filename).st_size  # Get the file size in order to know the data size
         raw_file = open(raw_filename, "rb")
 
         ch = raw_file.read(6)
@@ -296,7 +307,7 @@ class LTSpiceRawRead(object):
             numerical_type = 'real'
         i = header.index('Variables:')
         ivar = 0
-        for line in header[i+1:-1]:
+        for line in header[i + 1:-1]:
             _, name, var_type = line.lstrip().split('\t')
             if ivar == 0 and self.nVariables > 1 and self.nPoints != 1:
                 self.axis = Axis(name, var_type, self.nPoints, numerical_type)
@@ -304,8 +315,8 @@ class LTSpiceRawRead(object):
             elif self.nPoints == 1:
                 self._traces.append(Op(name, var_type, self.nPoints, self.axis))
             elif ((traces_to_read == "*") or
-                      (name in traces_to_read) or
-                      (ivar == 0)):
+                  (name in traces_to_read) or
+                  (ivar == 0)):
                 # TODO: Add wildcards to the waveform matching
                 trace = Trace(name, var_type, self.nPoints, self.axis, numerical_type)
                 self._traces.append(trace)
@@ -374,8 +385,8 @@ class LTSpiceRawRead(object):
             for point in range(self.nPoints):
                 first_var = True
                 for var in self._traces:
-                    line = raw_file.readline()\
-                            .decode(encoding=self.encoding, errors='ignore')
+                    line = raw_file.readline() \
+                        .decode(encoding=self.encoding, errors='ignore')
                     # raw_file.seek(raw_file.tell() + self.offset)  # Move past 0x00 from prev. line
                     # print(line)
 
@@ -434,6 +445,11 @@ class LTSpiceRawRead(object):
             return None
         else:
             return self._traces[trace_ref]
+
+    def get_time_axis(self, step=0):
+        """This funcion is to workaround on a LTSpice issue when using 2nd Order compression, where some values
+        have a negative value"""
+        return abs(self.get_trace('time').get_wave(step))
 
     def _load_step_information(self, filename):
         # Find the extension of the file
@@ -501,15 +517,15 @@ RawRead = LTSpiceRawRead
 This section is for testing your code
 '''
 
-
 if __name__ == "__main__":
     import sys
     import matplotlib.pyplot as plt
     import os
     from os.path import split as pathsplit
     from os.path import join as pathjoin
+
     directory = os.getcwd()
-    
+
     if len(sys.argv) > 1:
         raw_filename = sys.argv[1]
     else:
@@ -521,39 +537,33 @@ if __name__ == "__main__":
 
     print(LTR.get_trace_names())
     print(LTR.get_raw_property())
-    
+
     plt.figure()
-    
+
     volt_1 = LTR.get_trace('V(in)')
     volt_2 = LTR.get_trace('V(out)')
-    input_curves = []
-    output_curves= []
     x = LTR.get_trace('time')  # Zero is always the X axis
-    #steps = LTR.get_steps(ana=4.0)
+    # steps = LTR.get_steps(ana=4.0)
     steps = LTR.get_steps()
-    print (steps)
+    print(steps)
+    fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
+    for ax in (ax1, ax2):
+        ax.grid(True)
+
+    plt.xlim([0.9e-3, 1.2e-3])
+    ax1.plot(x.get_time_axis(0), volt_1.get_wave(0))
     for step in steps:
-        plt.subplot(2,1,1)
-        plt.grid(True)
-        plt.plot(x.get_wave(step), volt_1.get_wave(step))
-        input_curves.append(volt_1.get_wave(step))
-        plt.xlim([0.9e-3, 1.2e-3])
-        plt.subplot(2,1,2)
-        plt.plot(x.get_wave(step), volt_2.get_wave(step))
-        output_curves.append(volt_2.get_wave(step))
-        plt.grid(True)
-        plt.xlim([0.9e-3, 1.2e-3])
-        #plt.plot(y.get_wave(step))
-        #plt.plot(x.get_wave(step),marker='x')
-        #plt.plot(x.get_wave(step), y.get_wave(step), label=LTR.steps[step])
+        ax2.plot(x.get_time_axis(step), volt_2.get_wave(step))
+        # plt.plot(y.get_wave(step))
+        # plt.plot(x.get_wave(step),marker='x')
+        # plt.plot(x.get_wave(step), y.get_wave(step), label=LTR.steps[step])
 
     plt.show()
 '''
 '''
-    # out = open("RAW_TEST_out_test1.txt", 'w')
-    #
-    # for step in LTR.get_steps():
-    #     for x in range(len(LTR[0].data)):
-    #         out.write("%s, %e, %e\n" % (step, LTR[0].data[x], LTR[2].data[x]))
-    # out.close()
-
+# out = open("RAW_TEST_out_test1.txt", 'w')
+#
+# for step in LTR.get_steps():
+#     for x in range(len(LTR[0].data)):
+#         out.write("%s, %e, %e\n" % (step, LTR[0].data[x], LTR[2].data[x]))
+# out.close()
