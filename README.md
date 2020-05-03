@@ -31,7 +31,7 @@ This is a script to launch LTSpice Simulations. This is useful because:
 
 ### Using PiP Installer ###
 
- `pip install --upgrade PyLTSpic `  
+ `pip install --upgrade PyLTSpice`
 
 ### Using GITHub ###
 
@@ -58,8 +58,8 @@ Include the following line on your scripts
  `print(LTR.get_raw_property()) `  
  
  `IR1 = LTR.get_trace("I(R1)") `  
- `x = LTR.get_trace('time') # Gets the time axis
- `steps = LTR.get_steps() `  
+ `x = LTR.get_trace('time') # Gets the time axis`  
+ `steps = LTR.get_steps()`  
  `for step in range(len(steps)): `  
  `....# print(steps[step]) `  
  `....plt.plot(x.get_time_axis(step), IR1.get_wave(step), label=steps[step]) `  
@@ -96,15 +96,15 @@ Here follows an example of operation.
  
  ` for opamp in ('AD712', 'AD820'): `  
  ` ....# Setting a model of the U1 Component. Note that subcircuits need the X prefix `  
- ` ....LTC.set_element_model('XU1', opamp)  
+ ` ....LTC.set_element_model('XU1', opamp)`  
  ` ....for supply_voltage in (5, 10, 15): `  
  ` ........LTC.set_component_value('V1', supply_voltage)  # Set a voltage source value `  
  ` ........LTC.set_component_value('V2', -supply_voltage) `  
- ` ........rawfile, logfile = LTC.run()  # Runs the simulation with the updated netlist ` 
- ` ........# The run() returns the RAW filename and LOG filenames so that can be processed with
- ` ........# the LTSpice_ReadRaw and LTSteps modules.
- ` ........# The command below is optional, used just to keep a copy of the netlist for debug purposes
- ` ........copyfile(LTC.run_netlist_file, `  
+ ` ........rawfile, logfile = LTC.run()  # Runs the simulation with the updated netlist `  
+ ` ........# The run() returns the RAW filename and LOG filenames so that can be processed with`  
+ ` ........# the LTSpice_ReadRaw and LTSteps modules.`  
+ ` ........# The command below is optional, used just to keep a copy of the netlist for debug purposes`  
+ ` ........copyfile(LTC.run_netlist_file,`  
  ` ................."{}_{}_{}.net".format(LTC.circuit_radic, opamp, supply_voltage))  # Keep the netlist for reference `  
  
  ` LTC.reset_netlist()  # This resets all the changes done to the checklist`  
