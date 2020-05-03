@@ -116,11 +116,11 @@ Here follows an example of operation.
 
 ### LTSteps.py ###
 
- `python -m PyLTSpice.LTSteps <logfile or directory where last simulation was made `
+ `python -m PyLTSpice.LTSteps <logfile or directory where last simulation was made>`  
 
 ### Histogram.py ###
 
- `python -m PyLTSpice.Histogra ` 
+ `python -m PyLTSpice.Histogram `  
 
 ## To whom do I talk to? ##
 
