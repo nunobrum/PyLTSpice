@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name='PyLTSpice',
-    version='0.1.post6',
+    version='1.0.post0',
     scripts=['PyLTSpice\\__init__.py'
              # 'PyLTSpice\\Histogram.py',
              # 'PyLTSpice\\LTSpice_RawRead.py',

@@ -26,13 +26,15 @@ else:
     def message(*strs):
         pass
 
+
 def enc_norm(line):
-    if len(line) > 1 and line[0]== '\0': # This is the stupid encoding of LTspice XVII
+    if len(line) > 1 and line[0] == '\0':  # This is the stupid encoding of LTspice XVII
         return line[1::2]  # Removes zeros from the encoding
     else:
         return line  # Return as is
 
-def reformat_LTSpice_export(export_file:str, tabular_file:str):
+
+def reformat_LTSpice_export(export_file: str, tabular_file: str):
     """Reformat an LTSpice trace export to a tabular so that the step information is part of the columns exported
     The reformatted file is written into <tabular_file>"""
     fin = open(export_file, 'r')
@@ -43,7 +45,7 @@ def reformat_LTSpice_export(export_file:str, tabular_file:str):
     go_header = True
     run_no = 0  # Just to avoid warning, this is later overridden by the step information
     param_values = ""  # Just to avoid warning, this is later overridden by the step information
-    regx = re.compile("Step Information: ([\w=\d\. -]+) +\(Run: (\d*)/\d*\)\n")
+    regx = re.compile(r"Step Information: ([\w=\d\. -]+) +\(Run: (\d*)/\d*\)\n")
     for line in fin:
         line = enc_norm(line)
         if line.startswith("Step Information:"):
@@ -76,20 +78,20 @@ def reformat_LTSpice_export(export_file:str, tabular_file:str):
 
 class LTSpiceExport(object):
 
-    def __init__(self, filename:str):
+    def __init__(self, filename: str):
         """Reads an LTSpice Export into a structured class containing all data. Data is accessible by
         other class functions"""
         fin = open(filename, 'r')
         file_header = enc_norm(fin.readline())
 
-        self.headers =  file_header.split('\t')
+        self.headers = file_header.split('\t')
         # Set to read header
         go_header = True
 
         curr_dic = {}
         self.dataset = {}
 
-        regx = re.compile("Step Information: ([\w=\d\. -]+) +\(Run: (\d*)/\d*\)\n")
+        regx = re.compile(r"Step Information: ([\w=\d\. -]+) +\(Run: (\d*)/\d*\)\n")
         for line in fin:
             line = enc_norm(line)
             if line.startswith("Step Information:"):
@@ -105,34 +107,32 @@ class LTSpiceExport(object):
                         curr_dic[key] = float(value)
 
                     if go_header:
-                        go_header = False # This is executed only once
+                        go_header = False  # This is executed only once
                         for key in self.headers:
-                           self.dataset[key] = [] # Initializes an empty list
+                            self.dataset[key] = []  # Initializes an empty list
 
                         for key in curr_dic:
-                           self.dataset[key] = [] # Initializes an empty list
+                            self.dataset[key] = []  # Initializes an empty list
 
             else:
                 values = line.split('\t')
 
                 for key in curr_dic:
-                   self.dataset[key].append(curr_dic[key])
+                    self.dataset[key].append(curr_dic[key])
 
                 for i in range(len(values)):
-                   self.dataset[self.headers[i]].append(float(values[i]))
+                    self.dataset[self.headers[i]].append(float(values[i]))
 
         fin.close()
 
 
-
 class LTSpiceLogReader(object):
 
-    def __init__(self, logname:str):
+    def __init__(self, logname: str):
         """Reads Step data from a LTSpice log file. Data is accessible """
         fin = open(logname, 'r')
         self.dataset = {}
-        self.headers = [] # This is only need to keep the parameter order in the export
-        
+        self.headers = []  # This is only need to keep the parameter order in the export
         self.step_count = 0
         self.stepset = {}
         message("Processing LOG file", logname)
@@ -143,7 +143,10 @@ class LTSpiceLogReader(object):
             if line.startswith(".step "):
                 print(line)
                 break
-        
+        else:
+            fin.close()
+            return
+
         while line:
             if line.startswith(".step"):
                 # message(line)
@@ -160,22 +163,50 @@ class LTSpiceLogReader(object):
                 break
             line = enc_norm(fin.readline())
         fin.close()
-        
-    def read_measures(self, filename):   
+
+    def read_measures(self, filename):
         fin = open(filename, 'r')
         # self.dataset = {}  # Resets all loaded previous data
         dataname = None
         measurements = []
-        
+
+        if self.step_count == 0:  # then there are no steps,
+            # there are only measures taken in the format parameter: measurement
+            # A few examples of readings
+            # vout_rms: RMS(v(out))=1.41109 FROM 0 TO 0.001  => Interval
+            # vin_rms: RMS(v(in))=0.70622 FROM 0 TO 0.001  => Interval
+            # gain: vout_rms/vin_rms=1.99809 => Parameter
+            # vout1m: v(out)=-0.0186257 at 0.001 => Point
+            regx = re.compile(r"^(?P<name>\w+):\s+.*=(?P<value>[\d\.E+\-\(\)dB,°]+)(( FROM (?P<from>[\d\.E+-]*) TO (?P<to>[\d\.E+-]*))|( at (?P<at>[\d\.E+-]*)))?", re.IGNORECASE)
+            for line in fin:
+                match = regx.match(line)
+                if match:
+                    # Get the data
+                    dataname = match.group('name')
+                    if match.group('from'):
+                        params = [dataname, dataname + "_FROM", dataname + "_TO"]
+                        measurements = [match.group('value'), match.group('from'), match.group('to')]
+                    elif match.group('at'):
+                        params = [dataname, dataname + "_at"]
+                        measurements = [match.group('value'), match.group('at')]
+                    else:
+                        params = [dataname]
+                        measurements = [match.group('value')]
+
+                    self.headers.append(dataname)
+                    self.dataset[dataname] = (params, [measurements])
+            fin.close()
+            return
+
         for line in fin:
             line = enc_norm(line)
             print(line)
             if line.startswith("Measurement:"):
                 break
-      
+
         # message("Reading Measurements")
         measure_count = 0
-        param = ['param'] # Initializing an empty parameters
+        param = ['param']  # Initializing an empty parameters
         while line:
             line = line.strip('\n')
             if line.startswith("Measurement: "):
@@ -193,14 +224,15 @@ class LTSpiceLogReader(object):
                 tokens = line.split("\t")
                 if len(tokens) >= 2:
                     try:
-                        int(tokens[0]) # This instruction only serves to trigger the exception
-                        if len(tokens) == 2:
-                            meas = float(tokens[1])
-                        else:
-                            meas = tokens[1:]  #[float(x) for x in tokens[1:]]
+                        int(tokens[0])  # This instruction only serves to trigger the exception
+                        meas = tokens[1:]  # [float(x) for x in tokens[1:]]
                         measurements.append(meas)
                         measure_count += 1
                     except:
+                        if len(tokens) >= 3 and (tokens[2] == "FROM" or tokens[2] == 'at'):
+                            tokens[2] = dataname + '_' + tokens[2]
+                        if len(tokens) >= 4 and tokens[3] == "TO":
+                            tokens[3] = dataname + "_TO"
                         param = [dataname] + tokens[2:]
                 else:
                     message("->", line)
@@ -215,25 +247,24 @@ class LTSpiceLogReader(object):
 
         message("%d measurements" % len(self.headers))
         message("Identified %d steps, read %d measurements" % (self.step_count, measure_count))
-                
 
     def get_measure(self, measure, param=0):
         data = self.dataset[measure]
-        if len(data[0])==1:
+        if len(data[0]) == 1:
             return data[1]
         else:
             if isinstance(param, str):
-                k =  data[0].index(param)
+                k = data[0].index(param)
             else:
                 k = int(param)
             return [x[k] for x in data[1]]
 
-    def export_data(self, export_file:str, append_loginfo=None):
+    def export_data(self, export_file: str, append_loginfo=None):
         # message(tokens)
         if append_loginfo is None:
-            mode = 'w' # rewrites the file
+            mode = 'w'  # rewrites the file
         else:
-            mode = 'a' # Appends an existing file
+            mode = 'a'  # Appends an existing file
 
         if len(self.dataset) == 0:
             print("Empty data set. Exiting without writing file.")
@@ -265,10 +296,12 @@ class LTSpiceLogReader(object):
 
         fout.close()
 
+
 if __name__ == "__main__":
 
-    def valid_extension(f):
-        return f.endswith('.txt') or f.endswith('.log') or f.endswith('.mout')
+    def valid_extension(filename):
+        return filename.endswith('.txt') or filename.endswith('.log') or filename.endswith('.mout')
+
 
     if len(sys.argv) > 1:
         filename = sys.argv[1]
@@ -309,7 +342,7 @@ if __name__ == "__main__":
             reformat_LTSpice_export(filename, fname_out)
         elif filename.endswith("log"):
             data = LTSpiceLogReader(filename)
-            data.read_measures(filename)  
+            data.read_measures(filename)
             data.export_data(fname_out)
         elif filename.endswith(".mout"):
             # It must read first the step information

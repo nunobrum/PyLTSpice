@@ -47,7 +47,7 @@ If using this method it would be good to add the path where you cloned the site 
 ### LTSpice_RawRead.py ###
 Include the following line on your scripts
 
- `from PyLTSpice.LTSpice_RawRead import LTSpiceRawRead  
+ `from PyLTSpice.LTSpice_RawRead import LTSpiceRawRead `
  
  `from matplotlib import plot`  
  
@@ -58,19 +58,68 @@ Include the following line on your scripts
  `print(LTR.get_raw_property())`  
  
  `IR1 = LTR.get_trace("I(R1)")`  
- `x = LTR.get_trace(0)  # Zero is always the X axis`  
+ `x = LTR.get_trace('time') # Gets the time axis
  `steps = LTR.get_steps()`  
  `for step in range(len(steps)):`  
  `    # print(steps[step])`  
- `    plt.plot(x.get_wave(step), IR1.get_wave(step), label=steps[step])`  
+ `    plt.plot(x.get_time_axis(step), IR1.get_wave(step), label=steps[step])`  
 
  `plt.legend() # order a legend.`  
  `plt.show()`  
 
 ### LTSpice_Batch ###
+This module is used to launch LTSPice simulations. Results then can be processed with either the LTSpiceRawRead
+or with the LTSteps module to read the log file which can contain .MEAS results.
 
- `from PyLTSpice.LTSpiceBatch import *`  
- `LTC = LTCommander("testfile.asc")`  
+The script will firstly invoke the LTSpice in command line to generate a netlist, and then this netlist can be 
+updated directly by the script, in order to change component values, parameters or simulation commands.
+
+Here follows an example of operation.
+
+`import os`
+`from PyLTSpice.LTSpiceBatch import LTCommander`
+`from shutil import copyfile`
+
+`# get script absolute path`
+`meAbsPath = os.path.dirname(os.path.realpath(__file__));`
+`LTC = LTCommander(meAbsPath + "\\Batch_Test.asc")`
+
+`LTC.set_parameters(res=0, cap=100e-6) # set PARAM variables directly on the netlist`
+`LTC.set_component_value('R2', '2k')   # Replaces the value of a R2 resistor on the netlist`
+`LTC.set_component_value('R1', '4k')   # Replaces the value of the R1 resistor`
+`# define simulation`
+`LTC.add_instructions(`
+`    "; Simulation settings",`
+`    ".param run = 0"`
+`)`
+
+`for opamp in ('AD712', 'AD820'):  # Will make simulation with two OPAMP models. First the AD712 and then with the AD820`
+`    LTC.set_element_model('XU1', opamp)  # Sets the U1 OPAMP model. Note that the X prefix must be added for any subcircuit`
+`    for supply_voltage in (5, 10, 15):`
+`        LTC.set_component_value('V1', supply_voltage)  # set simulation voltages`
+`        LTC.set_component_value('V2', -supply_voltage)`
+`        rawfile, logfile = LTC.run()  # Runs the simulation, and returns both the RAW filename and LOG filenames.`
+`        # The line below is optional and serves just to keep a copy of all the netfiles for debug purposes`
+`        copyfile(LTC.run_netlist_file,`
+`                 "{}_{}_{}.net".format(LTC.circuit_radic, opamp, supply_voltage))  # Keep the netlist for reference`
+`         # Here the part where the processing of results could be done.`
+
+`LTC.reset_netlist()  # This reverts all the changes done to the netlist `
+` # Now making a new simulation type, using an AC (frequency small signal simulation)`
+`LTC.add_instructions(`
+`    "; Simulation settings",`
+`    ".ac dec 30 10 1Meg",`
+`    ".meas AC Gain MAX mag(V(out)) ; find the peak response and call it ""Gain""",`
+`    ".meas AC Fcut TRIG mag(V(out))=Gain/sqrt(2) FALL=last"`
+`)`
+
+`raw, log = LTC.run()`
+
+`# Sim Statistics`
+`print('Successful/Total Simulations: ' + str(LTC.okSim) + '/' + str(LTC.runno))`
+
+
+
 
 ### LTSteps.py ###
 
@@ -87,6 +136,19 @@ Include the following line on your scripts
 * Alternative contact : nuno.brum@gmail.com
 
 ## History ##
+* Version 1.0
+LTSpiceBatch.py: 
+Implemented an new approach (NOT BACKWARDS COMPATIBLE), that avoids the usage of the sim_settings.inc file.
+And allows to modify not only parameters, but also models and even the simulation commands.
+
+LTSpice_RawRead.py: 
+Added the get_time_axis method to the RawRead class to avoid the problems with negative values on
+time axis, when 2nd order compression is enabled in LTSpice.
+
+LTSteps.py: 
+Modified the LTSteps so it can also read measurements on log files without any steps done.
+
+
 * Version 0.6
 Histogram.py now has an option to make the histogram directly from values stored in the clipboard
 
