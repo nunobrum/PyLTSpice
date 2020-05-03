@@ -3,7 +3,7 @@ from PyLTSpice.LTSpiceBatch import LTCommander
 from shutil import copyfile
 
 # get script absolute path
-meAbsPath = os.path.dirname(os.path.realpath(__file__));
+meAbsPath = os.path.dirname(os.path.realpath(__file__))
 # select spice model
 LTC = LTCommander(meAbsPath + "\\Batch_Test.asc")
 # set default arguments

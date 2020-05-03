@@ -31,16 +31,16 @@ This is a script to launch LTSpice Simulations. This is useful because:
 
 ### Using PiP Installer ###
 
- `pip install --upgrade PyLTSpice`  
+ `pip install --upgrade PyLTSpic `  
 
 ### Using GITHub ###
 
- `git clone https://github.com/nunobrum/PyLTSpice.git`  
+ `git clone https://github.com/nunobrum/PyLTSpice.gi `  
  
 If using this method it would be good to add the path where you cloned the site to python path.
 
- `import sys`  
- `sys.path.append(<path to PyLTSpice>)`  
+ `import sys `  
+ `sys.path.append(<path to PyLTSpice>) `  
 
 ## How to use ##
 
@@ -49,23 +49,23 @@ Include the following line on your scripts
 
  `from PyLTSpice.LTSpice_RawRead import LTSpiceRawRead `
  
- `from matplotlib import plot`  
+ `from matplotlib import plot `  
  
  
- `LTR = LTSpiceRawRead("Draft1.raw")`  
+ `LTR = LTSpiceRawRead("Draft1.raw") `  
 
- `print(LTR.get_trace_names())`  
- `print(LTR.get_raw_property())`  
+ `print(LTR.get_trace_names()) `  
+ `print(LTR.get_raw_property()) `  
  
- `IR1 = LTR.get_trace("I(R1)")`  
+ `IR1 = LTR.get_trace("I(R1)") `  
  `x = LTR.get_trace('time') # Gets the time axis
- `steps = LTR.get_steps()`  
- `for step in range(len(steps)):`  
- `    # print(steps[step])`  
- `    plt.plot(x.get_time_axis(step), IR1.get_wave(step), label=steps[step])`  
+ `steps = LTR.get_steps() `  
+ `for step in range(len(steps)): `  
+ `....# print(steps[step]) `  
+ `....plt.plot(x.get_time_axis(step), IR1.get_wave(step), label=steps[step]) `  
 
- `plt.legend() # order a legend.`  
- `plt.show()`  
+ `plt.legend() # order a legend `  
+ `plt.show() `  
 
 ### LTSpice_Batch ###
 This module is used to launch LTSPice simulations. Results then can be processed with either the LTSpiceRawRead
@@ -76,58 +76,55 @@ updated directly by the script, in order to change component values, parameters 
 
 Here follows an example of operation.
 
-`import os`
-`from PyLTSpice.LTSpiceBatch import LTCommander`
-`from shutil import copyfile`
-
-`# get script absolute path`
-`meAbsPath = os.path.dirname(os.path.realpath(__file__));`
-`LTC = LTCommander(meAbsPath + "\\Batch_Test.asc")`
-
-`LTC.set_parameters(res=0, cap=100e-6) # set PARAM variables directly on the netlist`
-`LTC.set_component_value('R2', '2k')   # Replaces the value of a R2 resistor on the netlist`
-`LTC.set_component_value('R1', '4k')   # Replaces the value of the R1 resistor`
-`# define simulation`
-`LTC.add_instructions(`
-`    "; Simulation settings",`
-`    ".param run = 0"`
-`)`
-
-`for opamp in ('AD712', 'AD820'):  # Will make simulation with two OPAMP models. First the AD712 and then with the AD820`
-`    LTC.set_element_model('XU1', opamp)  # Sets the U1 OPAMP model. Note that the X prefix must be added for any subcircuit`
-`    for supply_voltage in (5, 10, 15):`
-`        LTC.set_component_value('V1', supply_voltage)  # set simulation voltages`
-`        LTC.set_component_value('V2', -supply_voltage)`
-`        rawfile, logfile = LTC.run()  # Runs the simulation, and returns both the RAW filename and LOG filenames.`
-`        # The line below is optional and serves just to keep a copy of all the netfiles for debug purposes`
-`        copyfile(LTC.run_netlist_file,`
-`                 "{}_{}_{}.net".format(LTC.circuit_radic, opamp, supply_voltage))  # Keep the netlist for reference`
-`         # Here the part where the processing of results could be done.`
-
-`LTC.reset_netlist()  # This reverts all the changes done to the netlist `
-` # Now making a new simulation type, using an AC (frequency small signal simulation)`
-`LTC.add_instructions(`
-`    "; Simulation settings",`
-`    ".ac dec 30 10 1Meg",`
-`    ".meas AC Gain MAX mag(V(out)) ; find the peak response and call it ""Gain""",`
-`    ".meas AC Fcut TRIG mag(V(out))=Gain/sqrt(2) FALL=last"`
-`)`
-
-`raw, log = LTC.run()`
-
-`# Sim Statistics`
-`print('Successful/Total Simulations: ' + str(LTC.okSim) + '/' + str(LTC.runno))`
-
-
+ ` import os `  
+ ` from PyLTSpice.LTSpiceBatch import LTCommander `  
+ ` from shutil import copyfile `  
+ 
+ ` # get script absolute path `  
+ ` meAbsPath = os.path.dirname(os.path.realpath(__file__)) `  
+ ` # select spice model `  
+ ` LTC = LTCommander(meAbsPath + "\\Batch_Test.asc") `  
+ 
+ ` LTC.set_parameters(res=0, cap=100e-6)  # Redefining parameters in the netlist `  
+ ` LTC.set_component_value('R2', '2k')  # Redefining component values `  
+ ` LTC.set_component_value('R1', '4k') `  
+ ` # define simulation `  
+ ` LTC.add_instructions( `  
+ `     "; Simulation settings", `  
+ `     ".param run = 0"  # Commands can be set directly with the .param command instad of the set_parameters(...) `  
+ ` ) `  
+ 
+ ` for opamp in ('AD712', 'AD820'): `  
+ ` ....# Setting a model of the U1 Component. Note that subcircuits need the X prefix `  
+ ` ....LTC.set_element_model('XU1', opamp)  
+ ` ....for supply_voltage in (5, 10, 15): `  
+ ` ........LTC.set_component_value('V1', supply_voltage)  # Set a voltage source value `  
+ ` ........LTC.set_component_value('V2', -supply_voltage) `  
+ ` ........rawfile, logfile = LTC.run()  # Runs the simulation with the updated netlist ` 
+ ` ........# The run() returns the RAW filename and LOG filenames so that can be processed with
+ ` ........# the LTSpice_ReadRaw and LTSteps modules.
+ ` ........# The command below is optional, used just to keep a copy of the netlist for debug purposes
+ ` ........copyfile(LTC.run_netlist_file, `  
+ ` ................."{}_{}_{}.net".format(LTC.circuit_radic, opamp, supply_voltage))  # Keep the netlist for reference `  
+ 
+ ` LTC.reset_netlist()  # This resets all the changes done to the checklist`  
+ ` LTC.add_instructions(  # Changing the simulation file`  
+ `     "; Simulation settings", `  
+ `     ".ac dec 30 10 1Meg", `  
+ `     ".meas AC Gain MAX mag(V(out)) ; find the peak response and call it ""Gain""", `  
+ `     ".meas AC Fcut TRIG mag(V(out))=Gain/sqrt(2) FALL=last" `  
+ ` ) `  
+ `  `  
+ ` raw, log = LTC.run() `  
 
 
 ### LTSteps.py ###
 
- `python -m PyLTSpice.LTSteps <logfile or directory where last simulation was made>`
+ `python -m PyLTSpice.LTSteps <logfile or directory where last simulation was made `
 
 ### Histogram.py ###
 
- `python -m PyLTSpice.Histogram` 
+ `python -m PyLTSpice.Histogra ` 
 
 ## To whom do I talk to? ##
 
