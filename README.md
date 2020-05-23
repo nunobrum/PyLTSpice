@@ -31,7 +31,6 @@ This is a script to launch LTSpice Simulations. This is useful because:
 `pip install PyLTSpice `  
 
 ### Updating PyLTSpice ###
-
  `pip install --upgrade PyLTSpice `  
 
 ### Using GITHub ###
@@ -125,7 +124,7 @@ Here follows an example of operation.
 
 ### Histogram.py ###
 
- `python -m PyLTSpice.Histogra ` 
+ `python -m PyLTSpice.Histogram `  
 
 ## To whom do I talk to? ##
 
