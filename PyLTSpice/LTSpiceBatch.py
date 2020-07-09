@@ -13,16 +13,17 @@ END_LINE_TERM = '\n'
 UNIQUE_SIMULATION_DOT_instructionS = ('.AC', '.DC', '.TRAN', 'NOISE', '.DC', '.TF')
 
 REPLACE_REGXES = {
+    'B': r"^B[VI]\w+(\s+[\w\+\-]+){2}\s+(?P<value>.*)$",  # Behavioral source
     'C': r"^C\w+(\s+[\w\+\-]+){2}\s+(?P<value>({)?(?(3).*}|([0-9\.E+-]+(Meg|[kmup])?R?))).*$",  # Capacitor
     'D': r"^D\w+(\s+[\w\+\-]+){2}\s+(?P<value>\w+).*$",  # Diode
-    'I': r"^I\w+(\s+[\w\+\-]+){2}\s+(?P<value>({)?(?(3).*}|([0-9\.E+-]+(Meg|[kmup])?R?))).*$",  # Current Source
+    'I': r"^I\w+(\s+[\w\+\-]+){2}\s+(?P<value>.*)$",  # Current Source
     'J': r"^J\w+(\s+[\w\+\-]+){3}\s+(?P<value>\w+).*$",  # JFET
     'K': r"^K\w+(\s+[\w\+\-]+){2:4}\s+(?P<value>[\+\-]?[0-9\.E+-]+[kmup]?).*$",  # Mutual Inductance
     'L': r"^L\w+(\s+[\w\+\-]+){2}\s+(?P<value>({)?(?(3).*}|([0-9\.E+-]+(Meg|[kmup])?R?))).*$",  # Inductance
     'M': r"^M\w+(\s+[\w\+\-]+){3}\s+(?P<value>\w+).*$",  # MOSFET
     'Q': r"^Q\w+(\s+[\w\+\-]+){3}\s+(?P<value>\w+).*$",  # Bipolar
     'R': r"^R\w+(\s+[\w\+\-]+){2}\s+(?P<value>({)?(?(3).*}|([0-9\.E+-]+(Meg|[kmup])?R?))).*$",  # Resistors
-    'V': r"^V\w+(\s+[\w\+\-]+){2}\s+(?P<value>({)?(?(3).*}|([0-9\.E+-]+(Meg|[kmup])?R?))).*$",  # Voltage Source
+    'V': r"^V\w+(\s+[\w\+\-]+){2}\s+(?P<value>.*)$",  # Voltage Source
     'X': r"^X\w+(\s+[\w\+\-]+){1,99}\s+(?P<value>\w+)(\s+\w+\s*=\s*\S+)*$",  # Sub-circuit
 }
 
@@ -57,8 +58,7 @@ def sweep(start, stop, step=1):
     """Generator function to be used in sweeps.
 Advantages towards the range python built-in functions_
     - Supports floating point arguments
-    - Supports both up and down sweeps
-    - Less memory footprint for large sweeps"""
+    - Supports both up and down sweeps"""
     inc = 0
     val = start
     if start < stop:
@@ -75,12 +75,12 @@ Advantages towards the range python built-in functions_
 
 
 def sweep_log(start, stop, step=10):
-    """Generator function to be used in sweeps.
+    """Generator function to be used in logarithmic sweeps.
 Advantages towards the range python built-in functions_
     - Supports floating point arguments
-    - Supports both up and down sweeps
-    - Less memory footprint for large sweeps"""
+    - Supports both up and down sweeps"""
     stp = abs(step)
+    assert stp > 1.0, "The Step should be higher than 1"
     if start < stop:
         while start <= stop:
             yield start
@@ -98,6 +98,14 @@ else:
 
 
 class LTCommander(object):
+    """Class for launch  LTSpice simulations from a Pyhton Script, thus allowing to 
+    overcome the 3 dimensions STEP limitation on LTSpice, update resistor values, or component models.
+    Usage:
+        LTC = LTCommander("my_circuit.asc")
+        for dmodel in ("BAT54", "BAT46WJ")
+            LTC.set_element_model("D1", model)
+            LTC.run()
+        """
     LTspiceIV_exe = [r"C:\Program Files (x86)\LTC\LTspiceIV\scad3.exe"]
     LTspiceXVII_exe = [r"C:\Program Files\LTC\LTspiceXVII\XVIIx64.exe"]
     LTspice_arg = {'netlist': ['-netlist'], 'run': ['-b', '-Run']}
@@ -116,11 +124,6 @@ class LTCommander(object):
 
         mlog = open(self.masterlog, 'a+')
 
-        # self.parameters = {}
-        # self.instructions = []
-        # self.value_updates = {}  # Resistances, Capacitances, Inductaces, Voltage and Current Sources
-        # self.model_updates = {} # Diodes, Transistors,
-        # self.line_updates = []
         self.runno = 0  # number of total runs
         self.failSim = 0  # number of failed simulations
         self.okSim = 0  # number of succesfull completed simulations
@@ -136,7 +139,7 @@ class LTCommander(object):
             self.write_log(msg)
             return
 
-        # prepare instructions, two stages used to enable load of sim_settings w/o open GUI
+        # prepare instructions, two stages used to enable edits on the netlist w/o open GUI
         # see: https://www.mikrocontroller.net/topic/480647?goto=5965300#5965300
         cmd_netlist = self.LTspice_exe + self.LTspice_arg.get('netlist') + [circuit_file]
 
@@ -236,7 +239,7 @@ class LTCommander(object):
         mlog.close()
 
     def add_instruction(self, instruction):
-        """Serves to save to the sim_settings.lob file simulation primitives other than .PARAM .
+        """Serves to add SPICE instructions to the netlist.
                 :param instruction: 
                    For example:
                   .tran 10m ; makes a transient simulation
@@ -264,13 +267,32 @@ class LTCommander(object):
                 self.netlist.insert(line, instruction)
 
     def add_instructions(self, *instructions):
+        """Addes a list of instructions to the SPICE NETLIST.
+        Example:
+            LTC.add_instructions(
+                ".STEP run -1 1023 1", 
+                ".dc V1 -5 5"
+            )"""
         for instruction in instructions:
             self.add_instruction(instruction)
 
     def remove_instruction(self, *instruction):
+        """Usage a previously added instructions.
+        Example:
+            LTC.remove_instruction(".STEP run -1 1023 1")
+        """
         self.netlist.remove(instruction)
 
     def set_parameter(self, param, value):
+        """Adds a parameter to the SPICE netlist.
+        Usage:
+            LTC.set_parameter("TEMP", 80)
+
+        This adds onto the netlist the following line:
+            .PARAM TEMP=80
+        This is an alternative to the set_parameters which is more pythonic in it's usage, 
+        and allows setting more than one parameter at once.
+        """
         param_line = self._get_param_line(param)
         if param_line == -1:  # Was not found
             # the last two lines are typically (.backano and .end)
@@ -284,13 +306,28 @@ class LTCommander(object):
             self.netlist[param_line] = line[:start] + "{} = {}".format(param, value) + line[stop:]
 
     def set_parameters(self, **kwargs):
+        """Adds one or more parameters to the netlist.
+        Usage:
+            for temp in (-40, 25, 125):
+                for freq in sweep_log(1, 100E3,)
+            LTC.set_parameters(TEMP=80, freq=freq)
+        """
         for param in kwargs:
             self.set_parameter(param, kwargs[param])
 
     def set_component_value(self, device, value):
+        """Changes the value of a component, such as a Resistor, Capacitor or Inductor.
+        Usage:
+            LTC.set_component_value('R1', '3.3k')
+        """
         self._set_model_and_value(device, value)
 
     def set_element_model(self, element, model):
+        """Changes the value of a circuit element, such as a diode model or a voltage supply.
+        Usage:
+            LTC.set_element_model('D1', '1N4148')
+            LTC.set_element_model('V1' "SINE(0 1 3k 0 0 0)")
+        """
         self._set_model_and_value(element, model)
         
     def write_netlist(self):
@@ -302,6 +339,7 @@ class LTCommander(object):
         f.close()
 
     def reset_netlist(self):
+        """Removes all previous edits done to the netlist, i.e. resets it to the original state."""
         if os.path.exists(self.netlist_file):
             try:
                 f = open(self.netlist_file, 'r')
@@ -381,7 +419,7 @@ class LTCommander(object):
                 pass
 
             if retcode == 0:  # If simulation is successful
-                return self.circuit_radic + '.raw', dest_log  # Return rawfile and logfile if simulation was OK
+                return self.circuit_radic + '_run.raw', dest_log  # Return rawfile and logfile if simulation was OK
             else:
                 return None, dest_log
         else:

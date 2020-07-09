@@ -20,12 +20,15 @@ This is a script to launch LTSpice Simulations. This is useful because:
     - Different types of simulations .TRAN .AC .NOISE can be run in a single batch
     - The RAW Files are smaller and easier to treat
     - When used with the LTSpiceRaw_Reader.py and LTSteps.py, validattion of the circuit can be done automatically.
-    - Different models can be simulation in a single batch. The principle of operation is the following :
-        1. Add to the Spice circuit a .INC sim_settings.lib  . In this include simulation directives are written by the script per each simulation call.
-        1. Use the python script to update the simulation directives and call LTSpice to run the simulation in command line.
-        1. When the simulation is complete, the simulation results are renamed according to user guidance.
+    - Different models can be simulated in a single batch, by using the following instructions:
+    	- `set_element_model('D1', '1N4148') # Replaces the Diode D1 with the model 1N4148 `  
+    	- `set_component_value('R2', '33k') # Replaces the value of R2 by 33k`  
+    	- `set_parameters(run=1, TEMP=80) # Creates or updates the netlist to have .PARAM run=1 or .PARAM TEMP=80`  
+    	- `add_instructions(".STEP run -1 1023 1", ".dc V1 -5 5") `  
+    	- `remove_instruction(".STEP run -1 1023 1")  # Removes previously added instruction`  
+    	- * reset_netlist() # Resets all edits done to the netlist.`  
 
-    Note: It only works with Windows based installations.
+    Note: It was only tested with Windows based installations.
 
 ## How to Install ##
 `pip install PyLTSpice `  
@@ -133,6 +136,13 @@ Here follows an example of operation.
 * Alternative contact : nuno.brum@gmail.com
 
 ## History ##
+* Version 1.1
+README.md:
+Updated the description
+LTSpiceBatch.py:
+Corrected the name of the returned raw file.
+Added comments throughout the code and cleanup
+
 * Version 1.0
 LTSpiceBatch.py: 
 Implemented an new approach (NOT BACKWARDS COMPATIBLE), that avoids the usage of the sim_settings.inc file.
