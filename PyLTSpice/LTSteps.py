@@ -130,6 +130,7 @@ class LTSpiceLogReader(object):
 
     def __init__(self, logname: str):
         """Reads Step data from a LTSpice log file. Data is accessible """
+        self.logname = logname
         fin = open(logname, 'r')
         self.dataset = {}
         self.headers = []  # This is only need to keep the parameter order in the export
@@ -164,7 +165,9 @@ class LTSpiceLogReader(object):
             line = enc_norm(fin.readline())
         fin.close()
 
-    def read_measures(self, filename):
+    def read_measures(self, filename=None):
+        if filename is None:
+            filename = self.logname
         fin = open(filename, 'r')
         # self.dataset = {}  # Resets all loaded previous data
         dataname = None
