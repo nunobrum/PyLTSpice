@@ -26,7 +26,7 @@ This is a script to launch LTSpice Simulations. This is useful because:
     	- `set_parameters(run=1, TEMP=80) # Creates or updates the netlist to have .PARAM run=1 or .PARAM TEMP=80`  
     	- `add_instructions(".STEP run -1 1023 1", ".dc V1 -5 5") `  
     	- `remove_instruction(".STEP run -1 1023 1")  # Removes previously added instruction`  
-    	- * reset_netlist() # Resets all edits done to the netlist.`  
+    	- `reset_netlist() # Resets all edits done to the netlist.`  
 
     Note: It was only tested with Windows based installations.
 
