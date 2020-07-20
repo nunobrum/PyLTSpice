@@ -50,25 +50,26 @@ If using this method it would be good to add the path where you cloned the site 
 ### LTSpice_RawRead.py ###
 Include the following line on your scripts
 
- `from PyLTSpice.LTSpice_RawRead import LTSpiceRawRead `
+ ```from PyLTSpice.LTSpice_RawRead import LTSpiceRawRead
  
- `from matplotlib import plot `  
+ from matplotlib import plot
  
  
- `LTR = LTSpiceRawRead("Draft1.raw") `  
+ LTR = LTSpiceRawRead("Draft1.raw") 
 
- `print(LTR.get_trace_names()) `  
- `print(LTR.get_raw_property()) `  
+ print(LTR.get_trace_names())
+ print(LTR.get_raw_property())
  
- `IR1 = LTR.get_trace("I(R1)") `  
- `x = LTR.get_trace('time') # Gets the time axis `  
- `steps = LTR.get_steps() `  
- `for step in range(len(steps)): `  
- `....# print(steps[step]) `  
- `....plt.plot(x.get_time_axis(step), IR1.get_wave(step), label=steps[step]) `  
+ IR1 = LTR.get_trace("I(R1)")
+ x = LTR.get_trace('time') # Gets the time axis
+ steps = LTR.get_steps()
+ for step in range(len(steps)):
+     # print(steps[step])
+     plt.plot(x.get_time_axis(step), IR1.get_wave(step), label=steps[step])
 
- `plt.legend() # order a legend `  
- `plt.show() `  
+ plt.legend() # order a legend
+ plt.show()
+ ```   
 
 ### LTSpice_Batch ###
 This module is used to launch LTSPice simulations. Results then can be processed with either the LTSpiceRawRead
@@ -79,47 +80,46 @@ updated directly by the script, in order to change component values, parameters 
 
 Here follows an example of operation.
 
- ` import os `  
- ` from PyLTSpice.LTSpiceBatch import LTCommander `  
- ` from shutil import copyfile `  
+ ```import os
+from PyLTSpice.LTSpiceBatch import LTCommander
+from shutil import copyfile
  
- ` # get script absolute path `  
- ` meAbsPath = os.path.dirname(os.path.realpath(__file__)) `  
- ` # select spice model `  
- ` LTC = LTCommander(meAbsPath + "\\Batch_Test.asc") `  
+# get script absolute path
+meAbsPath = os.path.dirname(os.path.realpath(__file__))
+# select spice model
+LTC = LTCommander(meAbsPath + "\\Batch_Test.asc")
  
- ` LTC.set_parameters(res=0, cap=100e-6)  # Redefining parameters in the netlist `  
- ` LTC.set_component_value('R2', '2k')  # Redefining component values `  
- ` LTC.set_component_value('R1', '4k') `  
- ` # define simulation `  
- ` LTC.add_instructions( `  
- `     "; Simulation settings", `  
- `     ".param run = 0"  # Commands can be set directly with the .param command instad of the set_parameters(...) `  
- ` ) `  
+LTC.set_parameters(res=0, cap=100e-6)  # Redefining parameters in the netlist
+LTC.set_component_value('R2', '2k')  # Redefining component values
+LTC.set_component_value('R1', '4k')
  
- ` for opamp in ('AD712', 'AD820'): `  
- ` ....# Setting a model of the U1 Component. Note that subcircuits need the X prefix `  
- ` ....LTC.set_element_model('XU1', opamp): `  
- ` ....for supply_voltage in (5, 10, 15): `  
- ` ........LTC.set_component_value('V1', supply_voltage)  # Set a voltage source value `  
- ` ........LTC.set_component_value('V2', -supply_voltage) `  
- ` ........rawfile, logfile = LTC.run()  # Runs the simulation with the updated netlist ` 
- ` ........# The run() returns the RAW filename and LOG filenames so that can be processed with `  
- ` ........# the LTSpice_ReadRaw and LTSteps modules. `  
- ` ........# The command below is optional, used just to keep a copy of the netlist for debug purposes `  
- ` ........copyfile(LTC.run_netlist_file, `  
- ` ................."{}_{}_{}.net".format(LTC.circuit_radic, opamp, supply_voltage))  # Keep the netlist for reference `  
+# define simulation
+LTC.add_instructions(
+    "; Simulation settings",
+    ".param run = 0"  # Commands can be set directly with the .param command instad of the set_parameters(...)
+)
  
- ` LTC.reset_netlist()  # This resets all the changes done to the checklist `  
- ` LTC.add_instructions(  # Changing the simulation file`  
- `     "; Simulation settings", `  
- `     ".ac dec 30 10 1Meg", `  
- `     ".meas AC Gain MAX mag(V(out)) ; find the peak response and call it ""Gain""", `  
- `     ".meas AC Fcut TRIG mag(V(out))=Gain/sqrt(2) FALL=last" `  
- ` ) `  
- `  `  
- ` raw, log = LTC.run() `  
+for opamp in ('AD712', 'AD820'):
+    # Setting a model of the U1 Component. Note that subcircuits need the X prefix
+    LTC.set_element_model('XU1', opamp):
+        for supply_voltage in (5, 10, 15):
+            LTC.set_component_value('V1', supply_voltage)  # Set a voltage source value
+            LTC.set_component_value('V2', -supply_voltage)
+            rawfile, logfile = LTC.run()  # Runs the simulation with the updated netlist
+            # The run() returns the RAW filename and LOG filenames so that can be processed with
+            # the LTSpice_ReadRaw and LTSteps modules.
 
+LTC.reset_netlist()  # This resets all the changes done to the checklist
+LTC.add_instructions(  # Changing the simulation file
+    "; Simulation settings",
+    ".ac dec 30 10 1Meg",
+    ".meas AC Gain MAX mag(V(out)) ; find the peak response and call it ""Gain""",
+    ".meas AC Fcut TRIG mag(V(out))=Gain/sqrt(2) FALL=last"
+)
+
+raw, log = LTC.run()
+LTC.wait_completion()
+```
 
 ### LTSteps.py ###
 
