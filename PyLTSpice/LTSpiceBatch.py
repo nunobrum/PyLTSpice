@@ -529,12 +529,33 @@ class SimCommander(object):
         """
         self._set_model_and_value(element, model)
 
-    def get_component_value(self, element: str):
-        """Returns the value of a component from the netlist."""
+    def get_component_value(self, element: str) -> str:
+        """
+        Returns the value of a component retrieved from the netlist.
+
+        Parameters
+        ----------
+        element : str
+            Reference of the circuit element to search for.
+
+        Returns
+        -------
+        : str
+            value of the circuit element .
+        """
         return self._get_model_and_value(element)
 
+    def set_component_values(self, **kwargs):
+        """Adds one or more components on the netlist.
+        Usage:
+            LTC.set_component_values(R1=330, R2="3.3k", R3="1Meg", V1="PWL(0 1 30m 1 30.001m 0 60m 0 60.001m 1)")
+        """
+        for value in kwargs:
+            self.set_component_value(value, kwargs[value])
+
     def write_netlist(self, run_netlist_file: str):
-        """Writes the netlist will all the requested updates into a file named <run_netlist_file>.
+        """
+        Writes the netlist will all the requested updates into a file named <run_netlist_file>.
 
         Parameters
         ----------
@@ -553,7 +574,8 @@ class SimCommander(object):
         f.close()
 
     def reset_netlist(self):
-        """Removes all previous edits done to the netlist, i.e. resets it to the original state.
+        """
+        Removes all previous edits done to the netlist, i.e. resets it to the original state.
 
         Parameters
         ----------
@@ -606,7 +628,6 @@ class SimCommander(object):
         -------
         Nothing
         """
-
         # decide sim required
         if self.netlist is not None:
             # update number of simulation
@@ -638,7 +659,11 @@ class SimCommander(object):
             raise UserWarning('skipping simulation ' + str(self.runno))
 
     def updated_stats(self):
-        """This function """
+        """
+        This function updates the OK/Fail statistics and releases finished RunTask objects from memory.
+        Returns
+        -------
+        Nothing"""
         i = 0
         while i < len(self.threads):
             if self.threads[i].is_alive():
