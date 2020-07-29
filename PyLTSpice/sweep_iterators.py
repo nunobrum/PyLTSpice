@@ -1,6 +1,30 @@
+"""
+@author:        Nuno Brum; Andreas Kaeberlein
+@copyright:     Copyright 2020
+
+@license:       GPLv3
+@maintainer:    Nuno Brum
+@email:         me@nunobrum.com
+
+@file:          sweep_iterators.py
+@date:          2020-07-24
+
+@brief          Iterator Helper
+
+                relaxed parameter sweeps
+"""
+
+
+
+#------------------------------------------------------------------------------
+# Python Libs
+#
 from typing import Union
+#------------------------------------------------------------------------------
 
 
+
+#------------------------------------------------------------------------------
 def sweep(start: Union[int, float], stop: Union[int, float], step: Union[int, float] = 1):
     """Helper function.
     Generator function to be used in sweeps.
@@ -28,8 +52,11 @@ def sweep(start: Union[int, float], stop: Union[int, float], step: Union[int, fl
             yield val
             inc += 1
             val = start - inc * step
+#------------------------------------------------------------------------------
 
 
+
+#------------------------------------------------------------------------------
 def sweep_log(start: Union[int, float], stop: Union[int, float], step: Union[int, float] = 10):
     """Helper function.
     Generator function to be used in logarithmic sweeps.
@@ -52,3 +79,117 @@ Advantages towards the range python built-in functions_
         while start >= stop:
             yield start
             start /= stp
+#------------------------------------------------------------------------------
+
+
+
+#------------------------------------------------------------------------------
+class sweep_iterators:
+
+    #*****************************
+    def __init__(self):
+        """
+        Initialization
+        """
+        self.numTotalIterations = 0     # total of iteartion if all loops are executed
+        self.numCurrentIteration = 0    # current iteration
+        self.iteratorEntrys = []        # list of dicts for iterator entrys
+        self.idxForNextIter = []        # currently used entry value for loop
+    #*****************************
+    
+    
+    #*****************************
+    def add(self, name="", vals = []):
+        """
+        @note               adds entry to list of iterators
+                            
+        @param name         component name in ltspice schematic
+        @param vals         component values
+        @rtype              boolean
+        @return             successful
+        """
+        # check for valid arguments
+        if ( 0 == len(name) or 0 == len(vals) ):
+            raise ValueError("Empty arguments provided")
+        # add to iterator list
+        self.iteratorEntrys.append({'name': name, 'values': vals})  # add entry
+        self.idxForNextIter.append(0)                               # start on first element
+        # update total number of iteration
+        self.numTotalIterations = 1;    # prepare for mutiplication
+        for i in self.iteratorEntrys:
+            self.numTotalIterations = self.numTotalIterations * len(i['values'])
+        # reset current iterator to ensure restart
+        self.numCurrentIteration = 0
+        # succesfull end
+        return True
+    #*****************************
+    
+    
+    #*****************************
+    def done(self):
+        """
+        @note               check if iteration is done
+        @rtype              boolean
+        @retval     True    Iteration done
+        @retval     False   Iteration needs to continue
+        @return             successful
+        """
+        # check for proper init
+        if ( 0 == len(self.iteratorEntrys) ):
+            return True
+        # iteration done?
+        if ( self.numCurrentIteration < self.numTotalIterations ):
+            return False
+        return True
+    #*****************************
+    
+    
+    #*****************************
+    def next(self):
+        """
+        @note               creates next parameter set for sweep
+        
+        @rtype              dict
+        @return             parameter set
+        """
+        # check for iterators
+        if ( 0 == len(self.iteratorEntrys) ):
+            raise ValueError("No iterator entrys defined. Use 'add' procedure")
+        # assemble dict with new iterator values
+        nextIter = {}
+        for i in range(len(self.iteratorEntrys)):
+            nextIter[self.iteratorEntrys[i]['name']] = self.iteratorEntrys[i]['values'][self.idxForNextIter[i]]
+        # prepare for next cycle
+        for i in range(len(self.idxForNextIter)-1, -1, -1):
+            # increment inner loop
+            if ( i == len(self.idxForNextIter)-1 ):
+                self.idxForNextIter[i] = self.idxForNextIter[i] + 1
+            # inner loop overflow, inc outer loop
+            if ( self.idxForNextIter[i] >= len(self.iteratorEntrys[i]['values']) ):
+                self.idxForNextIter[i]              = 0                             # restart inner loop at first element
+                self.idxForNextIter[max(i-1, 0)]    = self.idxForNextIter[i-1] + 1  # go to next element in outer loop
+        # increment iterator
+        self.numCurrentIteration = self.numCurrentIteration + 1
+        # next iteration element
+        return nextIter
+    #*****************************
+    
+#------------------------------------------------------------------------------
+
+
+
+#------------------------------------------------------------------------------
+if __name__ == '__main__':
+    
+    # init class
+    mySI = sweep_iterators()    
+    
+    # add to sweep
+    mySI.add('R1', [10, 20])
+    mySI.add('R2', [0, 1])
+    mySI.add('X1', ["abc", "def"])
+    
+    # generate iterator
+    while ( not mySI.done() ):
+        print(mySI.next())
+#------------------------------------------------------------------------------
