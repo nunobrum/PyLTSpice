@@ -162,12 +162,13 @@ class SimCommander(object):
 
         ```
         LTC = SimCommander("my_circuit.asc")
+        LTC.set_parameters(temp=80)  # Sets the simulation temperature to be 80 degrees
+        LTC.set_component_value('R2', '3.3k')  #  Updates the resistor R2 value to be 3.3k
         for dmodel in ("BAT54", "BAT46WJ")
             LTC.set_element_model("D1", model)  # Sets the Diode D1 model
-            LTC.set_parameters(temp=80)  # Sets the simulation temperature to be 80 degrees
-            LTC.set_component_value('R1', 3300)  #  Updates the resistor R1 value to be 3.3k
-            LTC.set_component_value('R2', '3.3k')  #  Updates the resistor R2 value to be 3.3k
-            LTC.run()
+            for res_value in sweep(2.2, 2,4, 0.2): Steps from 2.2 to 2.4 with 0.2 increments
+                LTC.set_component_value('R1', res_value)  #  Updates the resistor R1 value to be 3.3k
+                LTC.run()
 
         LTC.wait_completion()  # Waits for the LTSpice simulations to complete
 
