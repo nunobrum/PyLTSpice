@@ -1,3 +1,4 @@
+from typing import Callable, Any
 from typing import Iterable
 from PyLTSpice.LTSpiceBatch import SimCommander
 
@@ -9,9 +10,9 @@ class StepInfo(object):
         self.iter = iter
 
 
-class SimStepper(object):
+class SimStepper(SimCommander):
 
-    def __init__(self, sim_commander: SimCommander):
+    def __init__(self, spice_file: str, parallel_sims=4, renaming_mask=None):
         """This class is intended to be used for simulations with many parameter sweeps. This provides a more user-
         friendly interface than the SimCommander class when there are many parameters to be found. Using the
         SimCommander class a loop needs to be added for each dimension of the simulations.
@@ -47,24 +48,38 @@ class SimStepper(object):
         Another advantage of using SimStepper is that it can optionally use the .SAVEBIAS in the first simulation and
         then use the .LOADBIAS command at the subsequent ones to speed up the simulation times.
         """
-        self.sim_commander = sim_commander
+        SimCommander.__init__(self, spice_file, parallel_sims)
         self.iter_list = []
 
     def add_param_sweep(self, param: str, iterable: Iterable):
-        """Adds a dimension to the simulation"""
+        """Adds a dimension to the simulation, where the param is swept."""
         self.iter_list.append(StepInfo("param", param, iterable))
 
     def add_value_sweep(self, comp: str, iterable: Iterable):
+        """Adds a dimension to the simulation, where a component value is swept."""
         # The next line raises an ComponentNotFoundError if the component doesn't exist
-        _ = self.sim_commander.get_component_value(comp)
+        _ = self.get_component_value(comp)
         self.iter_list.append(StepInfo("component", comp, iterable))
 
     def add_model_sweep(self, comp: str, iterable: Iterable):
+        """Adds a dimension to the simulation, where a component model is swept."""
         # The next line raises an ComponentNotFoundError if the component doesn't exist
-        _ = self.sim_commander.get_component_value(comp)
+        _ = self.get_component_value(comp)
         self.iter_list.append(StepInfo("model", comp, iterable))
 
-    def run_all(self):
+    def total_number_of_simulations(self):
+        """Returns the total number of simulations foreseen."""
+        total = 1
+        for step in self.iter_list:
+            total *= len(step.iter)
+        return total
+
+    def run_all(self, callback: Callable[[str, str], Any] = None, use_loadbias='Auto'):
+        assert use_loadbias in ('Auto', 'Yes', 'No'), "use_loadbias argument must be 'Auto', 'Yes' or 'No'"
+        if (use_loadbias == 'Auto' and self.total_number_of_simulations() > 10) or use_loadbias == 'Yes':
+            # It will choose to use .SAVEBIAS/.LOADBIAS if the number of simulaitons is higher than 10
+            # TODO: Make a first simulation and storing the bias
+            pass
         iter_no = 0
         iterators = [iter(step.iter) for step in self.iter_list]
         while True:
@@ -76,45 +91,34 @@ class SimStepper(object):
                     iter_no -= 1
                     continue
                 if self.iter_list[iter_no].what == 'param':
-                    self.sim_commander.set_parameter(self.iter_list[iter_no].elem, value)
+                    self.set_parameter(self.iter_list[iter_no].elem, value)
                 elif self.iter_list[iter_no].what == 'component':
-                    self.sim_commander.set_component_value(self.iter_list[iter_no].elem, value)
+                    self.set_component_value(self.iter_list[iter_no].elem, value)
                 elif self.iter_list[iter_no].what == 'model':
-                    self.sim_commander.set_element_model(self.iter_list[iter_no].elem, value)
+                    self.set_element_model(self.iter_list[iter_no].elem, value)
                 else:
-                    # TODO: develop other sweeps
+                    # TODO: develop other types of sweeps EX: add .STEP instruction
                     raise ValueError("Not Supported sweep")
                 iter_no += 1
             if iter_no < 0:
                 break
-            self.sim_commander.run()
+            # TODO: Implement the renaming Mask, so the output filename is written according to user instructions
+            SimCommander.run(self, callback=callback)  # Like this a recursion is avoided
             iter_no = len(self.iter_list) - 1  # Resets the counter to start next iteration
-        # Now waits for the simulations to end    
-        self.sim_commander.wait_completion()
+        # Now waits for the simulations to end
+        self.wait_completion()
+
+    def run(self):
+        """Rather uses run_all instead"""
+        self.run_all()
 
 
 if __name__ == "__main__":
     from PyLTSpice.sweep_iterators import *
 
-    class TestSim(object):
-        def run(self):
-            print("Run")
-
-        def set_parameter(self, param, value):
-            print("Setting Param", param, " to ", value)
-
-        def set_component_value(self, comp, value):
-            print("Setting Component", comp, " to ", value)
-
-        def set_element_model(self, comp, value):
-            print("Setting Element", comp, " to ", value)
-
-        def get_component_value(self, comp):
-            pass
-
-    testsim = TestSim()
-    test = SimStepper(testsim)
+    test = SimStepper("mydesign.asc")
     test.add_param_sweep("param#1", range(1, 3))
     test.add_value_sweep("R1", sweep_log(0.1, 10, 10))
     test.add_model_sweep("D1", ("model1", "model2"))
     test.run_all()
+
