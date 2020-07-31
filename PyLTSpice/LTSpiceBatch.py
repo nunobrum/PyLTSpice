@@ -1,3 +1,19 @@
+#!/usr/bin/env python
+
+# -------------------------------------------------------------------------------
+# Name:        LTSpiceBatch.py
+# Purpose:     Tool used to launch LTSpice simulation in batch mode. Netlsts can
+#              be updated by user instructions
+#
+# Author:      Nuno Brum (nuno.brum@gmail.com)
+#
+# Created:     23-12-2016
+# Licence:     lGPL v3
+# -------------------------------------------------------------------------------
+
+__author__ = "Nuno Canto Brum <nuno.brum@gmail.com>"
+__copyright__ = "Copyright 2020, Fribourg Switzerland"
+
 from warnings import warn
 import subprocess
 import threading

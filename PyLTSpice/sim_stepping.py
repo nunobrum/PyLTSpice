@@ -1,3 +1,20 @@
+#!/usr/bin/env python
+
+# -------------------------------------------------------------------------------
+# Name:        sim_stepping.py
+# Purpose:     Spice Simulation Library intended to automate the exploring of
+#              design corners, try different models and different parameter
+#              settings.
+#
+# Author:      Nuno Brum (nuno.brum@gmail.com)
+#
+# Created:     31-07-2020
+# Licence:     lGPL v3
+# -------------------------------------------------------------------------------
+
+__author__ = "Nuno Canto Brum <nuno.brum@gmail.com>"
+__copyright__ = "Copyright 2017, Fribourg Switzerland"
+
 from typing import Callable, Any
 from typing import Iterable
 from PyLTSpice.LTSpiceBatch import SimCommander
