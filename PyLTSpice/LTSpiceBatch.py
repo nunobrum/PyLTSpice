@@ -295,14 +295,20 @@ class SimCommander(object):
 
     def _get_param_line(self, param):
         """Internal function. Do not use."""
-        line_no = 0
         prm = param.upper()
-        for line in self.netlist:
-            line_upcase = line.upper()
-            if line_upcase.startswith('.PARAM ') and (prm in line_upcase):
-                return line_no
-            # TODO process when the line is ending with +
-            line_no += 1
+        search_param = re.compile("%s\s*=" % prm)  # process everything in uppercase (Spice is case insensitive)
+        in_param_line = False  # This is needed to process multi-line commands
+        for line_no, line in enumerate(self.netlist):
+            line_upcase = line.lstrip(' ').upper()  # Everything in uppercase
+            if in_param_line or line_upcase.startswith('.PARAM '):
+                if search_param.search(line_upcase):
+                    return line_no
+                elif line.endswith('+'):  # processes next line independent if it starts with .PARAM
+                    in_param_line = True
+                else:
+                    in_param_line = False
+            else:
+                in_param_line = False
         else:
             return -1
 
