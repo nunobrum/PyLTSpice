@@ -23,19 +23,21 @@ END_LINE_TERM = '\n'
 UNIQUE_SIMULATION_DOT_instructionS = ('.AC', '.DC', '.TRAN', 'NOISE', '.DC', '.TF')
 
 REPLACE_REGXES = {
-    'B': r"^B[VI]\w+(\s+[\w\+\-]+){2}\s+(?P<value>.*)$",  # Behavioral source
-    'C': r"^C\w+(\s+[\w\+\-]+){2}\s+(?P<value>({)?(?(3).*}|([0-9\.E+-]+(Meg|[kmup])?R?))).*$",  # Capacitor
-    'D': r"^D\w+(\s+[\w\+\-]+){2}\s+(?P<value>\w+).*$",  # Diode
-    'I': r"^I\w+(\s+[\w\+\-]+){2}\s+(?P<value>.*)$",  # Current Source
-    'J': r"^J\w+(\s+[\w\+\-]+){3}\s+(?P<value>\w+).*$",  # JFET
-    'K': r"^K\w+(\s+[\w\+\-]+){2:4}\s+(?P<value>[\+\-]?[0-9\.E+-]+[kmup]?).*$",  # Mutual Inductance
-    'L': r"^L\w+(\s+[\w\+\-]+){2}\s+(?P<value>({)?(?(3).*}|([0-9\.E+-]+(Meg|[kmup])?R?))).*$",  # Inductance
-    'M': r"^M\w+(\s+[\w\+\-]+){3}\s+(?P<value>\w+).*$",  # MOSFET
-    'Q': r"^Q\w+(\s+[\w\+\-]+){3}\s+(?P<value>\w+).*$",  # Bipolar
-    'R': r"^R\w+(\s+[\w\+\-]+){2}\s+(?P<value>({)?(?(3).*}|([0-9\.E+-]+(Meg|[kmup])?R?))).*$",  # Resistors
-    'V': r"^V\w+(\s+[\w\+\-]+){2}\s+(?P<value>.*)$",  # Voltage Source
-    'X': r"^X\w+(\s+[\w\+\-]+){1,99}\s+(?P<value>\w+)(\s+\w+\s*=\s*\S+)*$",  # Sub-circuit
+    'B': r"^(B[VI]\w+)(\s+[\w\+\-]+){2}\s+(?P<value>.*)$",  # Behavioral source
+    'C': r"^(C\w+)(\s+[\w\+\-]+){2}\s+(?P<value>({)?(?(3).*}|([0-9\.E+-]+(Meg|[kmup])?R?))).*$",  # Capacitor
+    'D': r"^(D\w+)(\s+[\w\+\-]+){2}\s+(?P<value>\w+).*$",  # Diode
+    'I': r"^(I\w+)(\s+[\w\+\-]+){2}\s+(?P<value>.*)$",  # Current Source
+    'J': r"^(J\w+)(\s+[\w\+\-]+){3}\s+(?P<value>\w+).*$",  # JFET
+    'K': r"^(K\w+)(\s+[\w\+\-]+){2:4}\s+(?P<value>[\+\-]?[0-9\.E+-]+[kmup]?).*$",  # Mutual Inductance
+    'L': r"^(L\w+)(\s+[\w\+\-]+){2}\s+(?P<value>({)?(?(3).*}|([0-9\.E+-]+(Meg|[kmup])?R?))).*$",  # Inductance
+    'M': r"^(M\w+)(\s+[\w\+\-]+){3}\s+(?P<value>\w+).*$",  # MOSFET
+    'Q': r"^(Q\w+)(\s+[\w\+\-]+){3}\s+(?P<value>\w+).*$",  # Bipolar
+    'R': r"^(R\w+)(\s+[\w\+\-]+){2}\s+(?P<value>({)?(?(3).*}|([0-9\.E+-]+(Meg|[kmup])?R?))).*$",  # Resistors
+    'V': r"^(V\w+)(\s+[\w\+\-]+){2}\s+(?P<value>.*)$",  # Voltage Source
+    'X': r"^(X\w+)(\s+[\w\+\-]+){1,99}\s+(?P<value>\w+)(\s+\w+\s*=\s*\S+)*$",  # Sub-circuit
 }
+
+PARAM_REGX = r"%s\s*=\s*(?P<value>[\w*/\.+-/{}()]*)"
 
 
 def _get_group_regxstr(regstr, param):
@@ -144,7 +146,7 @@ class SpiceEditor(object):
             self.logger.error(error_msg)
             raise ComponentNotFoundError(error_msg)
 
-    def _get_model_and_value(self, component) -> Optional[str]:
+    def _get_component_info(self, component) -> Optional[dict]:
         """Internal function. Do not use."""
         prefix = component[0]  # Using the first letter of the component to identify what is it
         regxstr = REPLACE_REGXES.get(prefix, None)  # Obtain RegX to make the update
@@ -165,9 +167,8 @@ class SpiceEditor(object):
                 raise NotImplementedError(error_msg)
                 # print("Unsupported line ""{}""".format(line))
             else:
-                start = m.start('value')
-                end = m.end('value')
-                return line[start:end]
+                info = m.groupdict()
+                return info
         else:
             error_msg = "Component '%s' not found in netlist" % component
             self.logger.error(error_msg)
@@ -226,6 +227,13 @@ class SpiceEditor(object):
         """
         self.netlist.remove(instruction)
 
+    def get_parameter(self, param :str) -> str:
+        """Retrieves a Parameter from the Netlist"""
+        param_def =  self.netlist[self._get_param_line(param)]
+        regx = re.compile(PARAM_REGX % param, re.IGNORECASE)
+        m = regx.search(param_def, re.IGNORECASE)
+        return m.group('value')
+
     def set_parameter(self, param: str, value: Union[str, int, float]) -> None:
         """Adds a parameter to the SPICE netlist.
         Usage:
@@ -254,7 +262,7 @@ class SpiceEditor(object):
             insert_line = len(self.netlist) - 2
             self.netlist.insert(insert_line, '.PARAM {}={}  ; Batch instruction'.format(param, value))
         else:
-            regx = re.compile(r"%s\s*=\s*(\w*)" % param, re.IGNORECASE)
+            regx = re.compile(PARAM_REGX % param, re.IGNORECASE)
             line = self.netlist[param_line]
             m = regx.search(line)
             start, stop = m.span()
@@ -329,7 +337,7 @@ class SpiceEditor(object):
         : str
             value of the circuit element .
         """
-        return self._get_model_and_value(element)
+        return self._get_component_info(element)['value']
 
     def set_component_values(self, **kwargs):
         """Adds one or more components on the netlist.
@@ -338,6 +346,31 @@ class SpiceEditor(object):
         """
         for value in kwargs:
             self.set_component_value(value, kwargs[value])
+
+    def get_components(self, prefixes='*') -> list:
+        """Returns a list of components that match the list of prefixes indicated on the parameter prefixes.
+        In case prefixes is left empty, it returns all the ones that are defined by the REPLACE_REGEXES.
+        The list will contain the designators of all components found. """
+        answer = []
+        if prefixes == '*':
+            prefixes = ''.join(REPLACE_REGXES.keys())
+        for line in self.netlist:
+            prefix = line.upper()[0]
+            if prefix in prefixes:
+                # regexvalue = re.compile(REPLACE_REGXES[prefix], re.IGNORECASE)
+                # m = regexvalue.match(line)
+                i=1
+                while line[i] not in (' ', '\t'):  # detects the first space of tab which means end of designator
+                    i += 1
+                answer.append(line[:i])  # Appends only the designators
+        return answer
+
+    def remove_component(self, designator):
+        line = self._getline_startingwith(designator)
+        del self.netlist[line]  # Deletes the line
+
+    def get_all_nodes(self):
+        """TODO: Implement a function that retrieves all nodes existing on a Netlist"""
 
     def write_netlist(self, run_netlist_file: str):
         """
@@ -386,3 +419,18 @@ class SpiceEditor(object):
                 error_msg = traceback.format_tb(err)
                 self.logger.error(error_msg)
                 self.netlist = None
+
+
+if __name__ == '__main__':
+    E = SpiceEditor('..\\tests\\Batch_Test.net')
+    E.reset_netlist()
+    print(E.get_component_value('R1'))
+    print("Setting 1.23k")
+    E.set_parameter("I1", "1.23k")
+    print(E.get_parameter('I1'))
+    print("Setting {freq*(10/5.0})")
+    E.set_parameters(I1="{freq*(10/5.0})")
+    print(E.get_parameter('I1'))
+    print(E.get_components())
+    print(E.get_components('RC'))
+    print('\n'.join(E.netlist))
