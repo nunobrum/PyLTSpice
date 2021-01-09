@@ -1,0 +1,30 @@
+# ************************************************************************
+#  @author:     Andreas Kaeberlein
+#  @copyright:  Copyright 2021
+#  @credits:    AKAE
+# 
+#  @license:    GPLv3
+#  @maintainer: Andreas Kaeberlein
+#  @email:      andreas.kaeberlein@web.de
+# 
+#  @file:       unittest.yml
+#  @date:       2021-01-09
+# 
+#  @brief:      runs unit test
+#
+# ************************************************************************
+
+
+name: Unittest
+
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-python@v1
+        with:
+          python-version: '3.7' # Version range or exact version of a Python version to use, using semvers version range syntax.
+          architecture: 'x64'   # optional x64 or x86. Defaults to x64 if not specified
