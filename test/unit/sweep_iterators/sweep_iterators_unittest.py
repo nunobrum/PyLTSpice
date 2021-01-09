@@ -46,7 +46,7 @@ class test_sweep_iterators(unittest.TestCase):
         """
         @note   inits class
         """
-        # init
+        # prepare
         dut = sweep_iterators.sweep_iterators()
         # check 
         self.assertEqual(dut.numTotalIterations, 0)
@@ -56,6 +56,60 @@ class test_sweep_iterators(unittest.TestCase):
     #*****************************
     
     
+    #*****************************
+    def test_add(self):
+        """
+        @note   add 
+        """
+        # prepare
+        dut = sweep_iterators.sweep_iterators()
+        # add entries
+        dut.add('elem1', [1, 2, 3])
+        dut.add('elem2', [1.5, 1.8, 2.0])
+        dut.add('elem3', ["entry1", "entry2"])
+        # check
+        self.assertEqual(dut.numTotalIterations, 18)
+        self.assertEqual(dut.numCurrentIteration, 0)
+        self.assertDictEqual(dut.iteratorEntrys[0], {'name': 'elem1', 'values': [1, 2, 3]})
+        self.assertDictEqual(dut.iteratorEntrys[1], {'name': 'elem2', 'values': [1.5, 1.8, 2.0]})
+        self.assertDictEqual(dut.iteratorEntrys[2], {'name': 'elem3', 'values': ['entry1', 'entry2']})
+    #*****************************
+    
+    
+    #*****************************
+    def test_next(self):
+        """
+        @note   next
+        """
+        # prepare
+        dut = sweep_iterators.sweep_iterators()
+        dut.add('e1', [10])
+        dut.add('e2', [1e-6, 3e-6])
+        dut.add('e3', [1e3, 3e3, 5e3])
+        # caclulate iterators & check
+        self.assertEqual(dut.numTotalIterations, 6)
+        self.assertEqual(dut.numCurrentIteration, 0)
+        self.assertDictEqual(dut.next(), {'e1': 10, 'e2': 1e-06, 'e3': 1000.0})
+        self.assertDictEqual(dut.next(), {'e1': 10, 'e2': 1e-06, 'e3': 3000.0})
+        self.assertDictEqual(dut.next(), {'e1': 10, 'e2': 1e-06, 'e3': 5000.0})
+        self.assertDictEqual(dut.next(), {'e1': 10, 'e2': 3e-06, 'e3': 1000.0})
+        self.assertDictEqual(dut.next(), {'e1': 10, 'e2': 3e-06, 'e3': 3000.0})
+        self.assertDictEqual(dut.next(), {'e1': 10, 'e2': 3e-06, 'e3': 5000.0})
+    #*****************************
+    
+    
+    #*****************************
+    def test_done(self):
+        """
+        @note   next
+        """
+        # prepare
+        dut = sweep_iterators.sweep_iterators()
+        dut.add('e1', [10])
+        # check
+        self.assertDictEqual(dut.next(), {'e1': 10})
+        self.assertTrue(dut.done())
+    #*****************************
     
 #------------------------------------------------------------------------------
 
