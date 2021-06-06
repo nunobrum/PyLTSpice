@@ -8,8 +8,8 @@ setuptools.setup(
     version='1.1',
     scripts=['PyLTSpice\\__init__.py'
              # 'PyLTSpice\\Histogram.py',
-             # 'PyLTSpice\\LTSpice_RawRead.py',
-             # 'PyLTSpice\\LTSpiceBatch.py',
+             'PyLTSpice\\LTSpice_RawRead.py',
+             'PyLTSpice\\LTSpiceBatch.py',
              # 'PyLTSpice\\LTSteps.py',
              # 'PyLTSpice\\sketch.py'
              ],

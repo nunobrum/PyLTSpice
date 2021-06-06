@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# coding=utf-8
 
 # -------------------------------------------------------------------------------
 # Name:        LTSpice_RawRead.py
@@ -11,17 +12,168 @@
 # Licence:     General Public GNU License
 # -------------------------------------------------------------------------------
 
-""" A pure python implementation of an LTSpice RAW file reader.
-The reader returns a class containing all the traces read from the RAW File.
-In case there there stepped data detected, it will try to open the simulation LOG file and
-read the stepping information.
-Traces are accessible by the method <LTSpiceReader instance>.get_trace(trace_ref) where trace_ref is either
-the name of the net on the LTSPice Simulation. Normally trace references are stored with the format V(<node_name>)
-for voltages or I(device_reference). For example V(n001) or I(R1) or Ib(Q1).
-For checking step, the method <LTSpiceReader instance>.get_steps() is used. In case there are no steps in the simulation,
-the class will return a single element list.
-NOTE: This module tries to import the numpy if exists on the system.
-If it finds numpy all data is later provided as an array. If not it will use a standard list of floats.
+"""
+This module reads data from an LTSpice RAW file.
+The main class object is the LTSpiceRawRead which is initialized with the filename of the RAW file to be processed.
+The object wil read the file and construct a structure of objects which can be used to access the data inside the
+RAW file.
+To understand why this is done so, in the next section follows a brief explanation of what is contained inside a RAW
+file.
+In case RAW file contains stepped data detected, i.e. when the .STEP command is used, then it will also try to open the
+simulation LOG file and try to obtain read the stepping information.
+
+RAW File Structure
+==================
+
+This section is written to help understand the why the structure of classes is defined as it is. You can gladly skip
+this section and get right down to business by seeing the examples section below.
+
+The RAW file starts by have a text preamble that contains information about the names of the traces the order they
+appear on the binary part and some extra information.
+In the preamble, the lines are always started by one of the following identifiers:
+
+   + Title:          => Contains the path of the source .asc file used to make the simulation preceded by *
+
+   + Date:           => Date when the simulation started
+
+   + Plotname:       => Name of the simulation Ex: "Transient Analysis" or "AC Analysis"
+
+   + Output:         => *significance not understood*
+
+   + Flags:          => Flags that are used in this plot. The simulation can have any combination of these flags.
+                      * "real" -> The traces in the raw file contain real values. As for exmple on a TRAN simulation.
+                      * "complex" -> Traces in the raw file contain complex values. As for exmple on an AC simulation.
+                      * "forward" -> TBC
+                      * "log" -> The preferred plot view of this data is logarithmic.
+                      * "stepped" -> The simulation had .STEP primitives.
+                      * "FastAccess" -> Order of the data is changed to speed up access. See Binary section for details.
+   
+   + No. Variables:  => number of variables contained in this dataset. See section below for details.
+
+   + No. Points:     => number of points per each variable in
+
+   + Offset:         => when the saved of data started
+
+   + Command:        => Name of the simulator executable generating this file.
+
+   + Backannotation: => Backannotation alerts that occurred during simulation
+
+   + Variables:      => a list of variable, one per line as described below
+
+   + Binary:         => Start of the binary section. See section below for details.
+
+Variables List
+--------------
+The variable list contains the list measurements saved in the raw file. The order of the variables defines how they are
+stored in the binary section. The format is one variable per line, using the following format:
+
+<tab><ordinal number><tab><measurement><tab><type of measurement>
+
+Here is an example:
+
+.. code-block:: text
+
+	0	time	time
+	1	V(n001)	voltage
+	2	V(n004)	voltage
+	3	V(n003)	voltage
+	4	V(n006)	voltage
+	5	V(display_current_adc)	voltage
+	6	V(n002)	voltage
+	7	V(3v3_m)	voltage
+	8	V(n005)	voltage
+	9	V(n007)	voltage
+	10	V(24v_dsp)	voltage
+	11	I(C3)	device_current
+	12	I(C2)	device_current
+	13	I(C1)	device_current
+	14	I(I1)	device_current
+	15	I(R4)	device_current
+	16	I(R3)	device_current
+	17	I(V2)	device_current
+	18	I(V1)	device_current
+	19	Ix(u1:+)	subckt_current
+	20	Ix(u1:-)	subckt_current
+
+Binary Section
+--------------
+The binary section of .RAW file is where the data is usually written, unless the user had explicitly specified an ASCII
+representation. In this case this section is replaced with a "Values" section.
+LTSpice stores data directly onto the disk during simulation, writing per each time or frequency step the list of
+values, as exemplified below for a .TRAN simulation.
+
+     <timestamp 0><trace 1><trace 2><trace 3><trace 4>.....<trace N><timestamp 1><trace 1><trace2 >...
+
+Depending on the type of simulation the type of data changes.
+On TRAN simulations s the timestamp is always stored as 8 bytes float (double) and trace values as a 4 bytes (single).
+On AC simulations the data is stored in omplex format, which includes a real part and an imaginary part, each with 8
+bytes.
+The way we determine the size of the data is dividing the total block size by the number of points, then taking only
+the integer part.
+
+Fast Access
+-----------
+
+Once a simulation is done, the user can ask LTSpice to optimize the data structure in such that he variables are stored
+contiguously as illustrated below.
+
+     <timestamp 0><trace 1><trace 2><trace 3><trace 4>.....<trace N><timestamp 1><trace 1><trace2 >...
+
+This can speed up the data reading. Note that this transformation is not done automatically. Transforming data to Fast
+Access must be requested by the user. If the transformation is done, it is registered in the Flags: line in the
+header. RawReader supports both Normal and Fast Access formats
+
+Classes Defined
+===============
+
+The .RAW file is read during the construction (constructor method) of an `LTSpiceRawRead` object. All traces on the RAW
+file are uploaded into memory.
+
+The LTSpiceRawRead class then has all the methods that allow the user to access the Axis and Trace Values. If there is
+any stepped data (.STEP primitives), the LTSpiceRawRead class will try to load the log information from the same
+directory as the raw file in order to obtain the STEP information.
+
+Follows an example of the LTSpiceRawRead class usage. Information on the LTSpiceRawRead methods can be found here.
+
+Examples
+========
+
+The example below demonstrates the usage of the LTSpiceRawRead class. It reads a .RAW file and uses matplotlib library
+to plot the results of three traces in two subplots. ::
+
+    import matplotlib.pyplot as plt  # Imports the matplotlib library for plotting the results
+
+    LTR = RawRead("some_random_file.raw")  # Reads the RAW file contents from file
+
+    print(LTR.get_trace_names())  # Prints the contents of the RAW file. The result is a list, and print formats it.
+    print(LTR.get_raw_property())  # Prints all the properties found in the Header section.
+
+    plt.figure()  # Creates the canvas for plotting
+
+    vin = LTR.get_trace('V(in)')  # Get's the trace data. If Numpy is installed, then it comes in numpy array format.
+    vout = LTR.get_trace('V(out)') # Get's the second trace.
+    x = LTR.get_trace('time')  # Retrieves the time vector that will be used as X axis.
+
+    steps = LTR.get_steps()  # Get's the step information. Returns a list of step numbers, ex: [0,1,2...]. If no steps
+                             # are present on the RAW file, returns only one step : [0] .
+
+    fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)  # Creates the two subplots. One on top of the other.
+
+    for ax in (ax1, ax2):  # Crates a grid on all the plots.
+        ax.grid(True)
+
+    plt.xlim([0.9e-3, 1.2e-3])  # Optionally, limits the X axis to just a subrange.
+
+    ax1.plot(x.get_time_axis(0), vin.get_wave(0)) # On first plot plots the first STEP (=0) of Vin
+
+    for step in steps:  # On the second plot prints all the STEPS of the Vout
+        ax2.plot(x.get_time_axis(step), vout.get_wave(step))
+        # plt.plot(y.get_wave(step))
+        # plt.plot(x.get_wave(step),marker='x')
+        # plt.plot(x.get_wave(step), y.get_wave(step), label=LTR.steps[step])
+
+    plt.show()  # Creates the matplotlib's interactive window with the plots.
+
 """
 
 __author__ = "Nuno Canto Brum <nuno.brum@gmail.com>"
@@ -41,7 +193,14 @@ else:
 
 
 class DataSet(object):
-    """Class for storing Traces."""
+    """
+    This is the base class for storing all traces inside of a RAW file. Returned by the get_trace() or by the get_axis()
+    methods.
+    Normally the user doesn't have to be aware of this class. It is only used internally to encapsulate the different
+    implementations of the wave population.
+    Data can be retrieved directly by using the [] operator.
+    If numpy is available, the numpy vector can be retrieved by using the get_wave() method.
+    """
 
     def __init__(self, name, datatype, datalen, numerical_type='real'):
         """Base Class for both Axis and Trace Classes.
@@ -55,42 +214,100 @@ class DataSet(object):
             elif numerical_type == 'complex':
                 self.data = zeros(datalen, complex128)
         else:
-            self.data = [None for x in range(datalen)]
+            self.data = [None for _ in range(datalen)]
 
     def set_pointA(self, n, value):
-        """function to be used on ASCII RAW Files.
-        :param n:     the point to set
-        :param value: the Value of the point being set."""
+        """
+        Conversion function to be used on ASCII RAW Files.
+        :param n: number of the point to set
+        :type n:int
+        :param value: the Value of the point being set.
+        :type value: float
+        :returns: Nothing
+        """
         assert isinstance(value, float)
         self.data[n] = value
 
-    def set_pointB8(self, n, value):
-        """Function that converts the variable 0, normally associated with the plot X axis.
+    def set_pointB8(self, n, value)->None:
+        """
+        Function that converts the variable 0, normally associated with the plot X axis.
         The codification is done as follows:
-               7   6   5   4     3   2   1   0
-        Byte7  SGM SGE E9  E8    E7  E6  E5  E4         SGM - Signal of Mantissa: 0 - Positive 1 - Negative
-        Byte6  E3  E2  E1  E0    M51 M50 M49 M48        SGE - Signal of Exponent: 0 - Positive 1 - Negative
-        Byte5  M47 M46 M45 M44   M43 M42 M41 M40        E[9:0] - Exponent
-        Byte4  M39 M38 M37 M36   M35 M34 M33 M32        M[51:0] - Mantissa.
+
+        =====  === === === ===   === === === ===
+        bit#   7   6   5   4     3   2   1   0
+        =====  === === === ===   === === === ===
+        Byte7  SGM SGE E9  E8    E7  E6  E5  E4
+        Byte6  E3  E2  E1  E0    M51 M50 M49 M48
+        Byte5  M47 M46 M45 M44   M43 M42 M41 M40
+        Byte4  M39 M38 M37 M36   M35 M34 M33 M32
         Byte3  M31 M30 M29 M28   M27 M26 M25 M24
         Byte2  M23 M22 M21 M20   M19 M18 M17 M16
         Byte1  M15 M14 M13 M12   M11 M10 M9  M8
         Byte0  M7  M6  M5  M4    M3  M2  M1  M0
+        =====  === === === ===   === === === ===
+
+        Legend:
+
+        SGM - Signal of Mantissa: 0 - Positive 1 - Negative
+
+        SGE - Signal of Exponent: 0 - Positive 1 - Negative
+
+        E[9:0] - Exponent
+
+        M[51:0] - Mantissa.
+
+        :param n: number of the point to set
+        :type n: int
+        :param value: data stream to convert to float value
+        :type value: bytes
+        :returns: Nothing
         """
         self.data[n] = unpack("d", value)[0]
 
-    def set_pointB16(self, n, value):
+    def set_pointB16(self, n, value)->None:
+        """
+        Used to convert a 16 byte stream into a complex data point. Usually used for the .AC simulations.
+        The encoding is the same as for the set_pointB8() but two values are encoded. First one is the real part and
+        the second is the complex part.
+
+        :param n: number of the point to set
+        :type n: int
+        :param value: data stream to convert to complex value
+        :type value: bytes
+        :return: Nothing
+        """
         (re, im) = unpack('dd', value)
         self.data[n] = complex(re, im)
 
-    def set_pointB4(self, n, value):
-        """Function that converts a normal trace into float on a Binary storage. This codification uses 4 bytes.
+    def set_pointB4(self, n, value)->None:
+        """
+        Function that converts a normal trace into float on a Binary storage. This codification uses 4 bytes.
         The codification is done as follows:
-               7   6   5   4     3   2   1   0
-        Byte3  SGM SGE E6  E5    E4  E3  E2  E1         SGM - Signal of Mantissa: 0 - Positive 1 - Negative
-        Byte2  E0  M22 M21 M20   M19 M18 M17 M16        SGE - Signal of Exponent: 0 - Positive 1 - Negative
-        Byte1  M15 M14 M13 M12   M11 M10 M9  M8         E[6:0] - Exponent
-        Byte0  M7  M6  M5  M4    M3  M2  M1  M0         M[22:0] - Mantissa.
+
+        =====  === === === ===   === === === ===
+        bit#   7   6   5   4     3   2   1   0
+        =====  === === === ===   === === === ===
+        Byte3  SGM SGE E6  E5    E4  E3  E2  E1
+        Byte2  E0  M22 M21 M20   M19 M18 M17 M16
+        Byte1  M15 M14 M13 M12   M11 M10 M9  M8
+        Byte0  M7  M6  M5  M4    M3  M2  M1  M0
+        =====  === === === ===   === === === ===
+
+        Legend:
+
+        SGM - Signal of Mantissa: 0 - Positive 1 - Negative
+
+        SGE - Signal of Exponent: 0 - Positive 1 - Negative
+
+        E[6:0] - Exponent
+
+        M[22:0] - Mantissa.
+
+        :param n: number of the point to set
+        :type n: int
+        :param value: data stream to convert to float
+        :type value: bytes
+        :return: Nothing
         """
         self.data[n] = unpack("f", value)[0]
 
@@ -104,7 +321,20 @@ class DataSet(object):
             data = [b2a_hex(value) for value in self.data]
             return "name:'%s'\ntype:'%s'\nlen:%d\n%s" % (self.name, self.type, len(self.data), str(data))
 
+    def __getitem__(self, item):
+        return self.data.__getitem__(item)
+
+    def __len__(self):
+        return len(self.data)
+
     def get_point(self, n):
+        """
+        Get a point from the dataset
+        :param n: position on the vector
+        :type n:int
+        :returns: Value of the data point
+        :rtype: float or complex
+        """
         return self.data[n]
 
     def get_wave(self):
@@ -115,7 +345,14 @@ class DataSet(object):
 
 
 class Axis(DataSet):
-    """This class is used to represent the horizontal axis like on a Transient or DC Sweep Simulation."""
+    """This class is used to represent the horizontal axis like on a Transient or DC Sweep Simulation. It derives from
+    the DataSet and defines additional methods that are specific for X axis.
+    This class is constructed by the get_time_axis() method or by a get_trace(0) command. In RAW files the trace 0 is
+    always the X Axis. Ex: time for .TRAN simulations and frequency for the .AC simulations.
+
+    To access data inside this class, the get_wave() should be used, which implements the support for the STEPed data.
+    IF Numpy is available, get_wave() will return a numpy array.
+    """
 
     def __init__(self, name, datatype, datalen, numerical_type='real'):
         super().__init__(name, datatype, datalen, numerical_type)
@@ -144,6 +381,15 @@ class Axis(DataSet):
                                        "Expecting %d got %d" % (len(self.step_offsets), k))
 
     def step_offset(self, step):
+        """
+        In Stepped RAW files, several simulations runs are stored in the same RAW file. This function returns the
+        offset within the binary stream where each step starts.
+
+        :param step: Number of the step within the RAW file
+        :type step: int
+        :return: The offset within the RAW file
+        :rtype: int
+        """
         if self.step_info is None:
             if step > 0:
                 return len(self.data)
@@ -156,6 +402,18 @@ class Axis(DataSet):
                 return self.step_offsets[step]
 
     def get_wave(self, step=0):
+        """
+        Returns an the vector containing the wave values. If numpy is installed, data is returned as a numpy array.
+        If not, the wave is returned as a list of floats.
+
+        If stepped data is present in the array, the user should specify which step is to be returned. Failing to do so,
+        will return all available steps concatenated together.
+
+        :param step: Optional step in stepped data raw files.
+        :type step: int
+        :return: The trace values
+        :rtype: list[float] or numpy.array
+        """
         # print(self.data)
         # print('step offset %d' % self.step_offset(step))
         # print(self.data[self.step_offset(step):self.step_offset(step + 1)])
@@ -165,6 +423,16 @@ class Axis(DataSet):
             return self.data[self.step_offset(step):self.step_offset(step + 1)]
 
     def get_time_axis(self, step=0):
+        """
+        Returns the time axis raw data. Please note that the time axis may not have a constant time step. LTSpice will
+        increase the time-step in simulation phases where there aren't value changes, and decrease time step in
+        the parts where more time accuracy is needed.
+
+        :param step: Optional step number if reading a raw file with stepped data.
+        :type step: int
+        :return: time axis
+        :rtype: list[float] or numpy.array
+        """
         if USE_NNUMPY:
             return numpy_abs(self.get_wave(step))
         else:
@@ -176,19 +444,46 @@ class Axis(DataSet):
 
 
 class Trace(DataSet):
-    """Class used for storing generic traces that report to a given Axis."""
+    """This class is used to represent a trace . It derives from DataSet and implements the additional methods to
+    support STEPed simulations.
+    This class is constructed by the get_trace() command.
+    Data can be accessed through the [] and len() operators, or by the get_wave() method.
+    If numpy is available the get_wave() method will return a numpy array.
+    """
 
     def __init__(self, name, datatype, datalen, axis, numerical_type='real'):
         super().__init__(name, datatype, datalen, numerical_type)
         self.axis = axis
 
-    def get_point(self, n=0, step=0):
+    def get_point(self, n, step=0):
+        """
+        Implementation of the [] operator. Do not use this method directly.
+
+        :param n: item in the array
+        :type n: int
+        :param step: Optional step number
+        :type step: int
+        :return: float value of the item
+        :rtype: float
+        """
         if self.axis is None:
             return super().get_point(n)
         else:
             return self.data[self.axis.step_offset(step) + n]
 
     def get_wave(self, step=0):
+        """
+        Returns the data contained in this object. For stepped simulations an argument must be passed specifying the
+        the step number. If no steps exist, the argument must be left blank.
+        To know whether stepped data exist, the user can use the get_raw_property('Flags') method.
+
+        If numpy is available the get_wave() method will return a numpy array.
+
+        :param step: To be used when stepped data exist on the RAW file.
+        :type step: int
+        :return: a List or numpy array (if installed) containing the data contained in this object.
+        :rtype: list or numpy.array
+        """
         # print('step size %d' % step)
         # print(self.data[self.axis.step_offset(step):self.axis.step_offset(step + 1)])
         if self.axis is None:
@@ -234,6 +529,14 @@ class LTSPiceReadException(Exception):
 class LTSpiceRawRead(object):
     """Class for reading LTSpice wave Files. It can read all types of Files. If stepped data is detected,
     it will also try to read the corresponding LOG file so to retrieve the stepped data.
+
+    :param raw_filename: The file containing the RAW data to be read
+    :type raw_filename: str
+    :param traces_to_read:
+        A string containing the list of traces to be read. If None is provided, only the header is read and all trace
+        data is discarded. If a '*' wildcard is given or no parameter at all then all traces are read.
+    :key headeronly:
+        Used to only load the header information and skip the trace data entirely. Use `headeronly=True`.
     """
     header_lines = [
         "Title",
@@ -250,13 +553,6 @@ class LTSpiceRawRead(object):
     ]
 
     def __init__(self, raw_filename, traces_to_read='*', **kwargs):
-        """The arguments for this class are:
-    raw_filename   - The file containing the RAW data to be read
-    traces_to_read - A string containing the list of traces to be read. If None is provided, only the header is read
-                     and all trace data is discarded. If a '*' wildcard is given, all traces are read.
-    kwargs         - Keyword parameters that define the options for the loading. Options are:
-                        loadmem - If true, the file will only read waveforms to memory
-    """
         assert isinstance(raw_filename, str)
         if not traces_to_read is None:
             assert isinstance(traces_to_read, str)
@@ -424,19 +720,40 @@ class LTSpiceRawRead(object):
             self._load_step_information(raw_filename)
 
     def get_raw_property(self, property_name=None):
-        """Get a property. By default it returns everything"""
+        """
+        Get a property. By default it returns all properties defined in the RAW file.
+
+        :param property_name: name of the property to retrieve.
+        :type property_name: str
+        :returns: Property object
+        :rtype: str
+        :raises: ValueError if the property doesn't exist
+        """
         if property_name is None:
             return self.raw_params
         elif property_name in self.raw_params.keys():
             return self.raw_params[property_name]
         else:
-            return "Invalid property. Use %s" % str(self.raw_params.keys())
+            raise ValueError("Invalid property. Use %s" % str(self.raw_params.keys()))
 
     def get_trace_names(self):
+        """
+        Returns a list of exiting trace names inside of the RAW file.
+
+        :return: trace names
+        :rtype: list[str]
+        """
         return [trace.name for trace in self._traces]
 
     def get_trace(self, trace_ref):
-        """Retrieves the trace with the name given. """
+        """
+        Retrieves the trace with the requested name (trace_ref).
+
+        :param trace_ref: Name of the trace
+        :type trace_ref: str
+        :return: An object containing the requested trace
+        :rtype: DataSet subclass
+        """
         if isinstance(trace_ref, str):
             for trace in self._traces:
                 if trace_ref == trace.name:
@@ -447,9 +764,10 @@ class LTSpiceRawRead(object):
             return self._traces[trace_ref]
 
     def get_time_axis(self, step=0):
-        """This funcion is to workaround on a LTSpice issue when using 2nd Order compression, where some values
-        have a negative value"""
-        return abs(self.get_trace('time').get_wave(step))
+        """This function is equivalent to get_trace('time').get_time_axis(step) instruction.
+        It's workaround on a LTSpice issue when using 2nd Order compression, where some values on
+        the time trace have a negative value."""
+        return self.get_trace('time').get_time_axis(step)
 
     def _load_step_information(self, filename):
         # Find the extension of the file
@@ -489,6 +807,26 @@ class LTSpiceRawRead(object):
         return self.get_trace(item)
 
     def get_steps(self, **kwargs):
+        """
+        Returns the steps that correspond to the query set in the **kwargs. parameters.
+        Example:
+        ::
+
+            raw_read.get_steps(V5=1.2, TEMP=25)
+
+        This will return all steps in which the voltage source V5 was set to 1.2V and the TEMP parameter is 24 degrees.
+        This feature is only possible if a .log file with the same name as the .raw file exists in the same directory.
+        Note: the correspondency between step numbers and .STEP information is stored on the .log file.
+
+        :key kwargs:
+
+            key-value arguments in which the key correspond to a stepped parameter or source name, and the value is the
+            stepped value.
+
+        :return: The steps that match the query
+        :rtype: list[int]
+
+        """
         if self.steps is None:
             return [0]  # returns an single step
         else:
@@ -512,10 +850,6 @@ class LTSpiceRawRead(object):
 
 # Instruction for compatibility with modification made by other users
 RawRead = LTSpiceRawRead
-
-'''
-This section is for testing your code
-'''
 
 if __name__ == "__main__":
     import sys
@@ -553,11 +887,11 @@ if __name__ == "__main__":
     plt.xlim([0.9e-3, 1.2e-3])
     ax1.plot(x.get_time_axis(0), volt_1.get_wave(0))
     for step in steps:
-        ax2.plot(x.get_time_axis(step), volt_2.get_wave(step))
+        ax2.plot(x.get_time_axis(step), volt_2.get_wave(step), label=str(LTR.steps[step]))
         # plt.plot(y.get_wave(step))
         # plt.plot(x.get_wave(step),marker='x')
         # plt.plot(x.get_wave(step), y.get_wave(step), label=LTR.steps[step])
-
+    plt.figlegend()
     plt.show()
 '''
 '''
