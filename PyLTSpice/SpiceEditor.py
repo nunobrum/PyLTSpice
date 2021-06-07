@@ -218,8 +218,7 @@ class SpiceCircuit(object):
 
     def _get_param_line(self, param: str) -> int:
         """Internal function. Do not use."""
-        prm = param.upper()
-        search_param = re.compile("%s\s*=\s*" % prm)  # process everything in uppercase (Spice is case insensitive)
+        search_param = re.compile(r"%s\s*=\s*" % param, re.IGNORECASE)  # Spice is case insensitive
         in_param_line = False  # This is needed to process multi-line commands
         line_no = 0
         while line_no < len(self.netlist):

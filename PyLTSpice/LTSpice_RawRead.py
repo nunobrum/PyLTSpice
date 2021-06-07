@@ -808,8 +808,9 @@ class LTSpiceRawRead(object):
 
     def get_steps(self, **kwargs):
         """
-        Returns the steps that correspond to the query set in the **kwargs. parameters.
+        Returns the steps that correspond to the query set in the \*\*kwargs. parameters.
         Example:
+
         ::
 
             raw_read.get_steps(V5=1.2, TEMP=25)
@@ -825,7 +826,6 @@ class LTSpiceRawRead(object):
 
         :return: The steps that match the query
         :rtype: list[int]
-
         """
         if self.steps is None:
             return [0]  # returns an single step

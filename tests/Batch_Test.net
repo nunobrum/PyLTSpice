@@ -10,12 +10,12 @@ XU1 IN N001 +V -V OUT AD820
 .meas TRAN Vin_rms RMS V(IN)
 .meas TRAN gain PARAM Vout_rms/Vin_rms
 .param freq=10k
-.step param run 1 3 1
+* .step param run 1 3 1
 .meas Vout1m FIND V(OUT) AT 1m
 .meas TRAN period FIND time WHEN V(out)=0 RISE=1
 .param test_param3 = test_param2 + 1
 .param test_param1 = 12  test_param2=10
-.step dec param freq 10k 1Meg 1
+.step dec param freq 10k 1Meg 10
 .lib ADI1.lib
 .backanno
 .end

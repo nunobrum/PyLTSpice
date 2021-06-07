@@ -192,7 +192,7 @@ class RunTask(threading.Thread):
             logger.warning(time.asctime() + ": Simulation Failed. Time elapsed %s:%s" % (sim_time, END_LINE_TERM))
             netlist_radic = self.netlist_file.rstrip('.net')
             if os.path.exists(netlist_radic + '.log'):
-                os.rename(netlist_radic + '.log', self.netlist_radic + '.fail')
+                os.rename(netlist_radic + '.log', netlist_radic + '.fail')
 
 
 class SimCommander(SpiceEditor):
