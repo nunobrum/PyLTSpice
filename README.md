@@ -47,6 +47,10 @@ If using this method it would be good to add the path where you cloned the site 
 
 ## How to use ##
 
+Here follows a quick outlook on how to use each of the tools.
+
+More comprehnsive documentation can be found in https://pyltspice.readthedocs.io/en/latest/
+
 ### LTSpice_RawRead.py ###
 Include the following line on your scripts
 
@@ -136,6 +140,12 @@ LTC.wait_completion()
 * Alternative contact : nuno.brum@gmail.com
 
 ## History ##
+* Version 1.2
+README.md:
+Adding link to readthedocs documentation
+All files:
+Comprehensive documentation on how to use each module
+
 * Version 1.1
 README.md:
 Updated the description
@@ -147,11 +157,9 @@ Added comments throughout the code and cleanup
 LTSpiceBatch.py: 
 Implemented an new approach (NOT BACKWARDS COMPATIBLE), that avoids the usage of the sim_settings.inc file.
 And allows to modify not only parameters, but also models and even the simulation commands.
-
 LTSpice_RawRead.py: 
 Added the get_time_axis method to the RawRead class to avoid the problems with negative values on
 time axis, when 2nd order compression is enabled in LTSpice.
-
 LTSteps.py: 
 Modified the LTSteps so it can also read measurements on log files without any steps done.
 
