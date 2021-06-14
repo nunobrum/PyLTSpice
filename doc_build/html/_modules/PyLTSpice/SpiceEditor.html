@@ -1,0 +1,740 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PyLTSpice.SpiceEditor &#8212; PyLTSpice 2.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for PyLTSpice.SpiceEditor</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># coding=utf-8</span>
+
+<span class="c1"># -------------------------------------------------------------------------------</span>
+<span class="c1"># Name:        SpiceEditor.py</span>
+<span class="c1"># Purpose:     Class made to update Generic Spice Netlists</span>
+<span class="c1">#</span>
+<span class="c1"># Author:      Nuno Brum (nuno.brum@gmail.com)</span>
+<span class="c1">#</span>
+<span class="c1"># Created:     30-08-2020</span>
+<span class="c1"># Licence:     lGPL v3</span>
+<span class="c1"># -------------------------------------------------------------------------------</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">log</span><span class="p">,</span> <span class="n">floor</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;Nuno Canto Brum &lt;nuno.brum@gmail.com&gt;&quot;</span>
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s2">&quot;Copyright 2021, Fribourg Switzerland&quot;</span>
+
+<span class="n">END_LINE_TERM</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+
+<span class="c1"># A Spice netlist can only have one of the instructions below, otherwise an error will be raised</span>
+<span class="n">UNIQUE_SIMULATION_DOT_INSTRUCTIONS</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;.AC&#39;</span><span class="p">,</span> <span class="s1">&#39;.DC&#39;</span><span class="p">,</span> <span class="s1">&#39;.TRAN&#39;</span><span class="p">,</span> <span class="s1">&#39;NOISE&#39;</span><span class="p">,</span> <span class="s1">&#39;.DC&#39;</span><span class="p">,</span> <span class="s1">&#39;.TF&#39;</span><span class="p">)</span>
+
+<span class="n">REPLACE_REGXES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;B&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(B[VI]\w+)(\s+[\w\+\-]+)</span><span class="si">{2}</span><span class="s2">\s+(?P&lt;value&gt;.*)$&quot;</span><span class="p">,</span>  <span class="c1"># Behavioral source</span>
+    <span class="s1">&#39;C&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(C\w+)(\s+[\w\+\-]+)</span><span class="si">{2}</span><span class="s2">\s+(?P&lt;value&gt;({)?(?(3).*}|([0-9\.E+-]+(Meg|[kmunp])?F?))).*$&quot;</span><span class="p">,</span>  <span class="c1"># Capacitor</span>
+    <span class="s1">&#39;D&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(D\w+)(\s+[\w\+\-]+)</span><span class="si">{2}</span><span class="s2">\s+(?P&lt;value&gt;\w+).*$&quot;</span><span class="p">,</span>  <span class="c1"># Diode</span>
+    <span class="s1">&#39;I&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(I\w+)(\s+[\w\+\-]+)</span><span class="si">{2}</span><span class="s2">\s+(?P&lt;value&gt;.*)$&quot;</span><span class="p">,</span>  <span class="c1"># Current Source</span>
+    <span class="s1">&#39;J&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(J\w+)(\s+[\w\+\-]+)</span><span class="si">{3}</span><span class="s2">\s+(?P&lt;value&gt;\w+).*$&quot;</span><span class="p">,</span>  <span class="c1"># JFET</span>
+    <span class="s1">&#39;K&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(K\w+)(\s+[\w\+\-]+)</span><span class="si">{2:4}</span><span class="s2">\s+(?P&lt;value&gt;[\+\-]?[0-9\.E+-]+[kmunp]?).*$&quot;</span><span class="p">,</span>  <span class="c1"># Mutual Inductance</span>
+    <span class="s1">&#39;L&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(L\w+)(\s+[\w\+\-]+)</span><span class="si">{2}</span><span class="s2">\s+(?P&lt;value&gt;({)?(?(3).*}|([0-9\.E+-]+(Meg|[kmunp])?H?))).*$&quot;</span><span class="p">,</span>  <span class="c1"># Inductance</span>
+    <span class="s1">&#39;M&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(M\w+)(\s+[\w\+\-]+)</span><span class="si">{3}</span><span class="s2">\s+(?P&lt;value&gt;\w+).*$&quot;</span><span class="p">,</span>  <span class="c1"># MOSFET</span>
+    <span class="s1">&#39;Q&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(Q\w+)(\s+[\w\+\-]+)</span><span class="si">{3}</span><span class="s2">\s+(?P&lt;value&gt;\w+).*$&quot;</span><span class="p">,</span>  <span class="c1"># Bipolar</span>
+    <span class="s1">&#39;R&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(R\w+)(\s+[\w\+\-]+)</span><span class="si">{2}</span><span class="s2">\s+(?P&lt;value&gt;({)?(?(3).*}|([0-9\.E+-]+(Meg|[kmunp])?R?))).*$&quot;</span><span class="p">,</span>  <span class="c1"># Resistors</span>
+    <span class="s1">&#39;V&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(V\w+)(\s+[\w\+\-]+)</span><span class="si">{2}</span><span class="s2">\s+(?P&lt;value&gt;.*)$&quot;</span><span class="p">,</span>  <span class="c1"># Voltage Source</span>
+    <span class="s1">&#39;X&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(X\w+)(\s+[\w\+\-]+){1,99}\s+(?P&lt;value&gt;\w+)(\s+\w+\s*=\s*\S+)*$&quot;</span><span class="p">,</span>  <span class="c1"># Sub-circuit</span>
+<span class="p">}</span>
+
+<span class="n">PARAM_REGX</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">\s*=\s*(?P&lt;value&gt;[\w*/\.+-/</span><span class="si">{}</span><span class="s2">()]*)&quot;</span>
+
+
+<div class="viewcode-block" id="format_eng"><a class="viewcode-back" href="../../SpiceEditor.html#PyLTSpice.SpiceEditor.format_eng">[docs]</a><span class="k">def</span> <span class="nf">format_eng</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Helper function for formating value with the SI qualifiers.  That is, it will use</span>
+
+<span class="sd">        * p for pico (10E-12)</span>
+<span class="sd">        * n for nano (10E-9)</span>
+<span class="sd">        * u for micro (10E-6)</span>
+<span class="sd">        * m for mili (10E-3)</span>
+<span class="sd">        * k for kilo (10E+3)</span>
+<span class="sd">        * Meg for Mega (10E+6)</span>
+
+
+<span class="sd">    :param value: float value to format</span>
+<span class="sd">    :paramtype value: float</span>
+
+<span class="sd">    :return: String wiht the formatted value</span>
+<span class="sd">    :rtype: str</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">e</span> <span class="o">=</span> <span class="n">floor</span><span class="p">(</span><span class="n">log</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">value</span><span class="p">),</span> <span class="mi">1000</span><span class="p">))</span>
+    <span class="k">if</span> <span class="o">-</span><span class="mi">4</span> <span class="o">&lt;=</span> <span class="n">e</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">suffix</span> <span class="o">=</span> <span class="s2">&quot;pnum&quot;</span><span class="p">[</span><span class="n">e</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">e</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">suffix</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="k">elif</span> <span class="n">e</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">suffix</span> <span class="o">=</span> <span class="s2">&quot;k&quot;</span>
+    <span class="k">elif</span> <span class="n">e</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">suffix</span> <span class="o">=</span> <span class="s1">&#39;Meg&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{:E}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{:g}{:}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">value</span><span class="o">*</span> <span class="mi">1000</span><span class="o">**-</span><span class="n">e</span><span class="p">,</span> <span class="n">suffix</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">_get_group_regxstr</span><span class="p">(</span><span class="n">regstr</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;(Private function. Not to be used directly)</span>
+<span class="sd">    Helper function to parse regular expressions.&quot;&quot;&quot;</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">regstr</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;(?P&lt;</span><span class="si">%s</span><span class="s2">&gt;&quot;</span> <span class="o">%</span> <span class="n">param</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">a</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">parenthesis_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="n">b</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">regstr</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">regstr</span><span class="p">[</span><span class="n">b</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;)&#39;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">parenthesis_count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">regstr</span><span class="p">[</span><span class="n">a</span><span class="p">:</span><span class="n">b</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">parenthesis_count</span> <span class="o">-=</span> <span class="mi">1</span>
+            <span class="k">elif</span> <span class="n">regstr</span><span class="p">[</span><span class="n">b</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;(&#39;</span><span class="p">:</span>
+                <span class="n">parenthesis_count</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">b</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<div class="viewcode-block" id="get_line_command"><a class="viewcode-back" href="../../SpiceEditor.html#PyLTSpice.SpiceEditor.get_line_command">[docs]</a><span class="k">def</span> <span class="nf">get_line_command</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Retrives the type of SPICE command in the line.</span>
+<span class="sd">    Starts by removing the leading spaces and the evaluaties if it is a comment, a directive or a component.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)):</span>
+            <span class="n">ch</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">ch</span> <span class="o">==</span> <span class="s1">&#39; &#39;</span> <span class="ow">or</span> <span class="n">ch</span> <span class="o">==</span> <span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ch</span> <span class="o">=</span> <span class="n">ch</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">ch</span> <span class="ow">in</span> <span class="s1">&#39;BCDIJKLMQRVX&#39;</span><span class="p">:</span>  <span class="c1"># A circuit element</span>
+                    <span class="k">return</span> <span class="n">ch</span>
+                <span class="k">elif</span> <span class="n">ch</span> <span class="o">==</span> <span class="s1">&#39;+&#39;</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="s1">&#39;+&#39;</span>  <span class="c1"># This is a line continuation.</span>
+                <span class="k">elif</span> <span class="n">ch</span> <span class="ow">in</span> <span class="s2">&quot;;*</span><span class="se">\n\r</span><span class="s2">&quot;</span><span class="p">:</span>  <span class="c1"># It is a comment or a blank line</span>
+                    <span class="k">return</span> <span class="s2">&quot;*&quot;</span>
+                <span class="k">elif</span> <span class="n">ch</span> <span class="o">==</span> <span class="s1">&#39;.&#39;</span><span class="p">:</span>  <span class="c1"># this is a directive</span>
+                    <span class="n">j</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+                    <span class="k">while</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\r</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)):</span>
+                        <span class="n">j</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="k">return</span> <span class="n">line</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">SyntaxError</span><span class="p">(</span><span class="s1">&#39;Irrecognized command in line &quot;</span><span class="si">%s</span><span class="s1">&quot;&#39;</span> <span class="o">%</span> <span class="n">line</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">instance</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">SpiceCircuit</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;.SUBCKT&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">SyntaxError</span><span class="p">(</span><span class="s1">&#39;Irrecognized command in line &quot;</span><span class="si">%s</span><span class="s1">&quot;&#39;</span> <span class="o">%</span> <span class="n">line</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">_first_token_upped</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    (Private function. Not to be used directly)</span>
+<span class="sd">    Returns the first non space character in the line. IF a point &#39;.&#39; is found, then it gets the primitive associated.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="ow">and</span> <span class="n">line</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">):</span>
+        <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="n">j</span> <span class="o">=</span> <span class="n">i</span>
+    <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span><span class="n">line</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)):</span>
+        <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">line</span><span class="p">[</span><span class="n">j</span><span class="p">:</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+
+<span class="k">def</span> <span class="nf">_is_unique_instruction</span><span class="p">(</span><span class="n">instruction</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    (Private function. Not to be used directly)</span>
+<span class="sd">    Returns true if the instruction is one of the unique instructions</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cmd</span> <span class="o">=</span> <span class="n">get_line_command</span><span class="p">(</span><span class="n">instruction</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">cmd</span> <span class="ow">in</span> <span class="n">UNIQUE_SIMULATION_DOT_INSTRUCTIONS</span>
+
+
+<div class="viewcode-block" id="ComponentNotFoundError"><a class="viewcode-back" href="../../SpiceEditor.html#PyLTSpice.SpiceEditor.ComponentNotFoundError">[docs]</a><span class="k">class</span> <span class="nc">ComponentNotFoundError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Component Not Found Error&quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="ParameterNotFoundError"><a class="viewcode-back" href="../../SpiceEditor.html#PyLTSpice.SpiceEditor.ParameterNotFoundError">[docs]</a><span class="k">class</span> <span class="nc">ParameterNotFoundError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;ParameterNotFound Error&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="SpiceCircuit"><a class="viewcode-back" href="../../SpiceEditor.html#PyLTSpice.SpiceEditor.SpiceCircuit">[docs]</a><span class="k">class</span> <span class="nc">SpiceCircuit</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The Spice Circuit represents subcircuits within a SPICE circuit and since subcircuits can have subcircuits inside</span>
+<span class="sd">    them, it serves as base for the top level netlist.</span>
+<span class="sd">    This hierchical approach helps to encapsulate and protect parameters and components from a edits made a a higher</span>
+<span class="sd">    level.</span>
+<span class="sd">    The information is stored in a python list, each line of the SPICE netlist is an item of the list. A Subcircuit</span>
+<span class="sd">    is represented as a SpiceCircuit object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subcircuits</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">netlist</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;SpiceCircuit&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_getline_startingwith</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">substr</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Internal function. Do not use.&quot;&quot;&quot;</span>
+        <span class="c1"># This function returns the line number that starts with the substr string.</span>
+        <span class="c1"># If the line is not found, then -1 is returned.</span>
+        <span class="n">substr_upper</span> <span class="o">=</span> <span class="n">substr</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">line_no</span><span class="p">,</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">netlist</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>  <span class="c1"># If it is a subcircuit it will simply ignore it.</span>
+                <span class="k">continue</span>
+            <span class="n">line_upcase</span> <span class="o">=</span> <span class="n">_first_token_upped</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">line_upcase</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">substr_upper</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">line_no</span>
+        <span class="n">error_msg</span> <span class="o">=</span> <span class="s2">&quot;Component &#39;</span><span class="si">%s</span><span class="s2">&#39; not found in netlist&quot;</span> <span class="o">%</span> <span class="n">component</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">error_msg</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">ComponentNotFoundError</span><span class="p">(</span><span class="n">error_msg</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_add_lines</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line_iter</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Internal function. Do not use.</span>
+<span class="sd">        Add a list of lines to the netlist.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">line_iter</span><span class="p">:</span>
+            <span class="n">cmd</span> <span class="o">=</span> <span class="n">get_line_command</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">cmd</span> <span class="o">==</span> <span class="s1">&#39;.SUBCKT&#39;</span><span class="p">:</span>
+                <span class="n">sub_circuit</span> <span class="o">=</span> <span class="n">SpiceCircuit</span><span class="p">()</span>
+                <span class="n">sub_circuit</span><span class="o">.</span><span class="n">netlist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+                <span class="c1"># Advance to the next non nested .ENDS</span>
+                <span class="n">finished</span> <span class="o">=</span> <span class="n">sub_circuit</span><span class="o">.</span><span class="n">_add_lines</span><span class="p">(</span><span class="n">line_iter</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">finished</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">netlist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sub_circuit</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">elif</span> <span class="n">cmd</span> <span class="o">==</span> <span class="s1">&#39;+&#39;</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">netlist</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;ERROR: The first line cannot be starting with a +&quot;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">netlist</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">line</span>  <span class="c1"># Appends to the last line</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">netlist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">cmd</span><span class="p">[:</span><span class="mi">4</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;.END&#39;</span><span class="p">:</span>  <span class="c1"># True for either .END and .ENDS primitives</span>
+                    <span class="k">return</span> <span class="kc">True</span>  <span class="c1"># If an subcircuit is ended correctly, returns True</span>
+        <span class="k">return</span> <span class="kc">False</span>  <span class="c1"># If a subcircuit ends abruptly, returns False</span>
+
+    <span class="k">def</span> <span class="nf">_write_lines</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Internal function. Do not use.&quot;&quot;&quot;</span>
+        <span class="c1"># This helper function writes the contents of Subcircuit to the file f</span>
+        <span class="k">for</span> <span class="n">command</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">netlist</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">SpiceCircuit</span><span class="p">):</span>
+                <span class="n">command</span><span class="o">.</span><span class="n">_write_lines</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">command</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_param_line</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Internal function. Do not use.&quot;&quot;&quot;</span>
+        <span class="n">search_param</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">\s*=\s*&quot;</span> <span class="o">%</span> <span class="n">param</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>  <span class="c1"># Spice is case insensitive</span>
+        <span class="n">in_param_line</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># This is needed to process multi-line commands</span>
+        <span class="n">line_no</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="n">line_no</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">netlist</span><span class="p">):</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">netlist</span><span class="p">[</span><span class="n">line_no</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">SpiceCircuit</span><span class="p">):</span>  <span class="c1"># If it is a subcircuit it will simply ignore it.</span>
+                <span class="n">line_no</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">continue</span>
+            <span class="n">cmd</span> <span class="o">=</span> <span class="n">get_line_command</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">cmd</span> <span class="o">==</span> <span class="s1">&#39;.PARAM&#39;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">search_param</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="n">line_no</span>
+            <span class="n">line_no</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ParameterNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Parameter &quot;</span><span class="si">{</span><span class="n">param</span><span class="si">}</span><span class="s1">&quot; not found&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_set_model_and_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">component</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Internal function. Do not use.&quot;&quot;&quot;</span>
+        <span class="n">prefix</span> <span class="o">=</span> <span class="n">component</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># Using the first letter of the component to identify what is it</span>
+        <span class="n">regxstr</span> <span class="o">=</span> <span class="n">REPLACE_REGXES</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>  <span class="c1"># Obtain RegX to make the update</span>
+
+        <span class="k">if</span> <span class="n">regxstr</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Component must start with one of these letters:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">REPLACE_REGXES</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Got &#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">component</span><span class="p">))</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">regxvaluestr</span> <span class="o">=</span> <span class="n">_get_group_regxstr</span><span class="p">(</span><span class="n">regxstr</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">)</span>
+            <span class="n">regexvalue</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">regxvaluestr</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="n">regexvalue</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">m</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Value is not in the good format. Expecting &quot;&quot;</span><span class="si">{}</span><span class="s2">&quot;&quot;. Got &quot;&quot;</span><span class="si">{}</span><span class="s2">&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">regxvaluestr</span><span class="p">,</span>
+                                                                                                        <span class="n">value</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">format_eng</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+        <span class="n">line_no</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getline_startingwith</span><span class="p">(</span><span class="n">component</span><span class="p">)</span>
+        <span class="n">regex</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">regxstr</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">netlist</span><span class="p">[</span><span class="n">line_no</span><span class="p">]</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">regex</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">m</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Unsupported line &quot;</span><span class="si">{}</span><span class="s1">&quot;</span><span class="se">\n</span><span class="s1">Expected format is &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">regxstr</span><span class="p">))</span>
+            <span class="c1"># print(&quot;Unsupported line &quot;&quot;{}&quot;&quot;&quot;.format(line))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">)</span>
+            <span class="n">end</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">end</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">)</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="p">[:</span><span class="n">start</span><span class="p">]</span> <span class="o">+</span> <span class="n">value</span> <span class="o">+</span> <span class="n">line</span><span class="p">[</span><span class="n">end</span><span class="p">:]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">netlist</span><span class="p">[</span><span class="n">line_no</span><span class="p">]</span> <span class="o">=</span> <span class="n">line</span>
+
+    <span class="k">def</span> <span class="nf">_get_component_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">component</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Internal function. Do not use.&quot;&quot;&quot;</span>
+        <span class="n">prefix</span> <span class="o">=</span> <span class="n">component</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># Using the first letter of the component to identify what is it</span>
+        <span class="n">regxstr</span> <span class="o">=</span> <span class="n">REPLACE_REGXES</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>  <span class="c1"># Obtain RegX to make the update</span>
+
+        <span class="k">if</span> <span class="n">regxstr</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Component must start with one of these letters:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">REPLACE_REGXES</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Got &#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">component</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Unsuported prefex </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">prefix</span><span class="p">))</span>
+
+        <span class="n">line_no</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getline_startingwith</span><span class="p">(</span><span class="n">component</span><span class="p">)</span>
+        <span class="n">regex</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">regxstr</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">netlist</span><span class="p">[</span><span class="n">line_no</span><span class="p">]</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">regex</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">m</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">error_msg</span> <span class="o">=</span> <span class="s1">&#39;Unsupported line &quot;</span><span class="si">{}</span><span class="s1">&quot;</span><span class="se">\n</span><span class="s1">Expected format is &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">regxstr</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">error_msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">error_msg</span><span class="p">)</span>
+            <span class="c1"># print(&quot;Unsupported line &quot;&quot;{}&quot;&quot;&quot;.format(line))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">info</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">groupdict</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">info</span>
+
+<div class="viewcode-block" id="SpiceCircuit.get_parameter"><a class="viewcode-back" href="../../SpiceEditor.html#PyLTSpice.SpiceEditor.SpiceCircuit.get_parameter">[docs]</a>    <span class="k">def</span> <span class="nf">get_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieves a Parameter from the Netlist</span>
+
+<span class="sd">        :param param: Name of the parameter to be retrieved</span>
+<span class="sd">        :type param: str</span>
+<span class="sd">        :return: Value of the parameter being sought</span>
+<span class="sd">        :rtype: str</span>
+<span class="sd">        :raises: ParameterNotFoundError - In case the component is not found</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">param_def</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">netlist</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_param_line</span><span class="p">(</span><span class="n">param</span><span class="p">)]</span>
+        <span class="n">regx</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">PARAM_REGX</span> <span class="o">%</span> <span class="n">param</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">regx</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">param_def</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SpiceCircuit.set_parameter"><a class="viewcode-back" href="../../SpiceEditor.html#PyLTSpice.SpiceEditor.SpiceCircuit.set_parameter">[docs]</a>    <span class="k">def</span> <span class="nf">set_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Adds a parameter to the SPICE netlist.</span>
+
+<span class="sd">        Usage: ::</span>
+
+<span class="sd">         LTC.set_parameter(&quot;TEMP&quot;, 80)</span>
+
+<span class="sd">        This adds onto the netlist the following line: ::</span>
+
+<span class="sd">         .PARAM TEMP=80</span>
+
+<span class="sd">        This is an alternative to the set_parameters which is more pythonic in it&#39;s usage,</span>
+<span class="sd">        and allows setting more than one parameter at once.</span>
+
+<span class="sd">        :param param: Spice Parameter name to be added or updated.</span>
+<span class="sd">        :type param: str</span>
+
+<span class="sd">        :param value: Parameter Value to be set.</span>
+<span class="sd">        :type value: str, int or float</span>
+
+<span class="sd">        :return: Nothing</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">param_line</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_param_line</span><span class="p">(</span><span class="n">param</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">ParameterNotFoundError</span><span class="p">:</span>
+            <span class="c1"># Was not found</span>
+            <span class="c1"># the last two lines are typically (.backano and .end)</span>
+            <span class="n">insert_line</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">netlist</span><span class="p">)</span> <span class="o">-</span> <span class="mi">2</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">netlist</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">insert_line</span><span class="p">,</span> <span class="s1">&#39;.PARAM </span><span class="si">{}</span><span class="s1">=</span><span class="si">{}</span><span class="s1">  ; Batch instruction&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="o">+</span> <span class="n">END_LINE_TERM</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">regx</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">PARAM_REGX</span> <span class="o">%</span> <span class="n">param</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">netlist</span><span class="p">[</span><span class="n">param_line</span><span class="p">]</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="n">regx</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+            <span class="n">start</span><span class="p">,</span> <span class="n">stop</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">span</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">netlist</span><span class="p">[</span><span class="n">param_line</span><span class="p">]</span> <span class="o">=</span> <span class="n">line</span><span class="p">[:</span><span class="n">start</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">=</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="o">+</span> <span class="n">line</span><span class="p">[</span><span class="n">stop</span><span class="p">:]</span></div>
+
+<div class="viewcode-block" id="SpiceCircuit.set_parameters"><a class="viewcode-back" href="../../SpiceEditor.html#PyLTSpice.SpiceEditor.SpiceCircuit.set_parameters">[docs]</a>    <span class="k">def</span> <span class="nf">set_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Adds one or more parameters to the netlist.</span>
+<span class="sd">        Usage: ::</span>
+
+<span class="sd">            for temp in (-40, 25, 125):</span>
+<span class="sd">                for freq in sweep_log(1, 100E3,)</span>
+<span class="sd">            LTC.set_parameters(TEMP=80, freq=freq)</span>
+
+<span class="sd">        :key param_name:</span>
+<span class="sd">            Key is the parameter to be set. values the ther corresponding values. Values can either be a str; an int or</span>
+<span class="sd">            a float.</span>
+
+<span class="sd">        :returns: Nothing</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_parameter</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">param</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="SpiceCircuit.set_component_value"><a class="viewcode-back" href="../../SpiceEditor.html#PyLTSpice.SpiceEditor.SpiceCircuit.set_component_value">[docs]</a>    <span class="k">def</span> <span class="nf">set_component_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">device</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Changes the value of a component, such as a Resistor, Capacitor or Inductor.</span>
+<span class="sd">        Usage: ::</span>
+
+<span class="sd">            LTC.set_component_value(&#39;R1&#39;, &#39;3.3k&#39;)</span>
+
+<span class="sd">        :param device: Reference of the circuit element to be updated.</span>
+<span class="sd">        :type device: str</span>
+<span class="sd">        :param value:</span>
+<span class="sd">            value to be be set on the given circuit element. Float and integer values will automatically</span>
+<span class="sd">            formatted as per the engineering notations &#39;k&#39; for kile, &#39;m&#39;, for mili and so on.</span>
+<span class="sd">        :type value: str, int or float</span>
+<span class="sd">        :raises:</span>
+<span class="sd">            ComponentNotFoundError - In case the component is not found</span>
+
+<span class="sd">            ValueError - In case the value doesn&#39;t correspond to the expected format</span>
+
+<span class="sd">            NotImplementedError - In case the circuit element is defined in a format which is not supported by this</span>
+<span class="sd">            version.</span>
+
+<span class="sd">            If this is the case, use GitHub to start a ticket.  https://github.com/nunobrum/PyLTSpice</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_model_and_value</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SpiceCircuit.set_element_model"><a class="viewcode-back" href="../../SpiceEditor.html#PyLTSpice.SpiceEditor.SpiceCircuit.set_element_model">[docs]</a>    <span class="k">def</span> <span class="nf">set_element_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">element</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Changes the value of a circuit element, such as a diode model or a voltage supply.</span>
+<span class="sd">        Usage: ::</span>
+
+<span class="sd">            LTC.set_element_model(&#39;D1&#39;, &#39;1N4148&#39;)</span>
+<span class="sd">            LTC.set_element_model(&#39;V1&#39; &quot;SINE(0 1 3k 0 0 0)&quot;)</span>
+
+<span class="sd">        :param element: Reference of the circuit element to be updated.</span>
+<span class="sd">        :type element: str</span>
+<span class="sd">        :param model: model name of the device to be updated</span>
+<span class="sd">        :type model: str</span>
+
+<span class="sd">        :raises:</span>
+<span class="sd">            ComponentNotFoundError - In case the component is not found</span>
+
+<span class="sd">            ValueError - In case the model format contains irregular characters</span>
+
+<span class="sd">            NotImplementedError - In case the circuit element is defined in a format which is not supported by this version.</span>
+
+<span class="sd">            If this is the case, use GitHub to start a ticket.  https://github.com/nunobrum/PyLTSpice</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_model_and_value</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SpiceCircuit.get_component_value"><a class="viewcode-back" href="../../SpiceEditor.html#PyLTSpice.SpiceEditor.SpiceCircuit.get_component_value">[docs]</a>    <span class="k">def</span> <span class="nf">get_component_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">element</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the value of a component retrieved from the netlist.</span>
+
+<span class="sd">        :param element: Reference of the circuit element to search for.</span>
+<span class="sd">        :type element: str</span>
+
+<span class="sd">        :return: value of the circuit element .</span>
+<span class="sd">        :rtype: str</span>
+
+<span class="sd">        :raises: ComponentNotFoundError - In case the component is not found</span>
+
+<span class="sd">                 NotImplementedError - for not supported operations</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_component_info</span><span class="p">(</span><span class="n">element</span><span class="p">)[</span><span class="s1">&#39;value&#39;</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="SpiceCircuit.set_component_values"><a class="viewcode-back" href="../../SpiceEditor.html#PyLTSpice.SpiceEditor.SpiceCircuit.set_component_values">[docs]</a>    <span class="k">def</span> <span class="nf">set_component_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Adds one or more components on the netlist. The argument is in the form of a key-value pair where each</span>
+<span class="sd">        component designator is the key and the value is value to be set in the netlist.</span>
+
+<span class="sd">        Usage 1: ::</span>
+
+<span class="sd">         LTC.set_component_values(R1=330, R2=&quot;3.3k&quot;, R3=&quot;1Meg&quot;, V1=&quot;PWL(0 1 30m 1 30.001m 0 60m 0 60.001m 1)&quot;)</span>
+
+<span class="sd">        Usage 2: ::</span>
+
+<span class="sd">         value_settings = {&#39;R1&#39;: 330, &#39;R2&#39;: &#39;3.3k&#39;, &#39;R3&#39;: &quot;1Meg&quot;, &#39;V1&#39;: &#39;PWL(0 1 30m 1 30.001m 0 60m 0 60.001m 1)&#39;}</span>
+<span class="sd">         LTC.set_component_values(**value_settings)</span>
+
+<span class="sd">        :key &lt;comp_ref&gt;:</span>
+<span class="sd">            The key is the component designator (Ex: V1) and the value is the value to be set. Values can either be</span>
+<span class="sd">            strings; integers or floats</span>
+
+<span class="sd">        :return: Nothing</span>
+<span class="sd">        :raises: ComponentNotFoundError - In case one of the component is not found.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_component_value</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">value</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="SpiceCircuit.get_components"><a class="viewcode-back" href="../../SpiceEditor.html#PyLTSpice.SpiceEditor.SpiceCircuit.get_components">[docs]</a>    <span class="k">def</span> <span class="nf">get_components</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prefixes</span><span class="o">=</span><span class="s1">&#39;*&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a list of components that match the list of prefixes indicated on the parameter prefixes.</span>
+<span class="sd">        In case prefixes is left empty, it returns all the ones that are defined by the REPLACE_REGEXES.</span>
+<span class="sd">        The list will contain the designators of all components found.</span>
+
+<span class="sd">        :param prefixes:</span>
+<span class="sd">            Type of prefixes to search for. Examples: &#39;C&#39; for capacitors; &#39;R&#39; for Resistors; etc... See prefixes</span>
+<span class="sd">            in SPICE documentation for more details.</span>
+<span class="sd">            The default prefix is &#39;*&#39; which is a special case that returns all components.</span>
+<span class="sd">        :type prefixes: str</span>
+
+<span class="sd">        :return:</span>
+<span class="sd">            A list of components matching the prefixes demanded.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">answer</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">prefixes</span> <span class="o">==</span> <span class="s1">&#39;*&#39;</span><span class="p">:</span>
+            <span class="n">prefixes</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">REPLACE_REGXES</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">netlist</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">SpiceCircuit</span><span class="p">):</span>  <span class="c1"># Only gets components from the main netlist,</span>
+                                                <span class="c1"># it currently skips sub-circuits</span>
+                <span class="k">continue</span>
+
+            <span class="n">prefix</span> <span class="o">=</span> <span class="n">get_line_command</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">prefix</span> <span class="ow">in</span> <span class="n">prefixes</span><span class="p">:</span>
+                <span class="c1"># regexvalue = re.compile(REPLACE_REGXES[prefix], re.IGNORECASE)</span>
+                <span class="c1"># m = regexvalue.match(line)</span>
+                <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="k">while</span> <span class="n">line</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">):</span>  <span class="c1"># detects the first space of tab which means end of designator</span>
+                    <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">answer</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">[:</span><span class="n">i</span><span class="p">])</span>  <span class="c1"># Appends only the designators</span>
+        <span class="k">return</span> <span class="n">answer</span></div>
+
+<div class="viewcode-block" id="SpiceCircuit.remove_component"><a class="viewcode-back" href="../../SpiceEditor.html#PyLTSpice.SpiceEditor.SpiceCircuit.remove_component">[docs]</a>    <span class="k">def</span> <span class="nf">remove_component</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">designator</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Removes a component from  the design.</span>
+<span class="sd">        Note: Current implemetation only alows removal of a component from the main netlist, not from a sub-circuit.</span>
+
+<span class="sd">        :param designator: Component reference in the design. Ex: V1, C1, R1, etc...</span>
+<span class="sd">        :type designator: str</span>
+
+<span class="sd">        :return: Nothing</span>
+<span class="sd">        :raises: ComponentNotFoundError - When the component doesn&#39;t exist on the netlist.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getline_startingwith</span><span class="p">(</span><span class="n">designator</span><span class="p">)</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">netlist</span><span class="p">[</span><span class="n">line</span><span class="p">]</span>  <span class="c1"># Deletes the line</span></div>
+
+<div class="viewcode-block" id="SpiceCircuit.get_all_nodes"><a class="viewcode-back" href="../../SpiceEditor.html#PyLTSpice.SpiceEditor.SpiceCircuit.get_all_nodes">[docs]</a>    <span class="k">def</span> <span class="nf">get_all_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># TODO: Implement a function that retrieves all nodes existing on a Netlist</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;&#39;get_all_nodes()&#39; function not implemented&quot;</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="SpiceEditor"><a class="viewcode-back" href="../../SpiceEditor.html#PyLTSpice.SpiceEditor.SpiceEditor">[docs]</a><span class="k">class</span> <span class="nc">SpiceEditor</span><span class="p">(</span><span class="n">SpiceCircuit</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This class implements interfaces to manipulate SPICE netlist files. The class doesn&#39;t update the netlist file</span>
+<span class="sd">    itself. After implementing the modifications he/she should call the &quot;write_netlist&quot; method in order to write a new</span>
+<span class="sd">    netlist file.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">netlist_file</span><span class="p">):</span>
+        <span class="n">SpiceCircuit</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">netlist_file</span> <span class="o">=</span> <span class="n">netlist_file</span>
+
+<div class="viewcode-block" id="SpiceEditor.add_instruction"><a class="viewcode-back" href="../../SpiceEditor.html#PyLTSpice.SpiceEditor.SpiceEditor.add_instruction">[docs]</a>    <span class="k">def</span> <span class="nf">add_instruction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instruction</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Serves to add SPICE instructions to the simulation netlist. For example:</span>
+
+<span class="sd">        .. code-block:: text</span>
+
+<span class="sd">                  .tran 10m ; makes a transient simulation</span>
+<span class="sd">                  .meas TRAN Icurr AVG I(Rs1) TRIG time=1.5ms TARG time=2.5ms&quot; ; Establishes a measuring</span>
+<span class="sd">                  .step run 1 100, 1 ; makes the simulation run 100 times</span>
+
+<span class="sd">        :param instruction:</span>
+<span class="sd">            Spice instruction to add to the netlist. This instruction will be added at the end of the netlist,</span>
+<span class="sd">            typically just before the .BACKANNO statement</span>
+<span class="sd">        :type instruction: str</span>
+<span class="sd">        :return: Nothing</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">instruction</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">END_LINE_TERM</span><span class="p">):</span>
+            <span class="n">instruction</span> <span class="o">+=</span> <span class="n">END_LINE_TERM</span>
+        <span class="k">if</span> <span class="n">_is_unique_instruction</span><span class="p">(</span><span class="n">instruction</span><span class="p">):</span>
+            <span class="c1"># Before adding new instruction, delete previously set unique instructions</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">netlist</span><span class="p">):</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">netlist</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">_is_unique_instruction</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">netlist</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">instruction</span>
+                    <span class="k">break</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># check whether the instruction is already there (dummy proofing)</span>
+            <span class="k">if</span> <span class="n">instruction</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">netlist</span><span class="p">:</span>
+                <span class="c1"># Insert before backanno instruction</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">line</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">netlist</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;.backanno&#39;</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="n">line</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">netlist</span><span class="p">)</span> <span class="o">-</span> <span class="mi">2</span>  <span class="c1"># This is where typically the .backanno instruction is</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">netlist</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">instruction</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SpiceEditor.add_instructions"><a class="viewcode-back" href="../../SpiceEditor.html#PyLTSpice.SpiceEditor.SpiceEditor.add_instructions">[docs]</a>    <span class="k">def</span> <span class="nf">add_instructions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">instructions</span><span class="p">)</span><span class="o">-&gt;</span><span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Adds a list of instructions to the SPICE NETLIST.</span>
+<span class="sd">        Example:</span>
+<span class="sd">        ::</span>
+
+<span class="sd">            LTC.add_instructions(</span>
+<span class="sd">                &quot;.STEP run -1 1023 1&quot;,</span>
+<span class="sd">                &quot;.dc V1 -5 5&quot;</span>
+<span class="sd">            )</span>
+
+<span class="sd">        :param instructions: Argument list of instructions to add</span>
+<span class="sd">        :type instructions: list</span>
+<span class="sd">        :returns: Nothing</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">instruction</span> <span class="ow">in</span> <span class="n">instructions</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_instruction</span><span class="p">(</span><span class="n">instruction</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SpiceEditor.remove_instruction"><a class="viewcode-back" href="../../SpiceEditor.html#PyLTSpice.SpiceEditor.SpiceEditor.remove_instruction">[docs]</a>    <span class="k">def</span> <span class="nf">remove_instruction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instruction</span><span class="p">)</span><span class="o">-&gt;</span><span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Usage a previously added instructions.</span>
+<span class="sd">        Example: ::</span>
+
+<span class="sd">            LTC.remove_instruction(&quot;.STEP run -1 1023 1&quot;)</span>
+
+<span class="sd">        :param instructions The list of instructions to remove. Each instruction is of the type &#39;str&#39;</span>
+<span class="sd">        :type instruction: str</span>
+<span class="sd">        :returns: Nothing</span>
+<span class="sd">        TODO: This only works with a full line instruction.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Because the netlist is stored containing the end of line terminations and because they are added when they</span>
+        <span class="c1"># they are added to the netlist.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">instruction</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">END_LINE_TERM</span><span class="p">):</span>
+            <span class="n">instruction</span> <span class="o">+=</span> <span class="n">END_LINE_TERM</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">netlist</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">instruction</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SpiceEditor.write_netlist"><a class="viewcode-back" href="../../SpiceEditor.html#PyLTSpice.SpiceEditor.SpiceEditor.write_netlist">[docs]</a>    <span class="k">def</span> <span class="nf">write_netlist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_netlist_file</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span><span class="o">-&gt;</span><span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Writes the netlist will all the requested updates into a file named &lt;run_netlist_file&gt;.</span>
+<span class="sd">        :param run_netlist_file: File name of the netlist file.</span>
+<span class="sd">        :type run_netlist_file: str</span>
+<span class="sd">        :return Nothing</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">run_netlist_file</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">netlist</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">SpiceCircuit</span><span class="p">):</span>
+                <span class="n">line</span><span class="o">.</span><span class="n">_write_lines</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="SpiceEditor.reset_netlist"><a class="viewcode-back" href="../../SpiceEditor.html#PyLTSpice.SpiceEditor.SpiceEditor.reset_netlist">[docs]</a>    <span class="k">def</span> <span class="nf">reset_netlist</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">-&gt;</span><span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Removes all previous edits done to the netlist, i.e. resets it to the original state.</span>
+
+<span class="sd">        :returns: Nothing</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">netlist</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">netlist_file</span><span class="p">):</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">netlist_file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">lines</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>  <span class="c1"># Creates an iterator object to consume the file</span>
+                <span class="n">finished</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_lines</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">finished</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">SyntaxError</span><span class="p">(</span><span class="s2">&quot;Netlist with missing .END or .ENDS statements&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">remainig_lines</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Ignoring </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">remainig_lines</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Netlist file not found&quot;</span><span class="p">)</span></div></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">E</span> <span class="o">=</span> <span class="n">SpiceEditor</span><span class="p">(</span><span class="s1">&#39;..</span><span class="se">\\</span><span class="s1">tests</span><span class="se">\\</span><span class="s1">Editor_Test.net&#39;</span><span class="p">)</span>
+    <span class="n">E</span><span class="o">.</span><span class="n">reset_netlist</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">E</span><span class="o">.</span><span class="n">get_component_value</span><span class="p">(</span><span class="s1">&#39;R1&#39;</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Setting 1.23k&quot;</span><span class="p">)</span>
+    <span class="n">E</span><span class="o">.</span><span class="n">set_parameter</span><span class="p">(</span><span class="s2">&quot;I1&quot;</span><span class="p">,</span> <span class="s2">&quot;1.23k&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">E</span><span class="o">.</span><span class="n">get_parameter</span><span class="p">(</span><span class="s1">&#39;I1&#39;</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Setting {freq*(10/5.0})&quot;</span><span class="p">)</span>
+    <span class="n">E</span><span class="o">.</span><span class="n">set_parameters</span><span class="p">(</span><span class="n">I2</span><span class="o">=</span><span class="s2">&quot;{freq*(10/5.0})&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">E</span><span class="o">.</span><span class="n">get_parameter</span><span class="p">(</span><span class="s1">&#39;I2&#39;</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">E</span><span class="o">.</span><span class="n">get_components</span><span class="p">())</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">E</span><span class="o">.</span><span class="n">get_components</span><span class="p">(</span><span class="s1">&#39;RC&#39;</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Setting C4 to 22nF&quot;</span><span class="p">)</span>
+    <span class="n">E</span><span class="o">.</span><span class="n">set_component_value</span><span class="p">(</span><span class="s2">&quot;C4&quot;</span><span class="p">,</span> <span class="mf">22e-9</span><span class="p">)</span>
+    <span class="n">E</span><span class="o">.</span><span class="n">set_component_value</span><span class="p">(</span><span class="s2">&quot;C3&quot;</span><span class="p">,</span> <span class="s1">&#39;120n&#39;</span><span class="p">)</span>
+    <span class="n">E</span><span class="o">.</span><span class="n">write_netlist</span><span class="p">(</span><span class="s2">&quot;..</span><span class="se">\\</span><span class="s2">tests</span><span class="se">\\</span><span class="s2">test_spice_editor.net&quot;</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">PyLTSpice</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../LTSpiceBatch.html">LTSpiceBatch.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../SpiceEditor.html">SpiceEditor.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../LTSpice_RawRead.html">LTSpice_RawRead.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../LTSteps.html">LTSteps.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Histogram.html">Histogram.py</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2021, Nuno Brum.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
