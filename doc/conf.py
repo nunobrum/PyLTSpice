@@ -33,7 +33,7 @@ release = '2.0'
 # ones.
 extensions = [
 	# 'docxbuilder',
-	'sphinx-docxbuilder',
+	# 'sphinx-docxbuilder',
 	'sphinx.ext.todo', 
 	'sphinx.ext.viewcode', 
 	'sphinx.ext.autodoc',
