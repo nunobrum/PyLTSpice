@@ -37,7 +37,7 @@ extensions = [
 	'sphinx.ext.todo', 
 	'sphinx.ext.viewcode', 
 	'sphinx.ext.autodoc',
-    'rinoh.frontend.sphinx'
+    #'rinoh.frontend.sphinx'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
