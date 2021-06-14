@@ -82,6 +82,7 @@ and use it.
 __author__ = "Nuno Canto Brum <me@nunobrum.com>"
 __copyright__ = "Copyright 2017, Fribourg Switzerland"
 
+import math
 import re
 import os
 import sys
@@ -104,6 +105,28 @@ def enc_norm(line):
         return line  # Return as is
 
 
+class LTComplex(object):
+    """
+    Class to represent complex numbers as exported by LTSpice
+    """
+    complex_match = re.compile(r"\((?P<mag>.*)dB,(?P<ph>.*)°\)")
+
+    def __init__(self, strvalue):
+        a = self.complex_match.match(strvalue)
+        if a:
+            self.mag = float(a.group('mag'))
+            self.ph = float(a.group('ph'))
+        else:
+            raise ValueError("Invalide")
+
+    def to_complex(self):
+        ph = self.ph / 180 * math.pi
+        return complex(self.mag * math.cos(ph), self.mag * math.sin(ph))
+
+    def __str__(self):
+        return f"{self.mag},{self.ph}"
+
+
 def try_convert_value(value: str) -> Union[int, float, str]:
     """
     Tries to convert the string into an integer and if fails, tries to convert to a float, if it fails, then returns the
@@ -120,7 +143,10 @@ def try_convert_value(value: str) -> Union[int, float, str]:
         try:
             ans = float(value)
         except ValueError:
-            ans = value
+            try:
+                ans = LTComplex(value)
+            except ValueError:
+                ans = value
     return ans
 
 
@@ -467,6 +493,16 @@ class LTSpiceLogReader(object):
         else:  # Assuming it is an iterable
             return [self.dataset[measure][step] for step in steps]
 
+    def split_complex_values_on_datasets(self):
+        """
+        Internal function to split the complex values into additional two columns
+        TODO: Delete the old data and insert new ones the the right position
+        """
+        for param in list(self.dataset.keys()):
+            if len(self.dataset[param]) > 0 and isinstance(self.dataset[param][0], LTComplex):
+                self.dataset[param+'_mag'] = [v.mag for v in self.dataset[param]]
+                self.dataset[param+'_ph'] = [v.ph for v in self.dataset[param]]
+
     def export_data(self, export_file: str, append_with_line_prefix=None):
         """
         Exports the measurement information to a tab separated value (.tsv) format. If step data is found, it is
@@ -568,9 +604,11 @@ if __name__ == "__main__":
             reformat_LTSpice_export(filename, fname_out)
         elif filename.endswith("log"):
             data = LTSpiceLogReader(filename)
+            data.split_complex_values_on_datasets()
             data.export_data(fname_out)
         elif filename.endswith(".mout"):
             data = LTSpiceLogReader(filename.rstrip('mout') + 'log')
+            data.split_complex_values_on_datasets()
             data.export_data(fname_out)
 
     # input("Press Enter to Continue")

@@ -1,5 +1,5 @@
-LTSpiceBatch Module
-===================
+LTSpiceBatch.py
+===============
 .. automodule:: PyLTSpice.LTSpiceBatch
    :members:
    :undoc-members:
