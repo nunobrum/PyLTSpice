@@ -53,8 +53,7 @@
 <span class="sd">handled by this module.</span>
 
 <span class="sd">    + log files - Files with the extension &#39;.log&#39; that are automatically generated during simulation, and that are</span>
-<span class="sd">        normally accessible with the shortcut Ctrl+L after a simulation is ran.</span>
-<span class="sd">        Log files are interesting for two reasons.</span>
+<span class="sd">      normally accessible with the shortcut Ctrl+L after a simulation is ran.Log files are interesting for two reasons.</span>
 
 <span class="sd">            1. If .STEP primitives are used, the log file contain the correspondence between the step run and the step</span>
 <span class="sd">            value configuration.</span>
@@ -62,7 +61,7 @@
 <span class="sd">            2. If .MEAS primitives are used in the schematic, the log file contains the measurements made on the output</span>
 <span class="sd">            data.</span>
 
-<span class="sd">        LTSteps.py can be used to retrieve both step and measurement information from log files.</span>
+<span class="sd">      LTSteps.py can be used to retrieve both step and measurement information from log files.</span>
 
 <span class="sd">    + txt files - Files exported from the Plot File -&gt; Export data as text menu. This file is an text file where data is</span>
 <span class="sd">      saved in the text format. The reason to use PyLTSpice instead of another popular lib as pandas, is because the data</span>
@@ -98,18 +97,18 @@
 
 <span class="sd">    $ python -m PyLTSpice.LTSteps &lt;path_to_filename&gt;</span>
 
-<span class="sd">If &lt;path_to_filename&gt; is a log file, it will create a file with the same name, but with extension .tout that is a</span>
+<span class="sd">If `&lt;path_to_filename&gt;` is a log file, it will create a file with the same name, but with extension .tout that is a</span>
 <span class="sd">tab separated value (tsv) file, which contains the .STEP and .MEAS information collected.</span>
 
-<span class="sd">If &lt;path_to_filename&gt; is a txt exported file, it will create a file with the same name, but with extension .tsv a</span>
+<span class="sd">If `&lt;path_to_filename&gt;` is a txt exported file, it will create a file with the same name, but with extension .tsv a</span>
 <span class="sd">tab separated value (tsv) file, which contains data reformatted with the step number as one of the columns. Please</span>
 <span class="sd">consult the reformat_LTSpice_export() function for more information.</span>
 
-<span class="sd">If &lt;path_to_filename&gt; is a mout file, it will create a file with the same name, but with extension .tmout that is a</span>
+<span class="sd">If `&lt;path_to_filename&gt;` is a mout file, it will create a file with the same name, but with extension .tmout that is a</span>
 <span class="sd">tab separated value (tsv) file, which contains the .MEAS information collected, but adding the STEP run information</span>
 <span class="sd">as one of the columns.</span>
 
-<span class="sd">If &lt;path_to_filename&gt; argument is ommited, the script will automatically search for the newest .log/.txt/.mout file</span>
+<span class="sd">If `&lt;path_to_filename&gt;` argument is ommited, the script will automatically search for the newest .log/.txt/.mout file</span>
 <span class="sd">and use it.</span>
 
 <span class="sd">&quot;&quot;&quot;</span>

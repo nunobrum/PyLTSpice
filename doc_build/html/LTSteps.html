@@ -39,9 +39,8 @@
 handled by this module.</p>
 <blockquote>
 <div><ul>
-<li><dl>
-<dt>log files - Files with the extension ‘.log’ that are automatically generated during simulation, and that are</dt><dd><p>normally accessible with the shortcut Ctrl+L after a simulation is ran.
-Log files are interesting for two reasons.</p>
+<li><p>log files - Files with the extension ‘.log’ that are automatically generated during simulation, and that are
+normally accessible with the shortcut Ctrl+L after a simulation is ran.Log files are interesting for two reasons.</p>
 <blockquote>
 <div><p>1. If .STEP primitives are used, the log file contain the correspondence between the step run and the step
 value configuration.</p>
@@ -49,8 +48,6 @@ value configuration.</p>
 data.</p>
 </div></blockquote>
 <p>LTSteps.py can be used to retrieve both step and measurement information from log files.</p>
-</dd>
-</dl>
 </li>
 <li><p>txt files - Files exported from the Plot File -&gt; Export data as text menu. This file is an text file where data is
 saved in the text format. The reason to use PyLTSpice instead of another popular lib as pandas, is because the data
@@ -83,15 +80,15 @@ Measurement: gain
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>$ python -m PyLTSpice.LTSteps &lt;path_to_filename&gt;
 </pre></div>
 </div>
-<p>If &lt;path_to_filename&gt; is a log file, it will create a file with the same name, but with extension .tout that is a
+<p>If <cite>&lt;path_to_filename&gt;</cite> is a log file, it will create a file with the same name, but with extension .tout that is a
 tab separated value (tsv) file, which contains the .STEP and .MEAS information collected.</p>
-<p>If &lt;path_to_filename&gt; is a txt exported file, it will create a file with the same name, but with extension .tsv a
+<p>If <cite>&lt;path_to_filename&gt;</cite> is a txt exported file, it will create a file with the same name, but with extension .tsv a
 tab separated value (tsv) file, which contains data reformatted with the step number as one of the columns. Please
 consult the reformat_LTSpice_export() function for more information.</p>
-<p>If &lt;path_to_filename&gt; is a mout file, it will create a file with the same name, but with extension .tmout that is a
+<p>If <cite>&lt;path_to_filename&gt;</cite> is a mout file, it will create a file with the same name, but with extension .tmout that is a
 tab separated value (tsv) file, which contains the .MEAS information collected, but adding the STEP run information
 as one of the columns.</p>
-<p>If &lt;path_to_filename&gt; argument is ommited, the script will automatically search for the newest .log/.txt/.mout file
+<p>If <cite>&lt;path_to_filename&gt;</cite> argument is ommited, the script will automatically search for the newest .log/.txt/.mout file
 and use it.</p>
 <dl class="py class">
 <dt id="PyLTSpice.LTSteps.LTComplex">
