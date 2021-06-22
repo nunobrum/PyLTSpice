@@ -319,13 +319,15 @@ class LTSpiceLogReader(object):
     :type log_filename: str
     :param read_measures: Optional parameter to skip measuring data reading.
     :type read_measures: boolean
+    :param step_set: Optional parameter to provide the steps from another file. This is used to process .mout files.
+    :type step_set: dict
     """
 
-    def __init__(self, log_filename: str, read_measures=True):
+    def __init__(self, log_filename: str, read_measures=True, step_set={}):
         self.logname = log_filename
         fin = open(log_filename, 'r')
-        self.step_count = 0
-        self.stepset = {}
+        self.step_count = len(step_set)
+        self.stepset = step_set
         self.dataset = OrderedDict()  # Dictionary in which the order of the keys is kept
         self.measure_count = 0
 
@@ -472,10 +474,23 @@ class LTSpiceLogReader(object):
                 current_set = [v for v in current_set if v in condition_set]
         return current_set
 
-    def get_measure_names(self):
-        self.dataset.keys()
+    def get_measure_names(self) -> List[str]:
+        """
+        Returns the names of the measurements read from the log file.
+        :return: List of measurement names.
+        :rtype: list of str
+        """
+        return self.dataset.keys()
 
-    def get_measure_value(self, measure, step: int = None):
+    def get_measure_value(self, measure: str, step: int = None) -> Union[float, int, str, complex]:
+        """
+        Returns a measure value on a given step.
+
+        :param measure: name of the measurement to get
+        :type measure: str
+        :param step: optional step number if the simulation has no steps.
+        :type step: int
+        """
         if step is None:
             if len(self.dataset[measure]) == 1:
                 return self.dataset[measure][0]
@@ -484,7 +499,17 @@ class LTSpiceLogReader(object):
         else:
             return self.dataset[measure][step]
 
-    def get_measure_values_at_steps(self, measure, steps):
+    def get_measure_values_at_steps(self, measure: str, steps: Union[int, Iterable]):
+        """
+        Returns the measurements taken at a list of steps provided by the steps list.
+
+        :param measure: name of the measurement to get.
+        :type measure: str
+        :param steps: step number, or list of step numbers.
+        :type steps: int or list
+        :return: measurement or list of measurements
+        :rtype: int or Iterable
+        """
         if steps is None:
             return self.dataset[measure]  # Returns everything
         elif isinstance(steps, int):
@@ -606,7 +631,9 @@ if __name__ == "__main__":
             data.split_complex_values_on_datasets()
             data.export_data(fname_out)
         elif filename.endswith(".mout"):
-            data = LTSpiceLogReader(filename.rstrip('mout') + 'log')
+            steps = LTSpiceLogReader(filename.rstrip('mout') + 'log', read_measures=False)
+            data = LTSpiceLogReader(filename, step_set=steps.stepset)
+            data.stepset = steps.stepset
             data.split_complex_values_on_datasets()
             data.export_data(fname_out)
 
