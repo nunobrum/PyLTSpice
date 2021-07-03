@@ -27,15 +27,15 @@ UNIQUE_SIMULATION_DOT_INSTRUCTIONS = ('.AC', '.DC', '.TRAN', 'NOISE', '.DC', '.T
 
 REPLACE_REGXES = {
     'B': r"^(B[VI]\w+)(\s+[\w\+\-]+){2}\s+(?P<value>.*)$",  # Behavioral source
-    'C': r"^(C\w+)(\s+[\w\+\-]+){2}\s+(?P<value>({)?(?(3).*}|([0-9\.E+-]+(Meg|[kmunp])?F?))).*$",  # Capacitor
+    'C': r"^(C\w+)(\s+[\w\+\-]+){2}\s+(?P<value>({)?(?(4).*}|([0-9\.E+-]+(Meg|[kmunp])?F?))).*$",  # Capacitor
     'D': r"^(D\w+)(\s+[\w\+\-]+){2}\s+(?P<value>\w+).*$",  # Diode
     'I': r"^(I\w+)(\s+[\w\+\-]+){2}\s+(?P<value>.*)$",  # Current Source
     'J': r"^(J\w+)(\s+[\w\+\-]+){3}\s+(?P<value>\w+).*$",  # JFET
     'K': r"^(K\w+)(\s+[\w\+\-]+){2:4}\s+(?P<value>[\+\-]?[0-9\.E+-]+[kmunp]?).*$",  # Mutual Inductance
-    'L': r"^(L\w+)(\s+[\w\+\-]+){2}\s+(?P<value>({)?(?(3).*}|([0-9\.E+-]+(Meg|[kmunp])?H?))).*$",  # Inductance
+    'L': r"^(L\w+)(\s+[\w\+\-]+){2}\s+(?P<value>({)?(?(4).*}|([0-9\.E+-]+(Meg|[kmunp])?H?))).*$",  # Inductance
     'M': r"^(M\w+)(\s+[\w\+\-]+){3}\s+(?P<value>\w+).*$",  # MOSFET
     'Q': r"^(Q\w+)(\s+[\w\+\-]+){3}\s+(?P<value>\w+).*$",  # Bipolar
-    'R': r"^(R\w+)(\s+[\w\+\-]+){2}\s+(?P<value>({)?(?(3).*}|([0-9\.E+-]+(Meg|[kmunp])?R?))).*$",  # Resistors
+    'R': r"^(R\w+)(\s+[\w\+\-]+){2}\s+(?P<value>({)?(?(4).*}|([0-9\.E+-]+(Meg|[kmunp])?R?))).*$",  # Resistors
     'V': r"^(V\w+)(\s+[\w\+\-]+){2}\s+(?P<value>.*)$",  # Voltage Source
     'X': r"^(X\w+)(\s+[\w\+\-]+){1,99}\s+(?P<value>\w+)(\s+\w+\s*=\s*\S+)*$",  # Sub-circuit
 }
