@@ -140,6 +140,9 @@ LTC.wait_completion()
 * Alternative contact : nuno.brum@gmail.com
 
 ## History ##
+* Version 1.3
+Bug fixes on the SpiceEditor Class
+
 * Version 1.2
 README.md:
 Adding link to readthedocs documentation
