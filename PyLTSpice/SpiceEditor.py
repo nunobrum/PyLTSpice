@@ -23,21 +23,75 @@ __copyright__ = "Copyright 2021, Fribourg Switzerland"
 END_LINE_TERM = '\n'
 
 # A Spice netlist can only have one of the instructions below, otherwise an error will be raised
-UNIQUE_SIMULATION_DOT_INSTRUCTIONS = ('.AC', '.DC', '.TRAN', 'NOISE', '.DC', '.TF')
+UNIQUE_SIMULATION_DOT_INSTRUCTIONS = ('.AC', '.DC', '.TRAN', '.NOISE', '.DC', '.TF')
+
+SPICE_DOT_INSTRUCTIONS = (
+    '.BACKANNO',
+    '.END',
+    '.ENDS',
+    '.FERRET', # Downloads a File from a given URL
+    '.FOUR',  # Compute a Fourier Component after a .TRAN Analysis
+    '.FUNC', '.FUNCTION',
+    '.GLOBAL',
+    '.IC',
+    '.INC', '.INCLUDE',  # Include another file
+    '.LIB', # Include a Library
+    '.LOADBIAS', # Load a Previously Solved DC Solution
+     # These Commands are part of the contraption Programming Language of the Arbitrary State Machine
+    '.MACHINE', '.STATE', '.RULE', '.OUTPUT', '.ENDMACHINE',
+    '.MEAS', '.MEASURE',
+    '.MODEL',
+    '.NET', # Compute Network Parameters in a .AC Analysis
+    '.NODESET',  # Hints for Initial DC Solution
+    '.OP',
+    '.OPTIONS',
+    '.PARAM', '.PARAMS',
+    '.SAVE', '.SAV',
+    '.SAVEBIAS',
+    '.STEP',
+    '.SUBCKT',
+    '.TEXT',
+    '.WAVE', # Write Selected Nodes to a .Wav File
+
+)
 
 REPLACE_REGXES = {
-    'B': r"^(B[VI]\w+)(\s+[\w\+\-]+){2}\s+(?P<value>.*)$",  # Behavioral source
-    'C': r"^(C\w+)(\s+[\w\+\-]+){2}\s+(?P<value>({)?(?(4).*}|([0-9\.E+-]+(Meg|[kmunp])?F?))).*$",  # Capacitor
-    'D': r"^(D\w+)(\s+[\w\+\-]+){2}\s+(?P<value>\w+).*$",  # Diode
-    'I': r"^(I\w+)(\s+[\w\+\-]+){2}\s+(?P<value>.*)$",  # Current Source
-    'J': r"^(J\w+)(\s+[\w\+\-]+){3}\s+(?P<value>\w+).*$",  # JFET
-    'K': r"^(K\w+)(\s+[\w\+\-]+){2:4}\s+(?P<value>[\+\-]?[0-9\.E+-]+[kmunp]?).*$",  # Mutual Inductance
-    'L': r"^(L\w+)(\s+[\w\+\-]+){2}\s+(?P<value>({)?(?(4).*}|([0-9\.E+-]+(Meg|[kmunp])?H?))).*$",  # Inductance
-    'M': r"^(M\w+)(\s+[\w\+\-]+){3}\s+(?P<value>\w+).*$",  # MOSFET
-    'Q': r"^(Q\w+)(\s+[\w\+\-]+){3}\s+(?P<value>\w+).*$",  # Bipolar
-    'R': r"^(R\w+)(\s+[\w\+\-]+){2}\s+(?P<value>({)?(?(4).*}|([0-9\.E+-]+(Meg|[kmunp])?R?))).*$",  # Resistors
-    'V': r"^(V\w+)(\s+[\w\+\-]+){2}\s+(?P<value>.*)$",  # Voltage Source
-    'X': r"^(X\w+)(\s+[\w\+\-]+){1,99}\s+(?P<value>\w+)(\s+\w+\s*=\s*\S+)*$",  # Sub-circuit
+    'A': r"^(A\w+)(\s+\S+){8}\s+(?P<value>.*)(\s+\w+\s*=\s*\S+)*\s*$",  # Special Functions, Parameter substitution not supported
+    'B': r"^(B[VI]?\w+)(\s+\S+){2}\s+(?P<value>.*)$",  # Behavioral source
+    'C': r"^(C\w+)(\s+\S+){2}\s+(?P<value>({)?(?(4).*}|([0-9\.E+-]+(Meg|[kmunp])?F?))).*$",  # Capacitor
+    'D': r"^(D\w+)(\s+\S+){2}\s+(?P<value>\w+).*$",  # Diode
+    'I': r"^(I\w+)(\s+\S+){2}\s+(?P<value>.*)$",  # Current Source
+    'E': r"^(E\w+)(\s+\S+){2,4}\s+(?P<value>.*)$",  # Voltage Dependent Voltage Source
+                                                        # this only supports changing gain values
+    'F': r"^(F\w+)(\s+\S+){2}\s+(?P<value>.*)$",  # Current Dependent Current Source
+                                                        # TODO: this implementation replaces everything after the 2
+                                                        #       first nets
+    'G': r"^(G\w+)(\s+\S+){2,4}\s+(?P<value>.*)$",  # Voltage Dependent Current Source
+                                                        # this only supports changing gain values
+    'H': r"^(H\w+)(\s+\S+){2}\s+(?P<value>.*)$",  # Voltage Dependent Current Source
+                                                        # TODO: this implementation replaces everything after the 2
+                                                        #       first nets
+    'I': r"^(I\w+)(\s+\S+){2}\s+(?P<value>.*)$",  # Current Source
+                                                        # TODO: this implementation replaces everything after the 2
+                                                        #       first nets
+    'J': r"^(J\w+)(\s+\S+){3}\s+(?P<value>\w+).*$",  # JFET
+    'K': r"^(K\w+)(\s+\S+){2,4}\s+(?P<value>[\+\-]?[0-9\.E+-]+[kmunp]?).*$",  # Mutual Inductance
+    'L': r"^(L\w+)(\s+\S+){2}\s+(?P<value>({)?(?(4).*}|([0-9\.E+-]+(Meg|[kmunp])?H?))).*$",  # Inductance
+    'M': r"^(M\w+)(\s+\S+){3,4}\s+(?P<value>\w+).*$",  # MOSFET TODO: Parameters substitution not supported
+    'O': r"^(O\w+)(\s+\S+){4}\s+(?P<value>\w+).*$",  # Lossy Transmission Line TODO: Parameters substitution not supported
+    'Q': r"^(Q\w+)(\s+\S+){3}\s+(?P<value>\w+).*$",  # Bipolar TODO: Parameters substitution not supported
+    'R': r"^(R\w+)(\s+\S+){2}\s+(?P<value>({)?(?(4).*}|([0-9\.E+-]+(Meg|[kmunp])?R?))).*$",  # Resistors
+    'S': r"^(S\w+)(\s+\S+){4}\s+(?P<value>.*)$",  # Voltage Controlled Switch
+    'T': r"^(T\w+)(\s+\S+){4}\s+(?P<value>.*)$",  # Lossless Transmission
+    'U': r"^(U\w+)(\s+\S+){3}\s+(?P<value>.*)$",  # Uniform RC-line
+    'V': r"^(V\w+)(\s+\S+){2}\s+(?P<value>.*)$",  # Voltage Source
+                                                        # TODO: this implementation replaces everything after the 2
+                                                        #       first nets
+    'W': r"^(W\w+)(\s+\S+){2}\s+(?P<value>.*)$",  # Current Controlled Switch
+                                                        # TODO: this implementation replaces everything after the 2
+                                                        #       first nets
+    'X': r"(X\w+)(\s+\S+){1,99}\s+(?P<value>\S+)(\s+\w+\s*=\s*\S+)*\s*$",  # Sub-circuit, Parameter substitution not supported
+    'Z': r"^(Z\w+)(\s+\S+){3}\s+(?P<value>\w+).*$",  # MESFET and IBGT. TODO: Parameters substitution not supported
 }
 
 PARAM_REGX = r"%s\s*=\s*(?P<value>[\w*/\.+-/{}()]*)"
@@ -106,11 +160,11 @@ def get_line_command(line) -> str:
                 continue
             else:
                 ch = ch.upper()
-                if ch in 'BCDIJKLMQRVX':  # A circuit element
+                if ch in REPLACE_REGXES:  # A circuit element
                     return ch
                 elif ch == '+':
                     return '+'  # This is a line continuation.
-                elif ch in ";*\n\r":  # It is a comment or a blank line
+                elif ch in "#;*\n\r":  # It is a comment or a blank line
                     return "*"
                 elif ch == '.':  # this is a directive
                     j = i + 1
@@ -119,10 +173,10 @@ def get_line_command(line) -> str:
                     return line[i:j].upper()
                 else:
                     raise SyntaxError('Irrecognized command in line "%s"' % line)
-    elif instance(line, SpiceCircuit):
+    elif isinstance(line, SpiceCircuit):
         return ".SUBCKT"
     else:
-        raise SyntaxError('Irrecognized command in line "%s"' % line)
+        raise SyntaxError('Irrecognized command in line "{}"'.format(line))
 
 
 def _first_token_upped(line):
