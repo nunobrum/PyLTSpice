@@ -54,7 +54,8 @@ More comprehnsive documentation can be found in https://pyltspice.readthedocs.io
 ### LTSpice_RawRead.py ###
 Include the following line on your scripts
 
- ```from PyLTSpice.LTSpice_RawRead import LTSpiceRawRead
+ ```python
+ from PyLTSpice.LTSpice_RawRead import LTSpiceRawRead
  
  from matplotlib import plot
  
@@ -84,7 +85,8 @@ updated directly by the script, in order to change component values, parameters 
 
 Here follows an example of operation.
 
- ```import os
+```python
+import os
 from PyLTSpice.LTSpiceBatch import LTCommander
 from shutil import copyfile
  
