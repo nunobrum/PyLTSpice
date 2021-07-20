@@ -232,7 +232,7 @@ class SpiceCircuit(object):
             if isinstance(line, list):  # If it is a subcircuit it will simply ignore it.
                 continue
             line_upcase = _first_token_upped(line)
-            if line_upcase.startswith(substr_upper):
+            if line_upcase == substr_upper:
                 return line_no
         error_msg = "Component '%s' not found in netlist" % component
         self.logger.error(error_msg)
@@ -674,7 +674,9 @@ if __name__ == '__main__':
     E = SpiceEditor('..\\tests\\Editor_Test.net')
     E.reset_netlist()
     print(E.get_component_value('R1'))
-    print("Setting 1.23k")
+    print("Setting R1 to 10k")
+    E.set_component_value('R1', 10000)
+    print("Setting parameter I1 1.23k")
     E.set_parameter("I1", "1.23k")
     print(E.get_parameter('I1'))
     print("Setting {freq*(10/5.0})")

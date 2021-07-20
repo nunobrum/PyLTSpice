@@ -19,13 +19,11 @@
 #------------------------------------------------------------------------------
 # Python Libs
 #
-from typing import Union
-#------------------------------------------------------------------------------
+import math
+from typing import Union, Iterable
 
 
-
-#------------------------------------------------------------------------------
-def sweep(start: Union[int, float], stop: Union[int, float], step: Union[int, float] = 1):
+def sweep(start: Union[int, float], stop: Union[int, float], step: Union[int, float] = 1) -> Iterable[float]:
     """Helper function.
     Generator function to be used in sweeps.
     Advantages towards the range python built-in functions
@@ -52,12 +50,24 @@ def sweep(start: Union[int, float], stop: Union[int, float], step: Union[int, fl
             yield val
             inc += 1
             val = start - inc * step
-#------------------------------------------------------------------------------
 
 
+def sweepN(start: Union[int, float], stop: Union[int, float], N: int) -> Iterable[float]:
+    """Helper function.
+    Generator function that generates a 'N' number of points between a start and a stop interval.
+    Advantages towards the range python built-in functions
+    - Supports floating point arguments
+    - Supports both up and down sweeps-
+    Usage:
+        >>> list(sweep(0.3, 1.1, 4))
+        [0.3, 0.5, 0.7, 0.9000000000000001, 1.1]
+        >>> list(sweep(15, -15, 13))
+        [15, 12.5, 10.0, 7.5, 5.0, 2.5, 0.0, -2.5, -5.0, -7.5, -10.0, -12.5, -15.0]
+        """
+    return sweep(start, stop, (stop-start)/(N-1))
 
-#------------------------------------------------------------------------------
-def sweep_log(start: Union[int, float], stop: Union[int, float], step: Union[int, float] = 10):
+
+def sweep_log(start: Union[int, float], stop: Union[int, float], step: Union[int, float] = 10) -> Iterable[float]:
     """Helper function.
     Generator function to be used in logarithmic sweeps.
 Advantages towards the range python built-in functions_
@@ -79,6 +89,28 @@ Advantages towards the range python built-in functions_
         while start >= stop:
             yield start
             start /= stp
+
+
+def sweep_logN(start: Union[int, float], stop: Union[int, float], N: int) -> Iterable[float]:
+    """Helper function.
+    Generator function that generates a 'N' number of points between a start and a stop interval.
+    Advantages towards the range python built-in functions
+    - Supports floating point arguments
+    - Supports both up and down sweeps-
+    Usage:
+        >>> list(sweep_logN(1, 10, 6))
+        [1.0, 1.5848931924611136, 2.5118864315095806, 3.9810717055349736, 6.309573444801934, 10.000000000000004]
+        >>> list(sweep_logN(10, 1, 5))
+        [1.0, 0.5623413251903491, 0.31622776601683794, 0.17782794100389226, 0.09999999999999999]
+        """
+    step = math.exp(math.log(stop/start)/(N-1))
+    assert step != 0, "Step cannot be 0"
+    inc = 0
+    while inc < N:
+        yield math.pow(step, inc)
+        inc += 1
+
+
 #------------------------------------------------------------------------------
 
 
