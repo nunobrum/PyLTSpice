@@ -438,6 +438,21 @@ class LTSpiceLogReader(object):
 
         fin.close()
 
+    def __getitem__(self, key):
+        """
+        __getitem__ implements
+        :key: step or measurement name
+        :return: step or measurement set
+        :rtype: List[float]
+        """
+        if isinstance(key, slice):
+            raise NotImplementedError("Slicing in not allowed in this class")
+        if key in self.stepset:
+            return self.stepset[key]
+        if key in self.dataset:
+            return self.dataset[key]  # This will raise an Index Error if not found here.
+        raise IndexError("'%s' is not a valid step variable or measurement name" % key)
+
     def steps_with_parameter_equal_to(self, param: str, value: Union[str, int, float]) -> List[int]:
         """
         Returns the steps that contain a given condition.
@@ -473,6 +488,14 @@ class LTSpiceLogReader(object):
                 # makes the intersection between the lists
                 current_set = [v for v in current_set if v in condition_set]
         return current_set
+
+    def get_step_vars(self) -> List[str]:
+        """
+        Returns the stepped variable names of .
+        :return: List of step variables.
+        :rtype: list of str
+        """
+        return self.stepset.keys()
 
     def get_measure_names(self) -> List[str]:
         """

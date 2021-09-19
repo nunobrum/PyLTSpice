@@ -21,12 +21,12 @@ This is a script to launch LTSpice Simulations. This is useful because:
     - The RAW Files are smaller and easier to treat
     - When used with the LTSpiceRaw_Reader.py and LTSteps.py, validattion of the circuit can be done automatically.
     - Different models can be simulated in a single batch, by using the following instructions:
-    	- `set_element_model('D1', '1N4148') # Replaces the Diode D1 with the model 1N4148 `  
-    	- `set_component_value('R2', '33k') # Replaces the value of R2 by 33k`  
-    	- `set_parameters(run=1, TEMP=80) # Creates or updates the netlist to have .PARAM run=1 or .PARAM TEMP=80`  
-    	- `add_instructions(".STEP run -1 1023 1", ".dc V1 -5 5") `  
-    	- `remove_instruction(".STEP run -1 1023 1")  # Removes previously added instruction`  
-    	- `reset_netlist() # Resets all edits done to the netlist.`  
+        - `set_element_model('D1', '1N4148') # Replaces the Diode D1 with the model 1N4148 `  
+        - `set_component_value('R2', '33k') # Replaces the value of R2 by 33k`  
+        - `set_parameters(run=1, TEMP=80) # Creates or updates the netlist to have .PARAM run=1 or .PARAM TEMP=80`  
+        - `add_instructions(".STEP run -1 1023 1", ".dc V1 -5 5") `  
+        - `remove_instruction(".STEP run -1 1023 1")  # Removes previously added instruction`  
+        - `reset_netlist() # Resets all edits done to the netlist.`  
 
     Note: It was only tested with Windows based installations.
 
@@ -128,12 +128,68 @@ LTC.wait_completion()
 ```
 
 ### LTSteps.py ###
+This module defines a class that can be used to parse LTSpice log files where the information about .STEP information is written.
+There are two possible usages of this module, either programmatically by importing the module and then accessing data through the
+class as exemplified here:
 
- `python -m PyLTSpice.LTSteps <logfile or directory where last simulation was made `
+```python
+from PyLTSpice.LTSteps import LTSpiceLogReader
+
+data = LTSpiceLogReader("Batch_Test_AD820_15.log")
+
+print("Number of steps  :", data.step_count)
+step_names = data.get_step_vars()
+meas_names = data.get_measure_names()
+
+# Printing Headers
+print(' '.join([f"{step:15s}" for step in step_names]), end='')  # Print steps names with no new line 
+print(' '.join([f"{name:15s}" for name in meas_names]), end='\n')
+# Printing data
+for i in range(data.step_count):
+    print(' '.join([f"{data[step][i]:15}" for step in step_names]), end='')  # Print steps names with no new line
+    print(' '.join([f"{data[name][i]:15}" for name in meas_names]), end='\n')  # Print Header
+
+print("Total number of measures found :", data.measure_count)
+```
+The second possibility is to use the module directly on the command line
+ `python -m PyLTSpice.LTSteps <filename> `
+ The <filename> can be either be a log file (.log), a data export file (.txt) or a measurement output file (.meas)
+ This will process all the data and export it automatically into a text file with the extension (tlog, tsv, tmeas)
+ where the data read is formatted into a more convinient tab separated format.
+ In case the <logfile> is not provided, the script will scan the directory and process the newest log, txt or out file found.
 
 ### Histogram.py ###
+This module uses the data inside on the filename to produce an histogram image. 
+ ```
+Usage: Histogram.py [options] LOG_FILE TRACE
 
- `python -m PyLTSpice.Histogram `  
+Options:
+  --version             show program's version number and exit
+  -h, --help            show this help message and exit
+  -s SIGMA, --sigma=SIGMA
+                        Sigma to be used in the distribution fit. Default=3
+  -n NBINS, --nbins=NBINS
+                        Number of bins to be used in the histogram. Default=20
+  -c FILTERS, --condition=FILTERS
+                        Filter condition writen in python. More than one
+                        expression can be added but each expression should be
+                        preceded by -f. EXAMPLE: -c V(N001)>4 -c parameter==1
+                        -c  I(V1)<0.5
+  -f FORMAT, --format=FORMAT
+                        Format string for the X axis. Example: -f %3.4f
+  -t TITLE, --title=TITLE
+                        Title to appear on the top of the histogram.
+  -r RANGE, --range=RANGE
+                        Range of the X axis to use for the histogram in the
+                        form min:max. Example: -r -1:1
+  -C, --clipboard       If the data from the clipboard is to be used.
+  -i IMAGEFILE, --image=IMAGEFILE
+                        Name of the image File. extension 'png'    
+ ```
+ 
+### LTSpice_SemiDevOpReader.py ###
+This module is used to read from LTSpice log files Semiconductor Devices Operating Point Information.
+A more detailed documentation is directly included in the source file docstrings.
 
 ## To whom do I talk to? ##
 
@@ -142,6 +198,10 @@ LTC.wait_completion()
 * Alternative contact : nuno.brum@gmail.com
 
 ## History ##
+Version 1.4
+Adding the LTSpice_SemiDevOpReader module
+Re-enabling the Histogram functions which where disabled by mistake.
+
 * Version 1.3
 Bug fixes on the SpiceEditor Class
 
