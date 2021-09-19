@@ -150,7 +150,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">mag</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;mag&#39;</span><span class="p">))</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">ph</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;ph&#39;</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalide&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid complex value format&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="LTComplex.to_complex"><a class="viewcode-back" href="../../LTSteps.html#PyLTSpice.LTSteps.LTComplex.to_complex">[docs]</a>    <span class="k">def</span> <span class="nf">to_complex</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">ph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ph</span> <span class="o">/</span> <span class="mi">180</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span>
@@ -353,13 +353,15 @@
 <span class="sd">    :type log_filename: str</span>
 <span class="sd">    :param read_measures: Optional parameter to skip measuring data reading.</span>
 <span class="sd">    :type read_measures: boolean</span>
+<span class="sd">    :param step_set: Optional parameter to provide the steps from another file. This is used to process .mout files.</span>
+<span class="sd">    :type step_set: dict</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log_filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">read_measures</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log_filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">read_measures</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">step_set</span><span class="o">=</span><span class="p">{}):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">logname</span> <span class="o">=</span> <span class="n">log_filename</span>
         <span class="n">fin</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">log_filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">step_count</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">stepset</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">step_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">step_set</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stepset</span> <span class="o">=</span> <span class="n">step_set</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>  <span class="c1"># Dictionary in which the order of the keys is kept</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">measure_count</span> <span class="o">=</span> <span class="mi">0</span>
 
@@ -506,10 +508,23 @@
                 <span class="n">current_set</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">current_set</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">condition_set</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">current_set</span></div>
 
-<div class="viewcode-block" id="LTSpiceLogReader.get_measure_names"><a class="viewcode-back" href="../../LTSteps.html#PyLTSpice.LTSteps.LTSpiceLogReader.get_measure_names">[docs]</a>    <span class="k">def</span> <span class="nf">get_measure_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span></div>
+<div class="viewcode-block" id="LTSpiceLogReader.get_measure_names"><a class="viewcode-back" href="../../LTSteps.html#PyLTSpice.LTSteps.LTSpiceLogReader.get_measure_names">[docs]</a>    <span class="k">def</span> <span class="nf">get_measure_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the names of the measurements read from the log file.</span>
+<span class="sd">        :return: List of measurement names.</span>
+<span class="sd">        :rtype: list of str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="LTSpiceLogReader.get_measure_value"><a class="viewcode-back" href="../../LTSteps.html#PyLTSpice.LTSteps.LTSpiceLogReader.get_measure_value">[docs]</a>    <span class="k">def</span> <span class="nf">get_measure_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">measure</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="LTSpiceLogReader.get_measure_value"><a class="viewcode-back" href="../../LTSteps.html#PyLTSpice.LTSteps.LTSpiceLogReader.get_measure_value">[docs]</a>    <span class="k">def</span> <span class="nf">get_measure_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">measure</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">complex</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a measure value on a given step.</span>
+
+<span class="sd">        :param measure: name of the measurement to get</span>
+<span class="sd">        :type measure: str</span>
+<span class="sd">        :param step: optional step number if the simulation has no steps.</span>
+<span class="sd">        :type step: int</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">step</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="n">measure</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="n">measure</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
@@ -518,7 +533,17 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="n">measure</span><span class="p">][</span><span class="n">step</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="LTSpiceLogReader.get_measure_values_at_steps"><a class="viewcode-back" href="../../LTSteps.html#PyLTSpice.LTSteps.LTSpiceLogReader.get_measure_values_at_steps">[docs]</a>    <span class="k">def</span> <span class="nf">get_measure_values_at_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">measure</span><span class="p">,</span> <span class="n">steps</span><span class="p">):</span>
+<div class="viewcode-block" id="LTSpiceLogReader.get_measure_values_at_steps"><a class="viewcode-back" href="../../LTSteps.html#PyLTSpice.LTSteps.LTSpiceLogReader.get_measure_values_at_steps">[docs]</a>    <span class="k">def</span> <span class="nf">get_measure_values_at_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">measure</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">steps</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the measurements taken at a list of steps provided by the steps list.</span>
+
+<span class="sd">        :param measure: name of the measurement to get.</span>
+<span class="sd">        :type measure: str</span>
+<span class="sd">        :param steps: step number, or list of step numbers.</span>
+<span class="sd">        :type steps: int or list</span>
+<span class="sd">        :return: measurement or list of measurements</span>
+<span class="sd">        :rtype: int or Iterable</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">steps</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="n">measure</span><span class="p">]</span>  <span class="c1"># Returns everything</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">steps</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
@@ -640,7 +665,9 @@
             <span class="n">data</span><span class="o">.</span><span class="n">split_complex_values_on_datasets</span><span class="p">()</span>
             <span class="n">data</span><span class="o">.</span><span class="n">export_data</span><span class="p">(</span><span class="n">fname_out</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.mout&quot;</span><span class="p">):</span>
-            <span class="n">data</span> <span class="o">=</span> <span class="n">LTSpiceLogReader</span><span class="p">(</span><span class="n">filename</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;mout&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;log&#39;</span><span class="p">)</span>
+            <span class="n">steps</span> <span class="o">=</span> <span class="n">LTSpiceLogReader</span><span class="p">(</span><span class="n">filename</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;mout&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;log&#39;</span><span class="p">,</span> <span class="n">read_measures</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">LTSpiceLogReader</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">step_set</span><span class="o">=</span><span class="n">steps</span><span class="o">.</span><span class="n">stepset</span><span class="p">)</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">stepset</span> <span class="o">=</span> <span class="n">steps</span><span class="o">.</span><span class="n">stepset</span>
             <span class="n">data</span><span class="o">.</span><span class="n">split_complex_values_on_datasets</span><span class="p">()</span>
             <span class="n">data</span><span class="o">.</span><span class="n">export_data</span><span class="p">(</span><span class="n">fname_out</span><span class="p">)</span>
 
@@ -670,6 +697,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../LTSpice_RawRead.html">LTSpice_RawRead.py</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../LTSteps.html">LTSteps.py</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../Histogram.html">Histogram.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../SemiOpLogReader.html">LTSpice_SemiDevOpReader.py</a></li>
 </ul>
 
 <div class="relations">

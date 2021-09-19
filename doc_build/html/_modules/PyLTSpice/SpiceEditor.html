@@ -57,21 +57,75 @@
 <span class="n">END_LINE_TERM</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
 
 <span class="c1"># A Spice netlist can only have one of the instructions below, otherwise an error will be raised</span>
-<span class="n">UNIQUE_SIMULATION_DOT_INSTRUCTIONS</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;.AC&#39;</span><span class="p">,</span> <span class="s1">&#39;.DC&#39;</span><span class="p">,</span> <span class="s1">&#39;.TRAN&#39;</span><span class="p">,</span> <span class="s1">&#39;NOISE&#39;</span><span class="p">,</span> <span class="s1">&#39;.DC&#39;</span><span class="p">,</span> <span class="s1">&#39;.TF&#39;</span><span class="p">)</span>
+<span class="n">UNIQUE_SIMULATION_DOT_INSTRUCTIONS</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;.AC&#39;</span><span class="p">,</span> <span class="s1">&#39;.DC&#39;</span><span class="p">,</span> <span class="s1">&#39;.TRAN&#39;</span><span class="p">,</span> <span class="s1">&#39;.NOISE&#39;</span><span class="p">,</span> <span class="s1">&#39;.DC&#39;</span><span class="p">,</span> <span class="s1">&#39;.TF&#39;</span><span class="p">)</span>
+
+<span class="n">SPICE_DOT_INSTRUCTIONS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s1">&#39;.BACKANNO&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;.END&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;.ENDS&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;.FERRET&#39;</span><span class="p">,</span> <span class="c1"># Downloads a File from a given URL</span>
+    <span class="s1">&#39;.FOUR&#39;</span><span class="p">,</span>  <span class="c1"># Compute a Fourier Component after a .TRAN Analysis</span>
+    <span class="s1">&#39;.FUNC&#39;</span><span class="p">,</span> <span class="s1">&#39;.FUNCTION&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;.GLOBAL&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;.IC&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;.INC&#39;</span><span class="p">,</span> <span class="s1">&#39;.INCLUDE&#39;</span><span class="p">,</span>  <span class="c1"># Include another file</span>
+    <span class="s1">&#39;.LIB&#39;</span><span class="p">,</span> <span class="c1"># Include a Library</span>
+    <span class="s1">&#39;.LOADBIAS&#39;</span><span class="p">,</span> <span class="c1"># Load a Previously Solved DC Solution</span>
+     <span class="c1"># These Commands are part of the contraption Programming Language of the Arbitrary State Machine</span>
+    <span class="s1">&#39;.MACHINE&#39;</span><span class="p">,</span> <span class="s1">&#39;.STATE&#39;</span><span class="p">,</span> <span class="s1">&#39;.RULE&#39;</span><span class="p">,</span> <span class="s1">&#39;.OUTPUT&#39;</span><span class="p">,</span> <span class="s1">&#39;.ENDMACHINE&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;.MEAS&#39;</span><span class="p">,</span> <span class="s1">&#39;.MEASURE&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;.MODEL&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;.NET&#39;</span><span class="p">,</span> <span class="c1"># Compute Network Parameters in a .AC Analysis</span>
+    <span class="s1">&#39;.NODESET&#39;</span><span class="p">,</span>  <span class="c1"># Hints for Initial DC Solution</span>
+    <span class="s1">&#39;.OP&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;.OPTIONS&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;.PARAM&#39;</span><span class="p">,</span> <span class="s1">&#39;.PARAMS&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;.SAVE&#39;</span><span class="p">,</span> <span class="s1">&#39;.SAV&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;.SAVEBIAS&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;.STEP&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;.SUBCKT&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;.TEXT&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;.WAVE&#39;</span><span class="p">,</span> <span class="c1"># Write Selected Nodes to a .Wav File</span>
+
+<span class="p">)</span>
 
 <span class="n">REPLACE_REGXES</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s1">&#39;B&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(B[VI]\w+)(\s+[\w\+\-]+)</span><span class="si">{2}</span><span class="s2">\s+(?P&lt;value&gt;.*)$&quot;</span><span class="p">,</span>  <span class="c1"># Behavioral source</span>
-    <span class="s1">&#39;C&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(C\w+)(\s+[\w\+\-]+)</span><span class="si">{2}</span><span class="s2">\s+(?P&lt;value&gt;({)?(?(3).*}|([0-9\.E+-]+(Meg|[kmunp])?F?))).*$&quot;</span><span class="p">,</span>  <span class="c1"># Capacitor</span>
-    <span class="s1">&#39;D&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(D\w+)(\s+[\w\+\-]+)</span><span class="si">{2}</span><span class="s2">\s+(?P&lt;value&gt;\w+).*$&quot;</span><span class="p">,</span>  <span class="c1"># Diode</span>
-    <span class="s1">&#39;I&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(I\w+)(\s+[\w\+\-]+)</span><span class="si">{2}</span><span class="s2">\s+(?P&lt;value&gt;.*)$&quot;</span><span class="p">,</span>  <span class="c1"># Current Source</span>
-    <span class="s1">&#39;J&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(J\w+)(\s+[\w\+\-]+)</span><span class="si">{3}</span><span class="s2">\s+(?P&lt;value&gt;\w+).*$&quot;</span><span class="p">,</span>  <span class="c1"># JFET</span>
-    <span class="s1">&#39;K&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(K\w+)(\s+[\w\+\-]+)</span><span class="si">{2:4}</span><span class="s2">\s+(?P&lt;value&gt;[\+\-]?[0-9\.E+-]+[kmunp]?).*$&quot;</span><span class="p">,</span>  <span class="c1"># Mutual Inductance</span>
-    <span class="s1">&#39;L&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(L\w+)(\s+[\w\+\-]+)</span><span class="si">{2}</span><span class="s2">\s+(?P&lt;value&gt;({)?(?(3).*}|([0-9\.E+-]+(Meg|[kmunp])?H?))).*$&quot;</span><span class="p">,</span>  <span class="c1"># Inductance</span>
-    <span class="s1">&#39;M&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(M\w+)(\s+[\w\+\-]+)</span><span class="si">{3}</span><span class="s2">\s+(?P&lt;value&gt;\w+).*$&quot;</span><span class="p">,</span>  <span class="c1"># MOSFET</span>
-    <span class="s1">&#39;Q&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(Q\w+)(\s+[\w\+\-]+)</span><span class="si">{3}</span><span class="s2">\s+(?P&lt;value&gt;\w+).*$&quot;</span><span class="p">,</span>  <span class="c1"># Bipolar</span>
-    <span class="s1">&#39;R&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(R\w+)(\s+[\w\+\-]+)</span><span class="si">{2}</span><span class="s2">\s+(?P&lt;value&gt;({)?(?(3).*}|([0-9\.E+-]+(Meg|[kmunp])?R?))).*$&quot;</span><span class="p">,</span>  <span class="c1"># Resistors</span>
-    <span class="s1">&#39;V&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(V\w+)(\s+[\w\+\-]+)</span><span class="si">{2}</span><span class="s2">\s+(?P&lt;value&gt;.*)$&quot;</span><span class="p">,</span>  <span class="c1"># Voltage Source</span>
-    <span class="s1">&#39;X&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(X\w+)(\s+[\w\+\-]+){1,99}\s+(?P&lt;value&gt;\w+)(\s+\w+\s*=\s*\S+)*$&quot;</span><span class="p">,</span>  <span class="c1"># Sub-circuit</span>
+    <span class="s1">&#39;A&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(A\w+)(\s+\S+)</span><span class="si">{8}</span><span class="s2">\s+(?P&lt;value&gt;.*)(\s+\w+\s*=\s*\S+)*\s*$&quot;</span><span class="p">,</span>  <span class="c1"># Special Functions, Parameter substitution not supported</span>
+    <span class="s1">&#39;B&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(B[VI]?\w+)(\s+\S+)</span><span class="si">{2}</span><span class="s2">\s+(?P&lt;value&gt;.*)$&quot;</span><span class="p">,</span>  <span class="c1"># Behavioral source</span>
+    <span class="s1">&#39;C&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(C\w+)(\s+\S+)</span><span class="si">{2}</span><span class="s2">\s+(?P&lt;value&gt;({)?(?(4).*}|([0-9\.E+-]+(Meg|[kmunp])?F?))).*$&quot;</span><span class="p">,</span>  <span class="c1"># Capacitor</span>
+    <span class="s1">&#39;D&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(D\w+)(\s+\S+)</span><span class="si">{2}</span><span class="s2">\s+(?P&lt;value&gt;\w+).*$&quot;</span><span class="p">,</span>  <span class="c1"># Diode</span>
+    <span class="s1">&#39;I&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(I\w+)(\s+\S+)</span><span class="si">{2}</span><span class="s2">\s+(?P&lt;value&gt;.*)$&quot;</span><span class="p">,</span>  <span class="c1"># Current Source</span>
+    <span class="s1">&#39;E&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(E\w+)(\s+\S+){2,4}\s+(?P&lt;value&gt;.*)$&quot;</span><span class="p">,</span>  <span class="c1"># Voltage Dependent Voltage Source</span>
+                                                        <span class="c1"># this only supports changing gain values</span>
+    <span class="s1">&#39;F&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(F\w+)(\s+\S+)</span><span class="si">{2}</span><span class="s2">\s+(?P&lt;value&gt;.*)$&quot;</span><span class="p">,</span>  <span class="c1"># Current Dependent Current Source</span>
+                                                        <span class="c1"># TODO: this implementation replaces everything after the 2</span>
+                                                        <span class="c1">#       first nets</span>
+    <span class="s1">&#39;G&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(G\w+)(\s+\S+){2,4}\s+(?P&lt;value&gt;.*)$&quot;</span><span class="p">,</span>  <span class="c1"># Voltage Dependent Current Source</span>
+                                                        <span class="c1"># this only supports changing gain values</span>
+    <span class="s1">&#39;H&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(H\w+)(\s+\S+)</span><span class="si">{2}</span><span class="s2">\s+(?P&lt;value&gt;.*)$&quot;</span><span class="p">,</span>  <span class="c1"># Voltage Dependent Current Source</span>
+                                                        <span class="c1"># TODO: this implementation replaces everything after the 2</span>
+                                                        <span class="c1">#       first nets</span>
+    <span class="s1">&#39;I&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(I\w+)(\s+\S+)</span><span class="si">{2}</span><span class="s2">\s+(?P&lt;value&gt;.*)$&quot;</span><span class="p">,</span>  <span class="c1"># Current Source</span>
+                                                        <span class="c1"># TODO: this implementation replaces everything after the 2</span>
+                                                        <span class="c1">#       first nets</span>
+    <span class="s1">&#39;J&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(J\w+)(\s+\S+)</span><span class="si">{3}</span><span class="s2">\s+(?P&lt;value&gt;\w+).*$&quot;</span><span class="p">,</span>  <span class="c1"># JFET</span>
+    <span class="s1">&#39;K&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(K\w+)(\s+\S+){2,4}\s+(?P&lt;value&gt;[\+\-]?[0-9\.E+-]+[kmunp]?).*$&quot;</span><span class="p">,</span>  <span class="c1"># Mutual Inductance</span>
+    <span class="s1">&#39;L&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(L\w+)(\s+\S+)</span><span class="si">{2}</span><span class="s2">\s+(?P&lt;value&gt;({)?(?(4).*}|([0-9\.E+-]+(Meg|[kmunp])?H?))).*$&quot;</span><span class="p">,</span>  <span class="c1"># Inductance</span>
+    <span class="s1">&#39;M&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(M\w+)(\s+\S+){3,4}\s+(?P&lt;value&gt;\w+).*$&quot;</span><span class="p">,</span>  <span class="c1"># MOSFET TODO: Parameters substitution not supported</span>
+    <span class="s1">&#39;O&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(O\w+)(\s+\S+)</span><span class="si">{4}</span><span class="s2">\s+(?P&lt;value&gt;\w+).*$&quot;</span><span class="p">,</span>  <span class="c1"># Lossy Transmission Line TODO: Parameters substitution not supported</span>
+    <span class="s1">&#39;Q&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(Q\w+)(\s+\S+)</span><span class="si">{3}</span><span class="s2">\s+(?P&lt;value&gt;\w+).*$&quot;</span><span class="p">,</span>  <span class="c1"># Bipolar TODO: Parameters substitution not supported</span>
+    <span class="s1">&#39;R&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(R\w+)(\s+\S+)</span><span class="si">{2}</span><span class="s2">\s+(?P&lt;value&gt;({)?(?(4).*}|([0-9\.E+-]+(Meg|[kmunp])?R?))).*$&quot;</span><span class="p">,</span>  <span class="c1"># Resistors</span>
+    <span class="s1">&#39;S&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(S\w+)(\s+\S+)</span><span class="si">{4}</span><span class="s2">\s+(?P&lt;value&gt;.*)$&quot;</span><span class="p">,</span>  <span class="c1"># Voltage Controlled Switch</span>
+    <span class="s1">&#39;T&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(T\w+)(\s+\S+)</span><span class="si">{4}</span><span class="s2">\s+(?P&lt;value&gt;.*)$&quot;</span><span class="p">,</span>  <span class="c1"># Lossless Transmission</span>
+    <span class="s1">&#39;U&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(U\w+)(\s+\S+)</span><span class="si">{3}</span><span class="s2">\s+(?P&lt;value&gt;.*)$&quot;</span><span class="p">,</span>  <span class="c1"># Uniform RC-line</span>
+    <span class="s1">&#39;V&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(V\w+)(\s+\S+)</span><span class="si">{2}</span><span class="s2">\s+(?P&lt;value&gt;.*)$&quot;</span><span class="p">,</span>  <span class="c1"># Voltage Source</span>
+                                                        <span class="c1"># TODO: this implementation replaces everything after the 2</span>
+                                                        <span class="c1">#       first nets</span>
+    <span class="s1">&#39;W&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(W\w+)(\s+\S+)</span><span class="si">{2}</span><span class="s2">\s+(?P&lt;value&gt;.*)$&quot;</span><span class="p">,</span>  <span class="c1"># Current Controlled Switch</span>
+                                                        <span class="c1"># TODO: this implementation replaces everything after the 2</span>
+                                                        <span class="c1">#       first nets</span>
+    <span class="s1">&#39;X&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;(X\w+)(\s+\S+){1,99}\s+(?P&lt;value&gt;\S+)(\s+\w+\s*=\s*\S+)*\s*$&quot;</span><span class="p">,</span>  <span class="c1"># Sub-circuit, Parameter substitution not supported</span>
+    <span class="s1">&#39;Z&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(Z\w+)(\s+\S+)</span><span class="si">{3}</span><span class="s2">\s+(?P&lt;value&gt;\w+).*$&quot;</span><span class="p">,</span>  <span class="c1"># MESFET and IBGT. TODO: Parameters substitution not supported</span>
 <span class="p">}</span>
 
 <span class="n">PARAM_REGX</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">\s*=\s*(?P&lt;value&gt;[\w*/\.+-/</span><span class="si">{}</span><span class="s2">()]*)&quot;</span>
@@ -140,11 +194,11 @@
                 <span class="k">continue</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">ch</span> <span class="o">=</span> <span class="n">ch</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
-                <span class="k">if</span> <span class="n">ch</span> <span class="ow">in</span> <span class="s1">&#39;BCDIJKLMQRVX&#39;</span><span class="p">:</span>  <span class="c1"># A circuit element</span>
+                <span class="k">if</span> <span class="n">ch</span> <span class="ow">in</span> <span class="n">REPLACE_REGXES</span><span class="p">:</span>  <span class="c1"># A circuit element</span>
                     <span class="k">return</span> <span class="n">ch</span>
                 <span class="k">elif</span> <span class="n">ch</span> <span class="o">==</span> <span class="s1">&#39;+&#39;</span><span class="p">:</span>
                     <span class="k">return</span> <span class="s1">&#39;+&#39;</span>  <span class="c1"># This is a line continuation.</span>
-                <span class="k">elif</span> <span class="n">ch</span> <span class="ow">in</span> <span class="s2">&quot;;*</span><span class="se">\n\r</span><span class="s2">&quot;</span><span class="p">:</span>  <span class="c1"># It is a comment or a blank line</span>
+                <span class="k">elif</span> <span class="n">ch</span> <span class="ow">in</span> <span class="s2">&quot;#;*</span><span class="se">\n\r</span><span class="s2">&quot;</span><span class="p">:</span>  <span class="c1"># It is a comment or a blank line</span>
                     <span class="k">return</span> <span class="s2">&quot;*&quot;</span>
                 <span class="k">elif</span> <span class="n">ch</span> <span class="o">==</span> <span class="s1">&#39;.&#39;</span><span class="p">:</span>  <span class="c1"># this is a directive</span>
                     <span class="n">j</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
@@ -153,10 +207,10 @@
                     <span class="k">return</span> <span class="n">line</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">SyntaxError</span><span class="p">(</span><span class="s1">&#39;Irrecognized command in line &quot;</span><span class="si">%s</span><span class="s1">&quot;&#39;</span> <span class="o">%</span> <span class="n">line</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">instance</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">SpiceCircuit</span><span class="p">):</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">SpiceCircuit</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;.SUBCKT&quot;</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">SyntaxError</span><span class="p">(</span><span class="s1">&#39;Irrecognized command in line &quot;</span><span class="si">%s</span><span class="s1">&quot;&#39;</span> <span class="o">%</span> <span class="n">line</span><span class="p">)</span></div>
+        <span class="k">raise</span> <span class="ne">SyntaxError</span><span class="p">(</span><span class="s1">&#39;Irrecognized command in line &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">line</span><span class="p">))</span></div>
 
 
 <span class="k">def</span> <span class="nf">_first_token_upped</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
@@ -212,7 +266,7 @@
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>  <span class="c1"># If it is a subcircuit it will simply ignore it.</span>
                 <span class="k">continue</span>
             <span class="n">line_upcase</span> <span class="o">=</span> <span class="n">_first_token_upped</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">line_upcase</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">substr_upper</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">line_upcase</span> <span class="o">==</span> <span class="n">substr_upper</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">line_no</span>
         <span class="n">error_msg</span> <span class="o">=</span> <span class="s2">&quot;Component &#39;</span><span class="si">%s</span><span class="s2">&#39; not found in netlist&quot;</span> <span class="o">%</span> <span class="n">component</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">error_msg</span><span class="p">)</span>
@@ -654,7 +708,9 @@
     <span class="n">E</span> <span class="o">=</span> <span class="n">SpiceEditor</span><span class="p">(</span><span class="s1">&#39;..</span><span class="se">\\</span><span class="s1">tests</span><span class="se">\\</span><span class="s1">Editor_Test.net&#39;</span><span class="p">)</span>
     <span class="n">E</span><span class="o">.</span><span class="n">reset_netlist</span><span class="p">()</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">E</span><span class="o">.</span><span class="n">get_component_value</span><span class="p">(</span><span class="s1">&#39;R1&#39;</span><span class="p">))</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Setting 1.23k&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Setting R1 to 10k&quot;</span><span class="p">)</span>
+    <span class="n">E</span><span class="o">.</span><span class="n">set_component_value</span><span class="p">(</span><span class="s1">&#39;R1&#39;</span><span class="p">,</span> <span class="mi">10000</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Setting parameter I1 1.23k&quot;</span><span class="p">)</span>
     <span class="n">E</span><span class="o">.</span><span class="n">set_parameter</span><span class="p">(</span><span class="s2">&quot;I1&quot;</span><span class="p">,</span> <span class="s2">&quot;1.23k&quot;</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">E</span><span class="o">.</span><span class="n">get_parameter</span><span class="p">(</span><span class="s1">&#39;I1&#39;</span><span class="p">))</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Setting {freq*(10/5.0})&quot;</span><span class="p">)</span>
@@ -691,6 +747,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../LTSpice_RawRead.html">LTSpice_RawRead.py</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../LTSteps.html">LTSteps.py</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../Histogram.html">Histogram.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../SemiOpLogReader.html">LTSpice_SemiDevOpReader.py</a></li>
 </ul>
 
 <div class="relations">

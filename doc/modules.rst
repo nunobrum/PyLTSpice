@@ -6,3 +6,4 @@
    LTSpice_RawRead
    LTSteps
    Histogram
+   SemiOpLogReader

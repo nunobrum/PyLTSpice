@@ -116,7 +116,7 @@ class LTComplex(object):
             self.mag = float(a.group('mag'))
             self.ph = float(a.group('ph'))
         else:
-            raise ValueError("Invalide")
+            raise ValueError("Invalid complex value format")
 
     def to_complex(self):
         ph = self.ph / 180 * math.pi

@@ -1,0 +1,153 @@
+Circuit: *First line should always be commented out!
+
+Warning: Pscbe2 = 0 is not positive.
+Direct Newton iteration for .op point skipped.
+Gmin stepping method for .op point skipped.
+Starting source stepping with srcstepmethod=0
+Source Step = 3.0303%
+Source Step = 33.3333%
+Source Step = 53.7879%
+Source Step = 61.3636%
+Source Step = 68.9394%
+Source Step = 76.5152%
+Source Step = 84.0909%
+vernier = 0.375
+Source Step = 92.4242%
+Source stepping succeeded in finding the operating point.
+
+Semiconductor Device Operating Points:
+                        --- Diodes ---
+Name:         d:m6:1:para2:1               d:m4:1:para2:1               d:m3:1:para2:1         d:m6:1:para1:2    d:m4:1:para1:2
+Model: m6:1:para2:dpar_5v_psubnburd m4:1:para2:dpar_5v_psubnburd m3:1:para2:dpar_5v_psubnburd dpar_pburdnburdsw dpar_pburdnburdsw
+Id:              3.45e-19                     3.45e-19                     3.45e-19                1.11e-13          1.12e-13
+Vd:              3.27e-07                     3.27e-07                     3.27e-07                9.27e-02          9.31e-02
+Req:             9.48e+11                     9.48e+11                     9.48e+11                6.19e+11          6.17e+11
+CAP:             3.15e-14                     3.15e-14                     3.15e-14                5.20e-14          5.20e-14
+
+Name:  d:m1:1:para1:3  d:m2:1:para1:3  d:m6:1:para2:2 d:m4:1:para2:2 d:m3:1:para2:2
+Model: dpar_pisonepisw dpar_pisonepisw dpar_psubnepi  dpar_psubnepi  dpar_psubnepi
+Id:       -3.00e-12       -3.00e-12       3.45e-19       3.45e-19       3.45e-19
+Vd:       -3.00e+00       -3.00e+00       3.27e-07       3.27e-07       3.27e-07
+Req:       1.00e+12        1.00e+12       9.47e+11       9.47e+11       9.47e+11
+CAP:       3.39e-14        3.39e-14       5.84e-14       5.84e-14       5.84e-14
+
+Name:    d:q7:1      d:q4:1      d:q3:1      d:q5:1      d:q6:1
+Model:  dbsub_qpl   dbsub_qpl   dbsub_qpl   dbsub_qpl   dbsub_qpl
+Id:     -2.34e-12   -2.35e-12   -2.34e-12   -1.01e-12   -1.01e-12
+Vd:     -2.34e+00   -2.34e+00   -2.34e+00   -1.00e+00   -1.00e+00
+Req:     1.00e+12    1.00e+12    1.00e+12    1.00e+12    1.00e+12
+CAP:     1.69e-13    3.37e-13    1.69e-13    4.06e-13    4.06e-13
+
+                        --- Bipolar Transistors ---
+Name:     q:q2:1:2    q:q2:1:1     q:q1:1:2    q:q1:1:1     q:q7:3
+Model:  q2:1:qnl_pnp q2:1:qnl_m  q1:1:qnl_pnp q1:1:qnl_m   qpl_parc
+Ib:       3.94e-12     4.69e-08    7.43e-13     4.70e-08    3.75e-12
+Ic:      -2.34e-12     4.57e-06   -7.44e-13     4.50e-06   -2.35e-12
+Vbe:      1.60e+00     7.40e-01   -7.88e-04     7.40e-01    1.40e+00
+Vbc:      2.34e+00    -1.60e+00    7.40e-01     7.88e-04    2.34e+00
+Vce:     -7.40e-01     2.34e+00   -7.40e-01     7.40e-01   -9.40e-01
+BetaDC:  -5.94e-01     9.74e+01   -1.00e+00     9.59e+01   -6.27e-01
+Gm:       2.81e-42     1.75e-04    1.95e-15     1.72e-04    1.56e-38
+Rpi:      1.00e+12     5.54e+05    1.00e+12     5.54e+05    1.00e+12
+Rx:       0.00e+00     3.45e+03    0.00e+00     3.45e+03    0.00e+00
+Ro:       9.61e+53     2.31e+07    1.98e+19     2.31e+07    3.94e+53
+Cbe:      0.00e+00     1.51e-14    0.00e+00     1.50e-14    0.00e+00
+Cbc:      0.00e+00     3.04e-15    0.00e+00     5.63e-15    0.00e+00
+Cjs:      0.00e+00     1.55e-13    0.00e+00     1.96e-13    0.00e+00
+BetaAC:   2.81e-30     9.69e+01    1.95e-03     9.54e+01    1.56e-26
+Cbx:      0.00e+00     3.04e-15    0.00e+00     5.63e-15    0.00e+00
+Ft:       0.00e+00     1.31e+09    0.00e+00     1.04e+09    0.00e+00
+
+
+
+Name:     q:q4:1      q:q3:1      q:q5:1      q:q6:1
+Model:     qpl_m       qpl_m       qpl_m       qpl_m
+Ib:      -2.04e-08   -1.02e-08   -9.64e-09   -9.67e-09
+Ic:      -9.17e-06   -4.53e-06   -4.51e-06   -4.53e-06
+Vbe:     -6.61e-01   -6.61e-01   -6.41e-01   -6.41e-01
+Vbc:      6.98e-01   -2.16e-05    9.07e-01    9.07e-01
+Vce:     -1.36e+00   -6.61e-01   -1.55e+00   -1.55e+00
+BetaDC:   4.50e+02    4.45e+02    4.68e+02    4.68e+02
+Gm:       3.25e-04    1.61e-04    1.67e-04    1.67e-04
+Rpi:      1.29e+06    2.57e+06    2.72e+06    2.71e+06
+Rx:       4.95e+02    9.91e+02    4.96e+02    4.96e+02
+Ro:       6.67e+06    1.33e+07    1.36e+07    1.36e+07
+Cbe:      1.33e-12    6.56e-13    6.91e-13    6.92e-13
+Cbc:      6.91e-14    6.94e-14    6.11e-14    6.11e-14
+Cjs:      3.21e-13    1.60e-13    4.11e-13    4.11e-13
+BetaAC:   4.19e+02    4.14e+02    4.53e+02    4.53e+02
+Cbx:      0.00e+00    0.00e+00    0.00e+00    0.00e+00
+Ft:       3.71e+07    3.53e+07    3.53e+07    3.53e+07
+
+                        --- BSIM3 MOSFETS ---
+Name:    m:m6:1:ain  m:m4:1:ain  m:m3:1:ain  m:m5:1:ain  m:m1:1:ain
+Model:     n5g5_m      n5g5_m      n5g5_m       p5g5t       p5g5t
+Id:        4.63e-06    4.78e-06    4.78e-06   -5.00e-05   -4.78e-06
+Vgs:       8.48e-01    8.47e-01    8.47e-01   -8.76e-01   -8.59e-01
+Vds:       8.48e-01    2.05e+00    2.03e+00   -2.00e+00   -8.76e-01
+Vbs:       0.00e+00    0.00e+00    0.00e+00    0.00e+00    0.00e+00
+Vth:       7.67e-01    7.67e-01    7.67e-01   -7.39e-01   -7.18e-01
+Vdsat:     8.53e-02    8.51e-02    8.51e-02   -1.52e-01   -1.55e-01
+Gm:        7.02e-05    7.17e-05    7.18e-05    5.69e-04    5.08e-05
+Gds:       1.48e-07    1.41e-07    1.41e-07    2.64e-06    2.03e-07
+Gmb        3.12e-05    3.19e-05    3.19e-05    1.69e-04    1.58e-05
+Cbd:       2.25e-14    1.86e-14    1.86e-14    6.59e-14    1.67e-14
+Cbs:       2.89e-14    2.89e-14    2.89e-14    1.08e-13    2.23e-14
+Cgsov:     8.00e-15    8.00e-15    8.00e-15    2.80e-14    5.60e-15
+Cgdov:     5.40e-15    5.40e-15    5.40e-15    2.80e-14    5.60e-15
+Cgbov:     8.00e-16    8.00e-16    8.00e-16    4.00e-16    8.00e-16
+dQgdVgb:   8.01e-14    8.00e-14    8.01e-14    2.19e-13    7.68e-14
+dQgdVdb:  -5.40e-15   -5.40e-15   -5.40e-15   -2.80e-14   -5.61e-15
+dQgdVsb:  -6.34e-14   -6.33e-14   -6.33e-14   -1.72e-13   -6.37e-14
+dQddVgb:  -2.57e-14   -2.56e-14   -2.56e-14   -8.26e-14   -2.76e-14
+dQddVdb:   2.79e-14    2.40e-14    2.40e-14    9.39e-14    2.23e-14
+dQddVsb:   2.98e-14    2.98e-14    2.98e-14    7.17e-14    2.91e-14
+dQbdVgb:  -1.60e-14   -1.61e-14   -1.61e-14   -2.66e-14   -1.08e-14
+dQbdVdb:  -2.25e-14   -1.86e-14   -1.86e-14   -6.59e-14   -1.67e-14
+dQbdVsb:  -4.80e-14   -4.80e-14   -4.80e-14   -1.43e-13   -3.70e-14
+
+Name:    m:m2:1:ain
+Model:      p5g5t
+Id:       -4.78e-06
+Vgs:      -8.59e-01
+Vds:      -8.59e-01
+Vbs:       0.00e+00
+Vth:      -7.18e-01
+Vdsat:    -1.55e-01
+Gm:        5.08e-05
+Gds:       2.06e-07
+Gmb        1.58e-05
+Cbd:       1.67e-14
+Cbs:       2.23e-14
+Cgsov:     5.60e-15
+Cgdov:     5.60e-15
+Cgbov:     8.00e-16
+dQgdVgb:   7.68e-14
+dQgdVdb:  -5.61e-15
+dQgdVsb:  -6.37e-14
+dQddVgb:  -2.76e-14
+dQddVdb:   2.23e-14
+dQddVsb:   2.91e-14
+dQbdVgb:  -1.08e-14
+dQbdVdb:  -1.67e-14
+dQbdVsb:  -3.70e-14
+
+
+
+Date: Tue Aug 24 13:39:11 2021
+Total elapsed time: 1.605 seconds.
+
+tnom = 27
+temp = 27
+method = trap
+totiter = 439
+traniter = 0
+tranpoints = 0
+accept = 0
+rejected = 0
+matrix size = 85
+fillins = 76
+solver = Normal
+Matrix Compiler1:     867 opcodes
+Matrix Compiler2: 10.51 KB object code size  0.8/1.1/[0.5]
+

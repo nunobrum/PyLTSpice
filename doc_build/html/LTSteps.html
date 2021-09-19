@@ -137,7 +137,7 @@ lists. When reading STEPed data, a new kew called ‘runno’ is added to the da
 
 <dl class="py class">
 <dt id="PyLTSpice.LTSteps.LTSpiceLogReader">
-<em class="property">class </em><code class="sig-prename descclassname">PyLTSpice.LTSteps.</code><code class="sig-name descname">LTSpiceLogReader</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">log_filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">read_measures</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSteps.html#LTSpiceLogReader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSteps.LTSpiceLogReader" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">PyLTSpice.LTSteps.</code><code class="sig-name descname">LTSpiceLogReader</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">log_filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">read_measures</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">step_set</span><span class="o">=</span><span class="default_value">{}</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSteps.html#LTSpiceLogReader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSteps.LTSpiceLogReader" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Reads an LTSpice log file and retrieves the step information if it exists. The step information is then accessible
 by using the ‘stepset’ property of this class.
@@ -162,6 +162,7 @@ lists. This is information is only populated when the <em>read_measures</em> opt
 <dd class="field-even"><ul class="simple">
 <li><p><strong>log_filename</strong> (<em>str</em>) – path to the Export file.</p></li>
 <li><p><strong>read_measures</strong> (<em>boolean</em>) – Optional parameter to skip measuring data reading.</p></li>
+<li><p><strong>step_set</strong> (<em>dict</em>) – Optional parameter to provide the steps from another file. This is used to process .mout files.</p></li>
 </ul>
 </dd>
 </dl>
@@ -188,18 +189,45 @@ be done. And in this case, the user must provide a string that will identify the
 
 <dl class="py method">
 <dt id="PyLTSpice.LTSteps.LTSpiceLogReader.get_measure_names">
-<code class="sig-name descname">get_measure_names</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSteps.html#LTSpiceLogReader.get_measure_names"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSteps.LTSpiceLogReader.get_measure_names" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="sig-name descname">get_measure_names</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>str<span class="p">]</span><a class="reference internal" href="_modules/PyLTSpice/LTSteps.html#LTSpiceLogReader.get_measure_names"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSteps.LTSpiceLogReader.get_measure_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the names of the measurements read from the log file.
+:return: List of measurement names.
+:rtype: list of str</p>
+</dd></dl>
 
 <dl class="py method">
 <dt id="PyLTSpice.LTSteps.LTSpiceLogReader.get_measure_value">
-<code class="sig-name descname">get_measure_value</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">measure</span></em>, <em class="sig-param"><span class="n">step</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSteps.html#LTSpiceLogReader.get_measure_value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSteps.LTSpiceLogReader.get_measure_value" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="sig-name descname">get_measure_value</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">measure</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">step</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; Union<span class="p">[</span>float<span class="p">, </span>int<span class="p">, </span>str<span class="p">, </span>complex<span class="p">]</span><a class="reference internal" href="_modules/PyLTSpice/LTSteps.html#LTSpiceLogReader.get_measure_value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSteps.LTSpiceLogReader.get_measure_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a measure value on a given step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>measure</strong> (<em>str</em>) – name of the measurement to get</p></li>
+<li><p><strong>step</strong> (<em>int</em>) – optional step number if the simulation has no steps.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt id="PyLTSpice.LTSteps.LTSpiceLogReader.get_measure_values_at_steps">
-<code class="sig-name descname">get_measure_values_at_steps</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">measure</span></em>, <em class="sig-param"><span class="n">steps</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSteps.html#LTSpiceLogReader.get_measure_values_at_steps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSteps.LTSpiceLogReader.get_measure_values_at_steps" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="sig-name descname">get_measure_values_at_steps</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">measure</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">steps</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>int<span class="p">, </span>Iterable<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSteps.html#LTSpiceLogReader.get_measure_values_at_steps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSteps.LTSpiceLogReader.get_measure_values_at_steps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the measurements taken at a list of steps provided by the steps list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>measure</strong> (<em>str</em>) – name of the measurement to get.</p></li>
+<li><p><strong>steps</strong> (<em>int</em><em> or </em><em>list</em>) – step number, or list of step numbers.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>measurement or list of measurements</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>int or Iterable</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt id="PyLTSpice.LTSteps.LTSpiceLogReader.split_complex_values_on_datasets">
@@ -348,6 +376,7 @@ value as string.</p>
 <li class="toctree-l1"><a class="reference internal" href="LTSpice_RawRead.html">LTSpice_RawRead.py</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">LTSteps.py</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Histogram.html">Histogram.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="SemiOpLogReader.html">LTSpice_SemiDevOpReader.py</a></li>
 </ul>
 
 <div class="relations">
