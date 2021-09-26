@@ -117,4 +117,5 @@ def opLogReader(filename: str) -> dict:
                                 except ValueError:
                                     value = val
                                 dataset[where][devices[i]][param] = value
+    log.close()
     return dataset
