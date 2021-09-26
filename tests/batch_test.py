@@ -7,9 +7,8 @@ def processing_data(raw_file, log_file):
 # get script absolute path
 meAbsPath = os.path.dirname(os.path.realpath(__file__))
 # select spice model
-# LTC = SimCommander(meAbsPath + "\\Batch_Test.asc")
+LTC = SimCommander(meAbsPath + "\\Batch_Test.asc")
 # set default arguments
-LTC = SimCommander(r"C:\sandbox\ ドキュメント\testfile.asc")
 LTC.set_parameters(res=0, cap=100e-6)
 LTC.set_component_value('R2', '2k')
 LTC.set_component_value('R1', '4k')

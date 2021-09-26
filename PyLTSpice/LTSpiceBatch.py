@@ -95,54 +95,52 @@ import os
 import time
 from time import sleep
 import sys
-import re
 import traceback
 from typing import Optional, Callable, Union, Any
 from PyLTSpice.SpiceEditor import SpiceEditor
 
-__all__ = ('LTCommander', 'SimCommander', 'cmdline_switches')
+__all__ = ('SimCommander', 'cmdline_switches', 'LTspice_exe')
 
 END_LINE_TERM = '\n'
 
 logging.basicConfig(filename='LTSpiceBatch.log', level=logging.INFO)
 
+if sys.platform == "linux":
+    LTspice_exe = 'wine C:\\\\Program\\ Files\\\\LTC\\\\LTspiceXVII\\\\XVIIx64.exe'
+    LTspice_arg = {'run': ['-b', '-Run']}
+elif sys.platform == "darwin":
+    LTspice_exe = '/Applications/LTspice.app/Contents/MacOS/LTspice'
+    LTspice_arg = {'run': ['-b']}
+else:  # Windows
+    LTspice_exe = [r"C:\Program Files\LTC\LTspiceXVII\XVIIx64.exe"]
+    LTspice_arg = {'netlist': ['-netlist'], 'run': ['-b', '-Run']}
 
+# Legacy
 LTspiceIV_exe = [r"C:\Program Files (x86)\LTC\LTspiceIV\scad3.exe"]
-LTspiceXVII_exe = [r"C:\Program Files\LTC\LTspiceXVII\XVIIx64.exe"]
-LTspice_arg = {'netlist': ['-netlist'], 'run': ['-b', '-Run']}
 
 cmdline_switches = []
-
-# Sel existing LTC Kernel
-if os.path.isfile(LTspiceXVII_exe[0]):
-    LTspice_exe = LTspiceXVII_exe
-    logging.info("Found LTSpice XVII. Will use this engine.")
-elif os.path.isfile(LTspiceIV_exe[0]):
-    LTspice_exe = LTspiceIV_exe
-    logging.info("Found LTSpice IV. Will use this engine.")
-else:
-    error_message = "Error: No LTSpice installation found"
-    logging.error(error_message)
-    raise FileNotFoundError(error_message)
 
 
 if sys.version_info.major >= 3 and sys.version_info.minor >= 6:
     clock_function = time.process_time
 
-    def run_function(command):
-        result = subprocess.run(command)
+    def run_function(command, timeout=None):
+        result = subprocess.run(command, timeout=timeout)
         return result.returncode
 else:
     clock_function = time.clock
 
-    def run_function(command):
-        return subprocess.call(command)
+    def run_function(command, timeout=None):
+        return subprocess.call(command, timeout=timeout)
 
 
 class RunTask(threading.Thread):
     """This is an internal Class and should not be used directly by the User."""
 
-    def __init__(self, run_no, netlis_file: str, callback: Callable[[str, str], Any]):
+    def __init__(self, run_no, netlis_file: str, callback: Callable[[str, str], Any], timeout=None, verbose=True):
+        self.verbose = verbose
+        self.timeout = timeout  # Thanks to Daniel Phili for implemnting this
+        
         threading.Thread.__init__(self)
         self.setName("sim%d" % run_no)
         self.run_no = run_no
@@ -156,14 +154,15 @@ class RunTask(threading.Thread):
         logger.setLevel(logging.INFO)
 
         # Running the Simulation
-        cmd_run = LTspice_exe + LTspice_arg.get('run') + [self.netlist_file] + cmdline_switches
+        cmd_run = LTspice_exe + LTspice_arg.get('run', '') + [self.netlist_file] + cmdline_switches
 
         # run the simulation
         self.start_time = clock_function()
-        print(time.asctime(), ": Starting simulation %d" % self.run_no)
+        if self.verbose:
+            print(time.asctime(), ": Starting simulation %d" % self.run_no)
 
         # start execution
-        self.retcode = run_function(cmd_run)
+        self.retcode = run_function(cmd_run, timeout=self.timeout)
 
         # print simulation time
         sim_time = time.strftime("%H:%M:%S", time.gmtime(clock_function() - self.start_time))
@@ -171,13 +170,15 @@ class RunTask(threading.Thread):
         # Cleanup everything
         if self.retcode == 0:
             # simulation succesfull
-            print(time.asctime() + ": Simulation Successful. Time elapsed %s:%s" % (sim_time, END_LINE_TERM))
+            if self.verbose:
+                print(time.asctime() + ": Simulation Successful. Time elapsed %s:%s" % (sim_time, END_LINE_TERM))
             if self.callback:
                 netlist_radic = self.netlist_file.rstrip('.net')
                 raw_file = netlist_radic + '.raw'
                 log_file = netlist_radic + '.log'
                 if os.path.exists(raw_file) and os.path.exists(log_file):
-                    print("Calling the callback function")
+                    if self.verbose:
+                        print("Calling the callback function")
                     try:
                         self.callback(raw_file, log_file)
                     except Exception as err:
@@ -186,7 +187,8 @@ class RunTask(threading.Thread):
                 else:
                     logger.error("Simulation Raw file or Log file were not found")
             else:
-                print('No Callback')
+                if self.verbose:
+                    print('No Callback')
         else:
             # simulation failed
             logger.warning(time.asctime() + ": Simulation Failed. Time elapsed %s:%s" % (sim_time, END_LINE_TERM))
@@ -199,11 +201,14 @@ class SimCommander(SpiceEditor):
     """
     The SimCommander class implements all the methods required for launching batches of LTSpice simulations.
     """
-    def __init__(self, circuit_file: str, parallel_sims: int = 4):
+    def __init__(self, circuit_file: str, parallel_sims: int = 4, timeout=None, verbose=True, file_id=''):
         """
         Class Constructor. It serves to start batches of simulations.
         See Class documentation for more information.
         """
+        self.verbose = verbose
+        self.timeout = timeout
+        
         circuit_path, filename = os.path.split(circuit_file)
 
         self.circuit_path = circuit_path
@@ -216,7 +221,7 @@ class SimCommander(SpiceEditor):
         self.threads = []
 
         # master_log_filename = self.circuit_radic + '.masterlog' TODO: create the JSON or YAML file
-        self.logger = logging.getLogger("LTCommander")
+        self.logger = logging.getLogger("SimCommander")
         self.logger.setLevel(logging.INFO)
         # TODO redirect this logger to a file.
 
@@ -230,12 +235,15 @@ class SimCommander(SpiceEditor):
             self.netlist_file = self.circuit_radic + '.net'
             # prepare instructions, two stages used to enable edits on the netlist w/o open GUI
             # see: https://www.mikrocontroller.net/topic/480647?goto=5965300#5965300
+            assert 'netlist' in LTspice_arg, "In this platform LTSpice doesn't have netlist generation capabilities "
             cmd_netlist = LTspice_exe + LTspice_arg.get('netlist') + [circuit_file]
 
-            print("Creating Netlist")
+            if self.verbose:
+                print("Creating Netlist")
             retcode = run_function(cmd_netlist)
             if retcode == 0:
-                print("The Netlist was successfully created")
+                if self.verbose:
+                    print("The Netlist was successfully created")
                 self.reset_netlist()
 
         else:   # Supposedly it is a net or similar net file
@@ -251,21 +259,19 @@ class SimCommander(SpiceEditor):
         self.wait_completion()  # TODO: Kill all pending simulations
         self.logger.debug("Exiting SimCommander")
 
-    def setLTspiceVersion(self, exe: int) -> None:
-        """
-        For the ones that still can have access to the old IV version, you can select which version to use.
 
-        :param exe: Use 4 for LTSpice IV and 17 for LTSpice XVII.
-        :type exe: int
-        :returns: Nothing
+    def setLTspiceRunCommand(self, run_command: str) -> None:
+        """
+        Manually setting the LTSpice run command
+
+        :param path: String containing the command to be invoked to run LTSpice
+        :type path: str
+        :return: Nothing
+        :rtype: None
         """
         global LTspice_exe
-        if exe == 4:
-            LTspice_exe = LTspiceIV_exe
-        elif exe == 17:
-            LTspice_exe = LTspiceXVII_exe
-        else:
-            raise ValueError("Invalid LTspice Version. Allowed versions are 4 and 17.")
+        LTspice_exe = run_command
+
 
     def add_LTspiceRunCmdLineSwitches(self, *args) -> None:
         """
@@ -324,7 +330,8 @@ class SimCommander(SpiceEditor):
                 self.updated_stats()  # purge ended tasks
 
                 if (wait_resource is False) or (len(self.threads) < self.parallel_sims):
-                    t = RunTask(self.runno, run_netlist_file, callback)
+                    t = RunTask(self.runno, run_netlist_file, callback,
+                                timeout=self.timeout, verbose=self.verbose)
                     self.threads.append(t)
                     t.start()
                     sleep(0.01)  # Give slack for the thread to start
@@ -358,7 +365,6 @@ class SimCommander(SpiceEditor):
     def wait_completion(self):
         """
         This function will wait for the execution of all scheduled simulations to complete.
-        TODO: Implement the timeout to kill stalled simulations
 
         :returns: Nothing
         """

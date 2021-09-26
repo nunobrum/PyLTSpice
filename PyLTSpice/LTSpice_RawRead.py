@@ -553,9 +553,10 @@ class LTSpiceRawRead(object):
     ]
 
     def __init__(self, raw_filename, traces_to_read='*', **kwargs):
-        assert isinstance(raw_filename, str)
-        if not traces_to_read is None:
-            assert isinstance(traces_to_read, str)
+        self.verbose = kwargs.get('verbose', True)
+        assert isinstance(raw_filename, str), "RAW filename is expected to be a string"
+        if traces_to_read is not None:
+            assert isinstance(traces_to_read, (str, list)), "traces_to_read must be a string, a list or None"
 
         raw_file_size = os.stat(raw_filename).st_size  # Get the file size in order to know the data size
         raw_file = open(raw_filename, "rb")
@@ -635,7 +636,8 @@ class LTSpiceRawRead(object):
             self.block_size = (raw_file_size - self.binary_start) // self.nPoints
             self.data_size = self.block_size // self.nVariables
             if "fastaccess" in self.raw_params["Flags"]:
-                print("Fast access")
+                if self.verbose:
+                    print("Fast access")
                 # A fast access means that the traces are grouped together.
                 for var in self._traces:
                     if isinstance(var, DummyTrace):
@@ -656,7 +658,8 @@ class LTSpiceRawRead(object):
                                 var.set_pointB4(point, value)
 
             else:
-                print("Normal access")
+                if self.verbose:
+                    print("Normal access")
                 # This is the default save after a simulation where the traces are scattered
                 if self.data_size == 8:
                     for point in range(self.nPoints):

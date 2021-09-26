@@ -234,7 +234,7 @@ class SpiceCircuit(object):
             line_upcase = _first_token_upped(line)
             if line_upcase == substr_upper:
                 return line_no
-        error_msg = "Component '%s' not found in netlist" % component
+        error_msg = "line starting with '%s' not found in netlist" % substr
         self.logger.error(error_msg)
         raise ComponentNotFoundError(error_msg)
 
