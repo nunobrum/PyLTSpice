@@ -2,7 +2,7 @@ import os
 from PyLTSpice.LTSpiceBatch import SimCommander
 
 def processing_data(raw_file, log_file):
-    print("Handling the simulation data of %s" % log_file )
+    print("Handling the simulation data of %s, log file %s" % (raw_file, log_file))
 
 # get script absolute path
 meAbsPath = os.path.dirname(os.path.realpath(__file__))

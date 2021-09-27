@@ -410,7 +410,7 @@ class LTCommander(SimCommander):
         # decide sim required
         if self.netlist is not None:
             # Write the new settings
-            run_netlist_file = "%s.net" % (self.circuit_radic)
+            run_netlist_file = "%s_%i.net" % (self.circuit_radic, self.runno)
             self.write_netlist(run_netlist_file)
             cmd_run = LTspice_exe + LTspice_arg.get('run') + [run_netlist_file]
 
@@ -422,12 +422,14 @@ class LTCommander(SimCommander):
             retcode = run_function(cmd_run)
 
             # process the logfile, user can rename it
-            dest_log = "%s_%i.log" % (self.circuit_radic, self.runno)
+            netlist_radic = run_netlist_file.rstrip('.net')
+            raw_file = netlist_radic + '.raw'
+            log_file = netlist_radic + '.log'
             # print simulation time
             sim_time = time.strftime("%H:%M:%S", time.gmtime(clock_function() - start_time))
             # handle simstate
             if retcode == 0:
-                # simulation succesfull
+                # simulation successful
                 print(time.asctime() + ": Simulation Successful. Time elapsed %s:%s" % (sim_time, END_LINE_TERM))
                 self.write_log("%d%s" % (self.runno, END_LINE_TERM))
                 self.okSim += 1
@@ -439,17 +441,12 @@ class LTCommander(SimCommander):
                 # raise ValueError(time.asctime() + ': Simulation number ' + str(self.runno) + ' Failed !')
                 print(time.asctime() + ": Simulation Failed. Time elapsed %s:%s" % (sim_time, END_LINE_TERM))
                 # update failed parameters and counter
-                dest_log += 'fail'
-
-            try:
-                os.replace(self.circuit_radic + '_run.log', dest_log)
-            except FileNotFoundError:
-                pass
+                log_file += 'fail'
 
             if retcode == 0:  # If simulation is successful
-                return self.circuit_radic + '_run.raw', dest_log  # Return rawfile and logfile if simulation was OK
+                return raw_file, log_file  # Return rawfile and logfile if simulation was OK
             else:
-                return None, dest_log
+                return None, log_file
         else:
             # no simulation required
             raise UserWarning('skipping simulation ' + str(self.runno))
@@ -458,8 +455,9 @@ class LTCommander(SimCommander):
 if __name__ == "__main__":
     # get script absolute path
     meAbsPath = os.path.dirname(os.path.realpath(__file__))
+    meAbsPath, _ = os.path.split(meAbsPath)
     # select spice model
-    LTC = LTCommander(meAbsPath + "\\testfile.asc")
+    LTC = LTCommander(meAbsPath + "\\test_files\\testfile.asc")
     # set default arguments
     LTC.set_parameters(res=0.001, cap=100e-6)
     # define simulation
@@ -473,11 +471,16 @@ if __name__ == "__main__":
     for res in range(5):
         # LTC.runs_to_do = range(2)
         LTC.set_parameters(ANA=res)
-        LTC.run()
+        raw, log = LTC.run()
+        print("Raw file '%s' | Log File '%s'" % (raw, log))
     # Sim Statistics
     print('Successful/Total Simulations: ' + str(LTC.okSim) + '/' + str(LTC.runno))
 
-    LTC = SimCommander("my_circuit.asc", parallel_sims=1)
+
+    def callback_function(raw_file, log_file):
+        print("Handling the simulation data of %s, log file %s" % (raw_file, log_file))
+
+    LTC = SimCommander(meAbsPath + "\\test_files\\testfile.asc", parallel_sims=1)
     tstart = 0
     for tstop in (2, 5, 8, 10):
         tduration = tstop - tstart
@@ -489,4 +492,4 @@ if __name__ == "__main__":
         bias_file = "sim_loadbias_%d.txt" % tstop
         LTC.add_instruction(".savebias {} internal time={}".format(bias_file, tduration))
         tstart = tstop
-        LTC.run()
+        LTC.run(callback=callback_function)

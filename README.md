@@ -87,13 +87,12 @@ Here follows an example of operation.
 
 ```python
 import os
-from PyLTSpice.LTSpiceBatch import LTCommander
-from shutil import copyfile
+from PyLTSpice.LTSpiceBatch import SimCommander
  
 # get script absolute path
 meAbsPath = os.path.dirname(os.path.realpath(__file__))
 # select spice model
-LTC = LTCommander(meAbsPath + "\\Batch_Test.asc")
+LTC = SimCommander(meAbsPath + "\\Batch_Test.asc")
  
 LTC.set_parameters(res=0, cap=100e-6)  # Redefining parameters in the netlist
 LTC.set_component_value('R2', '2k')  # Redefining component values
@@ -104,16 +103,20 @@ LTC.add_instructions(
     "; Simulation settings",
     ".param run = 0"  # Commands can be set directly with the .param command instad of the set_parameters(...)
 )
- 
+def process_data(raw_file, log_file):
+    """This function is called after the completion of every simulation"""
+    print("Hint : use the LTRawRead to process the '%s'" % raw_file)
+    print("Hint : use the LTSteps to process the '%s'" % log_file)
+    
 for opamp in ('AD712', 'AD820'):
     # Setting a model of the U1 Component. Note that subcircuits need the X prefix
-    LTC.set_element_model('XU1', opamp):
-        for supply_voltage in (5, 10, 15):
-            LTC.set_component_value('V1', supply_voltage)  # Set a voltage source value
-            LTC.set_component_value('V2', -supply_voltage)
-            rawfile, logfile = LTC.run()  # Runs the simulation with the updated netlist
-            # The run() returns the RAW filename and LOG filenames so that can be processed with
-            # the LTSpice_ReadRaw and LTSteps modules.
+    LTC.set_element_model('XU1', opamp)
+    for supply_voltage in (5, 10, 15):
+        LTC.set_component_value('V1', supply_voltage)  # Set a voltage source value
+        LTC.set_component_value('V2', -supply_voltage)
+        LTC.run(callback=process_data)  # Runs the simulation with the updated netlist
+        # The run() returns the RAW filename and LOG filenames so that can be processed with
+        # the LTSpice_ReadRaw and LTSteps modules.
 
 LTC.reset_netlist()  # This resets all the changes done to the checklist
 LTC.add_instructions(  # Changing the simulation file
