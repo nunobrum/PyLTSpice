@@ -591,6 +591,7 @@ class SpiceEditor(SpiceCircuit):
                     i += 1
         else:
             # check whether the instruction is already there (dummy proofing)
+            # TODO: if adding a .MODEL or .SUBCKT it should verify if it already exists and update it.
             if instruction not in self.netlist:
                 # Insert before backanno instruction
                 try:
@@ -625,7 +626,8 @@ class SpiceEditor(SpiceCircuit):
         :param instructions The list of instructions to remove. Each instruction is of the type 'str'
         :type instruction: str
         :returns: Nothing
-        TODO: This only works with a full line instruction.
+        TODO: This only works with a full line instruction. Make it more inteligent so it recognizes .models, .param
+        and .subckt
         """
         # Because the netlist is stored containing the end of line terminations and because they are added when they
         # they are added to the netlist.
