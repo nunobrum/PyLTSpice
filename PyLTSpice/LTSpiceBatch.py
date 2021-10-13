@@ -209,12 +209,9 @@ class SimCommander(SpiceEditor):
         self.verbose = verbose
         self.timeout = timeout
         
-        circuit_path, filename = os.path.split(circuit_file)
-
-        self.circuit_path = circuit_path
-        # self.circuit_file = filename
-        fname, ext = os.path.splitext(filename)
-        self.circuit_radic = circuit_path + os.path.sep + fname
+        self.file_path = os.path.dirname(circuit_file)
+        self.file_name, file_ext = os.path.splitext(os.path.basename(circuit_file))
+        self.circuit_radic = os.path.join(self.file_path, self.file_name)
 
         self.cmdline_switches = []
         self.parallel_sims = parallel_sims
@@ -231,7 +228,7 @@ class SimCommander(SpiceEditor):
         # self.failParam = []  # collects for later user investigation of failed parameter sets
         self.netlist = []  # Netlist needs to be created in the __init__ for LINT purposes
 
-        if ext == '.asc':
+        if file_ext == '.asc':
             self.netlist_file = self.circuit_radic + '.net'
             # prepare instructions, two stages used to enable edits on the netlist w/o open GUI
             # see: https://www.mikrocontroller.net/topic/480647?goto=5965300#5965300
