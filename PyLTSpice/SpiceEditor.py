@@ -589,16 +589,16 @@ class SpiceEditor(SpiceCircuit):
                     break
                 else:
                     i += 1
-        else:
-            # check whether the instruction is already there (dummy proofing)
-            # TODO: if adding a .MODEL or .SUBCKT it should verify if it already exists and update it.
-            if instruction not in self.netlist:
-                # Insert before backanno instruction
-                try:
-                    line = self.netlist.index('.backanno')
-                except ValueError:
-                    line = len(self.netlist) - 2  # This is where typically the .backanno instruction is
-                self.netlist.insert(line, instruction)
+
+        # check whether the instruction is already there (dummy proofing)
+        # TODO: if adding a .MODEL or .SUBCKT it should verify if it already exists and update it.
+        if instruction not in self.netlist:
+            # Insert before backanno instruction
+            try:
+                line = self.netlist.index('.backanno')
+            except ValueError:
+                line = len(self.netlist) - 2  # This is where typically the .backanno instruction is
+            self.netlist.insert(line, instruction)
 
     def add_instructions(self, *instructions)->None:
         """Adds a list of instructions to the SPICE NETLIST.
