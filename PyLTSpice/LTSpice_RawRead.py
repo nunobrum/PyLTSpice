@@ -361,7 +361,7 @@ class Axis(DataSet):
     def _set_steps(self, step_info):
         self.step_info = step_info
 
-        self.step_offsets = [None for x in range(len(step_info))]
+        self.step_offsets = [None for _ in range(len(step_info))]
 
         # Now going to calculate the point offset for each step
         self.step_offsets[0] = 0

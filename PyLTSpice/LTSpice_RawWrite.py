@@ -43,7 +43,7 @@ class Trace(DataSet):
             datatype = 'voltage'
             numerical_type = 'real'
         self.name = name
-        self.datatype = datatype
+        self.type = datatype
         self.numerical_type = numerical_type
         if USE_NNUMPY and isinstance(data, (list, tuple)):
             self.data = array(data)
@@ -89,7 +89,7 @@ class LTSpiceRawWrite(object):
         f.write("Backannotation: \n".encode(self.encoding))
         f.write("Variables:\n".encode(self.encoding))
         for i, trace in enumerate(self.traces):
-            f.write("\t{0}\t{1}\t{2}\n".format(i, trace.name, trace.datatype).encode(self.encoding))
+            f.write("\t{0}\t{1}\t{2}\n".format(i, trace.name, trace.type).encode(self.encoding))
         total_bytes = 0
         f.write("Binary:\n".encode(self.encoding))
         if self.flag_fastaccess:
@@ -97,9 +97,9 @@ class LTSpiceRawWrite(object):
                 if False: #USE_NNUMPY:
                     f.write(trace.data.pack('dd'))
                 else:
-                    if trace.datatype == 'time':
+                    if trace.type == 'time':
                         fmt = 'd'
-                    elif trace.datatype == 'frequency':
+                    elif trace.type == 'frequency':
                         fmt = 'dd'
                     else:
                         fmt = 'f'
@@ -108,9 +108,9 @@ class LTSpiceRawWrite(object):
         else:
             for i in range(len(self.traces[0])):
                 for trace in self.traces:
-                    if trace.datatype == 'time':
+                    if trace.type == 'time':
                         fmt = 'd'
-                    elif trace.datatype == 'frequency':
+                    elif trace.type == 'frequency':
                         fmt = 'dd'
                     else:
                         fmt = 'f'
@@ -122,7 +122,7 @@ if __name__ == '__main__':
     from LTSpice_RawRead import LTSpiceRawRead
     import numpy as np
     LW = LTSpiceRawWrite()
-    tx = Trace('time', arange(0, 1e-4, 1e-9))
+    tx = Trace('time', arange(0, 1e-3, 1e-6))
     vy = Trace('V(N001)', np.sin(np.pi * tx.data))
     LW.add_trace(tx)
     LW.add_trace(vy)
@@ -130,15 +130,17 @@ if __name__ == '__main__':
     LR = LTSpiceRawRead("teste_w.raw")
     t = LR.get_trace('time')
     equal = True
-    for i in range(len(tx)):
-        if t[i] != tx[i]:
-            print(t, tx)
+    for ii in range(len(tx)):
+        if t[ii] != tx[ii]:
+            print(t[ii], tx[ii])
             equal = False
     print(equal)
+
     v = LR.get_trace('V(N001)')
-    equal = True
-    for i in range(len(vy)):
-        if t[i] != tx[i]:
-            print(v, vy)
-            equal = False
-    print(equal)
+    max_error = 1.5e-12
+    for ii in range(len(vy)):
+        err = abs(v[ii] - vy[ii])
+        if err > max_error:
+            max_error = err
+            print(v[ii], vy[ii], v[ii] - vy[ii])
+    print(max_error)
