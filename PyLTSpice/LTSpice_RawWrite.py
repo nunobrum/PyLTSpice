@@ -2,9 +2,8 @@
 # coding=utf-8
 
 # -------------------------------------------------------------------------------
-# Name:        LTSpice_RawRead.py
-# Purpose:     Process LTSpice output files and align data for usage in a spread-
-#              sheet tool such as Excel, or Calc.
+# Name:        LTSpice_RawWrite.py
+# Purpose:     Create RAW Files
 #
 # Author:      Nuno Brum (nuno.brum@gmail.com)
 #
@@ -53,7 +52,7 @@ class Trace(DataSet):
 
 class LTSpiceRawWrite(object):
     """
-    This class represents the datafile being generated.
+    This class represents the RAW data file being generated.
     """
 
     def __init__(self):
@@ -84,7 +83,7 @@ class LTSpiceRawWrite(object):
         f.write("Flags: {}\n".format(self._str_flags()).encode(self.encoding))
         f.write("No. Variables: {}\n".format(len(self.traces)).encode(self.encoding))
         f.write("No. Points: {:12}\n".format(len(self.traces[0])).encode(self.encoding))
-        f.write("Offset:   0.0000000000000000e+000\n".format(self.offset).encode(self.encoding))
+        f.write("Offset:   {:.16e}\n".format(self.offset).encode(self.encoding))
         f.write("Command: Linear Technology Corporation LTspice XVII\n".encode(self.encoding))
         f.write("Backannotation: \n".encode(self.encoding))
         f.write("Variables:\n".encode(self.encoding))
@@ -93,6 +92,7 @@ class LTSpiceRawWrite(object):
         total_bytes = 0
         f.write("Binary:\n".encode(self.encoding))
         if self.flag_fastaccess:
+            # TODO: This is not tested.
             for trace in self.traces:
                 if False: #USE_NNUMPY:
                     f.write(trace.data.pack('dd'))
