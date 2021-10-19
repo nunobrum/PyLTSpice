@@ -228,7 +228,7 @@ class DataSet(object):
         assert isinstance(value, float)
         self.data[n] = value
 
-    def set_pointB8(self, n, value)->None:
+    def set_pointB8(self, n, value) -> None:
         """
         Function that converts the variable 0, normally associated with the plot X axis.
         The codification is done as follows:
@@ -264,7 +264,7 @@ class DataSet(object):
         """
         self.data[n] = unpack("d", value)[0]
 
-    def set_pointB16(self, n, value)->None:
+    def set_pointB16(self, n, value) -> None:
         """
         Used to convert a 16 byte stream into a complex data point. Usually used for the .AC simulations.
         The encoding is the same as for the set_pointB8() but two values are encoded. First one is the real part and
@@ -279,7 +279,7 @@ class DataSet(object):
         (re, im) = unpack('dd', value)
         self.data[n] = complex(re, im)
 
-    def set_pointB4(self, n, value)->None:
+    def set_pointB4(self, n, value) -> None:
         """
         Function that converts a normal trace into float on a Binary storage. This codification uses 4 bytes.
         The codification is done as follows:
