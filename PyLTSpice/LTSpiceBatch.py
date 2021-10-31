@@ -210,6 +210,8 @@ class SimCommander(SpiceEditor):
         self.timeout = timeout
         
         self.file_path = os.path.dirname(circuit_file)
+        if self.file_path == '':
+            self.file_path = os.path.abspath(os.curdir)
         self.file_name, file_ext = os.path.splitext(os.path.basename(circuit_file))
         self.circuit_radic = os.path.join(self.file_path, self.file_name)
 

@@ -152,7 +152,6 @@ to plot the results of three traces in two subplots. ::
 
     vin = LTR.get_trace('V(in)')  # Get's the trace data. If Numpy is installed, then it comes in numpy array format.
     vout = LTR.get_trace('V(out)') # Get's the second trace.
-    x = LTR.get_trace('time')  # Retrieves the time vector that will be used as X axis.
 
     steps = LTR.get_steps()  # Get's the step information. Returns a list of step numbers, ex: [0,1,2...]. If no steps
                              # are present on the RAW file, returns only one step : [0] .
@@ -164,13 +163,12 @@ to plot the results of three traces in two subplots. ::
 
     plt.xlim([0.9e-3, 1.2e-3])  # Optionally, limits the X axis to just a subrange.
 
-    ax1.plot(x.get_time_axis(0), vin.get_wave(0)) # On first plot plots the first STEP (=0) of Vin
+    x = LTR.get_axis(0)  # Retrieves the time vector that will be used as X axis. Uses STEP 0
+    ax1.plot(x, vin.get_wave(0)) # On first plot plots the first STEP (=0) of Vin
 
     for step in steps:  # On the second plot prints all the STEPS of the Vout
-        ax2.plot(x.get_time_axis(step), vout.get_wave(step))
-        # plt.plot(y.get_wave(step))
-        # plt.plot(x.get_wave(step),marker='x')
-        # plt.plot(x.get_wave(step), y.get_wave(step), label=LTR.steps[step])
+        x = LTR.get_axis(step)  # Retrieves the time vector that will be used as X axis.
+        ax2.plot(x, vout.get_wave(step))
 
     plt.show()  # Creates the matplotlib's interactive window with the plots.
 
@@ -182,6 +180,7 @@ __copyright__ = "Copyright 2017, Fribourg Switzerland"
 import os
 from binascii import b2a_hex
 from struct import unpack
+from typing import Union
 
 try:
     from numpy import zeros, array, complex128, abs as numpy_abs
@@ -748,12 +747,12 @@ class LTSpiceRawRead(object):
         """
         return [trace.name for trace in self._traces]
 
-    def get_trace(self, trace_ref):
+    def get_trace(self, trace_ref: Union[str, int]):
         """
         Retrieves the trace with the requested name (trace_ref).
 
-        :param trace_ref: Name of the trace
-        :type trace_ref: str
+        :param trace_ref: Name of the trace or the index of the trace
+        :type trace_ref: str or int
         :return: An object containing the requested trace
         :rtype: DataSet subclass
         """
@@ -767,10 +766,24 @@ class LTSpiceRawRead(object):
             return self._traces[trace_ref]
 
     def get_time_axis(self, step=0):
-        """This function is equivalent to get_trace('time').get_time_axis(step) instruction.
+        """
+        *(Deprecated)* Use get_axis method instead
+
+        This function is equivalent to get_trace('time').get_time_axis(step) instruction.
         It's workaround on a LTSpice issue when using 2nd Order compression, where some values on
         the time trace have a negative value."""
         return self.get_trace('time').get_time_axis(step)
+
+    def get_axis(self, step: int = 0):
+        """
+        This function is equivalent to get_trace(0).get_wave(step) instruction.
+        It also implements a workaround on a LTSpice issue when using 2nd Order compression, where some values on
+        the time trace have a negative value."""
+        axis = self.get_trace(0)
+        if axis.type == 'time':
+            return axis.get_time_axis(step)
+        else:
+            return axis.get_wave(step)
 
     def _load_step_information(self, filename):
         # Find the extension of the file
@@ -879,7 +892,6 @@ if __name__ == "__main__":
 
     volt_1 = LTR.get_trace('V(in)')
     volt_2 = LTR.get_trace('V(out)')
-    x = LTR.get_trace('time')  # Zero is always the X axis
     # steps = LTR.get_steps(ana=4.0)
     steps = LTR.get_steps()
     print(steps)
@@ -888,9 +900,11 @@ if __name__ == "__main__":
         ax.grid(True)
 
     plt.xlim([0.9e-3, 1.2e-3])
-    ax1.plot(x.get_time_axis(0), volt_1.get_wave(0))
+    x = LTR.get_axis(0)  # Zero is always the X axis
+    ax1.plot(x, volt_1.get_wave(0))
     for step in steps:
-        ax2.plot(x.get_time_axis(step), volt_2.get_wave(step), label=str(LTR.steps[step]))
+        x = LTR.get_axis(step)  # Zero is always the X axis
+        ax2.plot(x, volt_2.get_wave(step), label=str(LTR.steps[step]))
         # plt.plot(y.get_wave(step))
         # plt.plot(x.get_wave(step),marker='x')
         # plt.plot(x.get_wave(step), y.get_wave(step), label=LTR.steps[step])
