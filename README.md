@@ -201,51 +201,54 @@ A more detailed documentation is directly included in the source file docstrings
 * Alternative contact : nuno.brum@gmail.com
 
 ## History ##
-Version 1.4
-Adding the LTSpice_SemiDevOpReader module
+* Version 1.5\
+Small fixes and improvements on the class usage. No added features
+
+* Version 1.4 \
+Adding the LTSpice_SemiDevOpReader module\
 Re-enabling the Histogram functions which where disabled by mistake.
 
-* Version 1.3
+* Version 1.3 \
 Bug fixes on the SpiceEditor Class
 
-* Version 1.2
+* Version 1.2 \
 README.md:
-Adding link to readthedocs documentation
+Adding link to readthedocs documentation\
 All files:
 Comprehensive documentation on how to use each module
 
-* Version 1.1
+* Version 1.1\
 README.md:
-Updated the description
+Updated the description\
 LTSpiceBatch.py:
-Corrected the name of the returned raw file.
+Corrected the name of the returned raw file.\
 Added comments throughout the code and cleanup
 
-* Version 1.0
+* Version 1.0\
 LTSpiceBatch.py: 
 Implemented an new approach (NOT BACKWARDS COMPATIBLE), that avoids the usage of the sim_settings.inc file.
-And allows to modify not only parameters, but also models and even the simulation commands.
+And allows to modify not only parameters, but also models and even the simulation commands.\
 LTSpice_RawRead.py: 
 Added the get_time_axis method to the RawRead class to avoid the problems with negative values on
-time axis, when 2nd order compression is enabled in LTSpice.
+time axis, when 2nd order compression is enabled in LTSpice.\
 LTSteps.py: 
 Modified the LTSteps so it can also read measurements on log files without any steps done.
 
 
-* Version 0.6
+* Version 0.6\
 Histogram.py now has an option to make the histogram directly from values stored in the clipboard
 
-* Version 0.5
+* Version 0.5\
 The LTSpice_RawReader.py now uses the struc.unpack function for a faster execution
 
-* Version 0.4
+* Version 0.4\
 Added LTSpiceBatch.py to the collection of tools
 
-* Version 0.3
+* Version 0.3\
 A version of LTSteps that can be imported to use in a higher level script 
 
-* Version 0.2
+* Version 0.2\
 Adding LTSteps.py and Histogram.py
 
-* Version 0.1 
+* Version 0.1 \
 First commit to the bitbucket repository.
