@@ -181,15 +181,15 @@ class LTSpiceRawWrite(object):
         :keyword force_axis_alignment: If two raw files don't have the same axis, an attempt is made to sync the two
         :keyword admissible_error: maximum error allowed in the sync between the two axis
         :keyword rename_format: when adding traces with the same name, it is possible to define a rename format.
-                                For example, if there are two traces named N001 in order to avoid duplicate names the
-                                rename format can be defined as "{}_{kwarg_name} where kwarg_name is passed as a keyword
-                                argument of this function
+            For example, if there are two traces named N001 in order to avoid duplicate names the
+            rename format can be defined as "{}_{kwarg_name} where kwarg_name is passed as a keyword
+            argument of this function
 
         :keyword step: by default only step 0 is added from the second raw. It is possible to add other steps, by
-                       using this keyword parameter. This is useful when we want to "flatten" the multiple step runs
-                       into the same view.
+            using this keyword parameter. This is useful when we want to "flatten" the multiple step runs into the same 
+            view.
         :keyword: minimum_timestep: This parameter forces the two axis to sync using a minimum time step. That is, all
-                                    time increments that are less than this parameter will be suppressed.
+            time increments that are less than this parameter will be suppressed.
         :return: A new instance of LTSpiceRawWrite with
         :rtype: LTSpiceRawWrite
         """

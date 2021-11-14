@@ -87,6 +87,7 @@ simulation is finished.
 __author__ = "Nuno Canto Brum <nuno.brum@gmail.com>"
 __copyright__ = "Copyright 2020, Fribourg Switzerland"
 
+from abc import ABC
 from warnings import warn
 import subprocess
 import threading
@@ -96,7 +97,7 @@ import time
 from time import sleep
 import sys
 import traceback
-from typing import Optional, Callable, Union, Any
+from typing import Optional, Callable, Union, Any, Tuple
 from PyLTSpice.SpiceEditor import SpiceEditor
 
 __all__ = ('SimCommander', 'cmdline_switches', 'LTspice_exe')
@@ -137,16 +138,18 @@ else:
 class RunTask(threading.Thread):
     """This is an internal Class and should not be used directly by the User."""
 
-    def __init__(self, run_no, netlis_file: str, callback: Callable[[str, str], Any], timeout=None, verbose=True):
+    def __init__(self, run_no, netlist_file: str, callback: Callable[[str, str], Any], timeout=None, verbose=True):
         self.verbose = verbose
         self.timeout = timeout  # Thanks to Daniel Phili for implemnting this
         
         threading.Thread.__init__(self)
         self.setName("sim%d" % run_no)
         self.run_no = run_no
-        self.netlist_file = netlis_file
+        self.netlist_file = netlist_file
         self.callback = callback
         self.retcode = -1  # Signals an error by default
+        self.raw_file = None
+        self.log_file = None
 
     def run(self):
         # Setting up
@@ -166,46 +169,62 @@ class RunTask(threading.Thread):
 
         # print simulation time
         sim_time = time.strftime("%H:%M:%S", time.gmtime(clock_function() - self.start_time))
+        netlist_radic = self.netlist_file.rstrip('.net')
+        self.log_file = netlist_radic + '.log'
 
         # Cleanup everything
         if self.retcode == 0:
-            # simulation succesfull
+            # simulation successful
+            logger.info("Simulation Successful. Time elapsed: %s" % sim_time)
             if self.verbose:
                 print(time.asctime() + ": Simulation Successful. Time elapsed %s:%s" % (sim_time, END_LINE_TERM))
-            if self.callback:
-                netlist_radic = self.netlist_file.rstrip('.net')
-                raw_file = netlist_radic + '.raw'
-                log_file = netlist_radic + '.log'
-                if os.path.exists(raw_file) and os.path.exists(log_file):
+
+            self.raw_file = netlist_radic + '.raw'
+
+            if os.path.exists(self.raw_file) and os.path.exists(self.log_file):
+                if self.callback:
                     if self.verbose:
                         print("Calling the callback function")
                     try:
-                        self.callback(raw_file, log_file)
+                        self.callback(self.raw_file, self.log_file)
                     except Exception as err:
                         error = traceback.format_tb(err)
                         logger.error(error)
                 else:
-                    logger.error("Simulation Raw file or Log file were not found")
+                    if self.verbose:
+                        print('No Callback')
             else:
-                if self.verbose:
-                    print('No Callback')
+                logger.error("Simulation Raw file or Log file were not found")
         else:
             # simulation failed
+
             logger.warning(time.asctime() + ": Simulation Failed. Time elapsed %s:%s" % (sim_time, END_LINE_TERM))
-            netlist_radic = self.netlist_file.rstrip('.net')
-            if os.path.exists(netlist_radic + '.log'):
-                os.rename(netlist_radic + '.log', netlist_radic + '.fail')
+            if os.path.exists(self.log_file):
+                old_log_file = self.log_file
+                self.log_file =  netlist_radic + '.fail'
+                os.rename(old_log_file, self.log_file)
+
+    def wait_results(self) -> Tuple[str, str]:
+        """Waits for the completion of the task and returns the raw and log files."""
+        while self.is_alive() or self.retcode == -1:
+            sleep(0.1)
+        if self.retcode == 0:  # All finished OK
+            return self.raw_file, self.log_file
+        else:
+            return '', self.log_file
 
 
 class SimCommander(SpiceEditor):
     """
     The SimCommander class implements all the methods required for launching batches of LTSpice simulations.
     """
+
     def __init__(self, circuit_file: str, parallel_sims: int = 4, timeout=None, verbose=True, file_id=''):
         """
         Class Constructor. It serves to start batches of simulations.
         See Class documentation for more information.
         """
+
         self.verbose = verbose
         self.timeout = timeout
         
@@ -228,10 +247,9 @@ class SimCommander(SpiceEditor):
         self.failSim = 0  # number of failed simulations
         self.okSim = 0  # number of succesfull completed simulations
         # self.failParam = []  # collects for later user investigation of failed parameter sets
-        self.netlist = []  # Netlist needs to be created in the __init__ for LINT purposes
 
         if file_ext == '.asc':
-            self.netlist_file = self.circuit_radic + '.net'
+            netlist_file = self.circuit_radic + '.net'
             # prepare instructions, two stages used to enable edits on the netlist w/o open GUI
             # see: https://www.mikrocontroller.net/topic/480647?goto=5965300#5965300
             assert 'netlist' in LTspice_arg, "In this platform LTSpice doesn't have netlist generation capabilities "
@@ -243,12 +261,19 @@ class SimCommander(SpiceEditor):
             if retcode == 0:
                 if self.verbose:
                     print("The Netlist was successfully created")
-                self.reset_netlist()
+            else:
+                if self.verbose:
+                    print("Unable to create the Netlist from %s" % circuit_file)
+                netlist_file = None
+        elif os.path.exists(circuit_file):
+            netlist_file = circuit_file
+        else:
+            netlist_file = None
+            if self.verbose:
+                print("Unable to find the Netlist: %s" % circuit_file)
 
-        else:   # Supposedly it is a net or similar net file
-            self.netlist_file = circuit_file
-            self.reset_netlist()
-
+        super(SimCommander, self).__init__(netlist_file)
+        self.reset_netlist()
         if len(self.netlist) == 0:
             self.logger.error("Unable to create Netlist")
 
@@ -288,7 +313,7 @@ class SimCommander(SpiceEditor):
         cmdline_switches = args
 
     def run(self, run_filename: str = None, wait_resource: bool = True,
-            callback: Callable[[str, str], Any] = None) -> int:
+            callback: Callable[[str, str], Any] = None, timeout: float = 600) -> RunTask:
         """
         Executes a simulation run with the conditions set by the user.
         Conditions are set by the set_parameter, set_component_value or add_instruction functions.
@@ -309,8 +334,10 @@ class SimCommander(SpiceEditor):
             The user can optionally give a callback function for when the simulation finishes, so that a processing can
             be immediately done.
         :type: callback: function(raw_file, log_file)
+        :param timeout: Timeout to be used in waiting for resources. Default time is 600 seconds, i.e. 10 minutes.
+        :type timeout: float
 
-        :returns: Nothing
+        :returns: The task object of type RunTask
         """
         # decide sim required
         if self.netlist is not None:
@@ -324,8 +351,8 @@ class SimCommander(SpiceEditor):
                 run_netlist_file = run_filename
 
             self.write_netlist(run_netlist_file)
-
-            while True:
+            t0 = time.perf_counter()  # Store the time for timeout calculation
+            while time.perf_counter() - t0 < timeout:
                 self.updated_stats()  # purge ended tasks
 
                 if (wait_resource is False) or (len(self.threads) < self.parallel_sims):
@@ -334,10 +361,12 @@ class SimCommander(SpiceEditor):
                     self.threads.append(t)
                     t.start()
                     sleep(0.01)  # Give slack for the thread to start
-                    break
+                    return t  # Returns the task number
                 sleep(0.1)  # Give Time for other simulations to end
-
-            return self.runno  # Just returns the simulation number
+            else:
+                self.logger.error("Timeout waiting for resources for simulation %d" % self.runno)
+                if self.verbose:
+                    print("Timeout on launching simulation %d." % self.runno)
 
         else:
             # no simulation required
@@ -395,7 +424,7 @@ class LTCommander(SimCommander):
             mlog.write(time.asctime() + ':' + text + END_LINE_TERM)
         mlog.close()
 
-    def run(self, run_id=None):
+    def run(self, run_id=None) -> Tuple[str, str]:
         """
         Executes a simulation run with the conditions set by the user. (See also set_parameter, set_component_value,
         add_instruction)

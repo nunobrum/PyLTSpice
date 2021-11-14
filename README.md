@@ -224,6 +224,9 @@ A more detailed documentation is directly included in the source file docstrings
 * Alternative contact : nuno.brum@gmail.com
 
 ## History ##
+* Version 1.6\
+Adding LTSpice_RawWrite. Adding documentation.
+
 * Version 1.5\
 Small fixes and improvements on the class usage. No added features
 

@@ -35,7 +35,9 @@ LTC.add_instructions(
     ".meas AC Fcut TRIG mag(V(out))=Gain/sqrt(2) FALL=last"
 )
 
-LTC.run()
+raw, log = LTC.run(run_filename="no_callback.net").wait_results()
+processing_data(raw, log)
+
 LTC.wait_completion()
 
 # Sim Statistics
