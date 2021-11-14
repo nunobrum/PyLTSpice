@@ -472,6 +472,21 @@
 
         <span class="n">fin</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        __getitem__ implements</span>
+<span class="sd">        :key: step or measurement name</span>
+<span class="sd">        :return: step or measurement set</span>
+<span class="sd">        :rtype: List[float]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">slice</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Slicing in not allowed in this class&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">stepset</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">stepset</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>  <span class="c1"># This will raise an Index Error if not found here.</span>
+        <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s2">&quot;&#39;</span><span class="si">%s</span><span class="s2">&#39; is not a valid step variable or measurement name&quot;</span> <span class="o">%</span> <span class="n">key</span><span class="p">)</span>
+
 <div class="viewcode-block" id="LTSpiceLogReader.steps_with_parameter_equal_to"><a class="viewcode-back" href="../../LTSteps.html#PyLTSpice.LTSteps.LTSpiceLogReader.steps_with_parameter_equal_to">[docs]</a>    <span class="k">def</span> <span class="nf">steps_with_parameter_equal_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the steps that contain a given condition.</span>
@@ -507,6 +522,14 @@
                 <span class="c1"># makes the intersection between the lists</span>
                 <span class="n">current_set</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">current_set</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">condition_set</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">current_set</span></div>
+
+<div class="viewcode-block" id="LTSpiceLogReader.get_step_vars"><a class="viewcode-back" href="../../LTSteps.html#PyLTSpice.LTSteps.LTSpiceLogReader.get_step_vars">[docs]</a>    <span class="k">def</span> <span class="nf">get_step_vars</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the stepped variable names of .</span>
+<span class="sd">        :return: List of step variables.</span>
+<span class="sd">        :rtype: list of str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">stepset</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="LTSpiceLogReader.get_measure_names"><a class="viewcode-back" href="../../LTSteps.html#PyLTSpice.LTSteps.LTSpiceLogReader.get_measure_names">[docs]</a>    <span class="k">def</span> <span class="nf">get_measure_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -695,6 +718,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../LTSpiceBatch.html">LTSpiceBatch.py</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../SpiceEditor.html">SpiceEditor.py</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../LTSpice_RawRead.html">LTSpice_RawRead.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../LTSpice_RawWrite.html">LTSpice_RawWrite.py</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../LTSteps.html">LTSteps.py</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../Histogram.html">Histogram.py</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../SemiOpLogReader.html">LTSpice_SemiDevOpReader.py</a></li>

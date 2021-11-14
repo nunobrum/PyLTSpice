@@ -33,41 +33,8 @@
 
           <div class="body" role="main">
             
-  <div class="section" id="module-PyLTSpice.Histogram">
-<span id="histogram-py"></span><h1>Histogram.py<a class="headerlink" href="#module-PyLTSpice.Histogram" title="Permalink to this headline">¶</a></h1>
-<p>This module uses matplotlib to plot an histogram of a gaussian distribution and calculates the project n-sigma interval.</p>
-<p>The data can either collected from the clipboard or from a text file. Use the following command line text to call the
-this module.</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>python -m PyLTSpice.Histogram [options] [data_file] TRACE
-</pre></div>
-</div>
-<p>The help can be obtained by calling the script without arguments</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Usage: Histogram.py [options] LOG_FILE TRACE
-
-Options:
-  --version             show program&#39;s version number and exit
-  -h, --help            show this help message and exit
-  -s SIGMA, --sigma=SIGMA
-                        Sigma to be used in the distribution fit. Default=3
-  -n NBINS, --nbins=NBINS
-                        Number of bins to be used in the histogram. Default=20
-  -c FILTERS, --condition=FILTERS
-                        Filter condition writen in python. More than one
-                        expression can be added but each expression should be
-                        preceded by -f. EXAMPLE: -c V(N001)&gt;4 -c parameter==1
-                        -c  I(V1)&lt;0.5
-  -f FORMAT, --format=FORMAT
-                        Format string for the X axis. Example: -f %3.4f
-  -t TITLE, --title=TITLE
-                        Title to appear on the top of the histogram.
-  -r RANGE, --range=RANGE
-                        Range of the X axis to use for the histogram in the
-                        form min:max. Example: -r -1:1
-  -C, --clipboard       If the data from the clipboard is to be used.
-  -i IMAGEFILE, --image=IMAGEFILE
-                        Name of the image File. extension &#39;png&#39;
-</pre></div>
-</div>
+  <div class="section" id="histogram-py">
+<h1>Histogram.py<a class="headerlink" href="#histogram-py" title="Permalink to this headline">¶</a></h1>
 </div>
 
 
@@ -92,6 +59,7 @@ Options:
 <li class="toctree-l1"><a class="reference internal" href="LTSpiceBatch.html">LTSpiceBatch.py</a></li>
 <li class="toctree-l1"><a class="reference internal" href="SpiceEditor.html">SpiceEditor.py</a></li>
 <li class="toctree-l1"><a class="reference internal" href="LTSpice_RawRead.html">LTSpice_RawRead.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="LTSpice_RawWrite.html">LTSpice_RawWrite.py</a></li>
 <li class="toctree-l1"><a class="reference internal" href="LTSteps.html">LTSteps.py</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Histogram.py</a></li>
 <li class="toctree-l1"><a class="reference internal" href="SemiOpLogReader.html">LTSpice_SemiDevOpReader.py</a></li>

@@ -268,7 +268,7 @@
             <span class="n">line_upcase</span> <span class="o">=</span> <span class="n">_first_token_upped</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">line_upcase</span> <span class="o">==</span> <span class="n">substr_upper</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">line_no</span>
-        <span class="n">error_msg</span> <span class="o">=</span> <span class="s2">&quot;Component &#39;</span><span class="si">%s</span><span class="s2">&#39; not found in netlist&quot;</span> <span class="o">%</span> <span class="n">component</span>
+        <span class="n">error_msg</span> <span class="o">=</span> <span class="s2">&quot;line starting with &#39;</span><span class="si">%s</span><span class="s2">&#39; not found in netlist&quot;</span> <span class="o">%</span> <span class="n">substr</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">error_msg</span><span class="p">)</span>
         <span class="k">raise</span> <span class="n">ComponentNotFoundError</span><span class="p">(</span><span class="n">error_msg</span><span class="p">)</span>
 
@@ -623,15 +623,16 @@
                     <span class="k">break</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># check whether the instruction is already there (dummy proofing)</span>
-            <span class="k">if</span> <span class="n">instruction</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">netlist</span><span class="p">:</span>
-                <span class="c1"># Insert before backanno instruction</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">line</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">netlist</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;.backanno&#39;</span><span class="p">)</span>
-                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-                    <span class="n">line</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">netlist</span><span class="p">)</span> <span class="o">-</span> <span class="mi">2</span>  <span class="c1"># This is where typically the .backanno instruction is</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">netlist</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">instruction</span><span class="p">)</span></div>
+
+        <span class="c1"># check whether the instruction is already there (dummy proofing)</span>
+        <span class="c1"># TODO: if adding a .MODEL or .SUBCKT it should verify if it already exists and update it.</span>
+        <span class="k">if</span> <span class="n">instruction</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">netlist</span><span class="p">:</span>
+            <span class="c1"># Insert before backanno instruction</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">netlist</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;.backanno&#39;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">netlist</span><span class="p">)</span> <span class="o">-</span> <span class="mi">2</span>  <span class="c1"># This is where typically the .backanno instruction is</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">netlist</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">instruction</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="SpiceEditor.add_instructions"><a class="viewcode-back" href="../../SpiceEditor.html#PyLTSpice.SpiceEditor.SpiceEditor.add_instructions">[docs]</a>    <span class="k">def</span> <span class="nf">add_instructions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">instructions</span><span class="p">)</span><span class="o">-&gt;</span><span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Adds a list of instructions to the SPICE NETLIST.</span>
@@ -659,7 +660,8 @@
 <span class="sd">        :param instructions The list of instructions to remove. Each instruction is of the type &#39;str&#39;</span>
 <span class="sd">        :type instruction: str</span>
 <span class="sd">        :returns: Nothing</span>
-<span class="sd">        TODO: This only works with a full line instruction.</span>
+<span class="sd">        TODO: This only works with a full line instruction. Make it more inteligent so it recognizes .models, .param</span>
+<span class="sd">        and .subckt</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Because the netlist is stored containing the end of line terminations and because they are added when they</span>
         <span class="c1"># they are added to the netlist.</span>
@@ -745,6 +747,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../LTSpiceBatch.html">LTSpiceBatch.py</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../SpiceEditor.html">SpiceEditor.py</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../LTSpice_RawRead.html">LTSpice_RawRead.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../LTSpice_RawWrite.html">LTSpice_RawWrite.py</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../LTSteps.html">LTSteps.py</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../Histogram.html">Histogram.py</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../SemiOpLogReader.html">LTSpice_SemiDevOpReader.py</a></li>

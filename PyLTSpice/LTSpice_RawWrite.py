@@ -50,6 +50,7 @@ class LTSpiceRawWrite(object):
     """
     This class represents the RAW data file being generated. Contrary to the the LTSpiceRawRead this class doesn't
     support stepped data.
+
     """
 
     def __init__(self, plot_name='', fastacces=True):
@@ -114,8 +115,9 @@ class LTSpiceRawWrite(object):
         Saves the RAW file into a file. The file format is always binary. Text based RAW output format is not supported
         in this version.
 
-        :param filename: filename to where the RAW file is going to be written. Make sure that the extension of the
-        file is .RAW.
+        :param filename: filename to where the RAW file is going to be written. Make sure that the extension of the file
+        is .RAW.
+
         :type filename: str
         :return: Nothing
         :rtype: None
@@ -168,8 +170,9 @@ class LTSpiceRawWrite(object):
         return False
 
     def add_traces_from_raw(self, other: LTSpiceRawRead, trace_filter: Union[list, tuple], **kwargs):
-        """
+        skip_doc ="""
         *(Not fully implemented)*
+
         Merge two LTSpiceRawWrite classes together resulting in a new instance
         :param other: another instance of the LTSpiceRawWrite class.
         :type other: LTSpiceRawWrite
@@ -178,13 +181,15 @@ class LTSpiceRawWrite(object):
         :keyword force_axis_alignment: If two raw files don't have the same axis, an attempt is made to sync the two
         :keyword admissible_error: maximum error allowed in the sync between the two axis
         :keyword rename_format: when adding traces with the same name, it is possible to define a rename format.
-        For example, if there are two traces named N001 in order to avoid duplicate names the rename format can be
-        defined as "{}_{kwarg_name} where kwarg_name is passed as a keyword argument of this function-
+                                For example, if there are two traces named N001 in order to avoid duplicate names the
+                                rename format can be defined as "{}_{kwarg_name} where kwarg_name is passed as a keyword
+                                argument of this function
+
         :keyword step: by default only step 0 is added from the second raw. It is possible to add other steps, by
-        using this keyword parameter. This is useful when we want to "flatten" the multiple step runs into the same
-        view.
+                       using this keyword parameter. This is useful when we want to "flatten" the multiple step runs
+                       into the same view.
         :keyword: minimum_timestep: This parameter forces the two axis to sync using a minimum time step. That is, all
-        time increments that are less than this parameter will be suppressed.
+                                    time increments that are less than this parameter will be suppressed.
         :return: A new instance of LTSpiceRawWrite with
         :rtype: LTSpiceRawWrite
         """

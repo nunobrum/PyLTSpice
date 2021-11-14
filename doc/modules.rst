@@ -4,6 +4,7 @@
    LTSpiceBatch
    SpiceEditor
    LTSpice_RawRead
+   LTSpice_RawWrite
    LTSteps
    Histogram
    SemiOpLogReader

@@ -1,5 +1,5 @@
-LTSpice_RawRead.py
-==================
+LTSpice_RawWrite.py
+===================
 .. automodule:: PyLTSpice.LTSpice_RawWrite
    :members:
    :undoc-members:
