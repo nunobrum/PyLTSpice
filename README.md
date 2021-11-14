@@ -10,6 +10,9 @@ An utility that extracts from LTSpice output files data, and formats it for impo
 * __LTSpice_RawRead.py__
 A pure python class that serves to read raw files into a python class.
 
+* __LTSpice_RawWrite.py__
+A class to write RAW files that can be read by LTSpice Application.
+
 * __Histogram.py__
 A python script that uses numpy and matplotlib to create an histogram and calculate the sigma deviations. This is useful for Monte-Carlo analysis. 
 
@@ -52,29 +55,48 @@ Here follows a quick outlook on how to use each of the tools.
 More comprehnsive documentation can be found in https://pyltspice.readthedocs.io/en/latest/
 
 ### LTSpice_RawRead.py ###
-Include the following line on your scripts
+The example below reads the data from a LTSpice Simulation called 
+"TRAN - STEP.raw" and displays all steps of the "I(R1)" trace in a matplotlib plot 
 
  ```python
- from PyLTSpice.LTSpice_RawRead import LTSpiceRawRead
- 
- from matplotlib import plot
- 
- 
- LTR = LTSpiceRawRead("Draft1.raw") 
+from PyLTSpice.LTSpice_RawRead import LTSpiceRawRead
 
- print(LTR.get_trace_names())
- print(LTR.get_raw_property())
- 
- IR1 = LTR.get_trace("I(R1)")
- x = LTR.get_trace('time') # Gets the time axis
- steps = LTR.get_steps()
- for step in range(len(steps)):
-     # print(steps[step])
-     plt.plot(x.get_time_axis(step), IR1.get_wave(step), label=steps[step])
+from matplotlib import pyplot as plt
 
- plt.legend() # order a legend
- plt.show()
+LTR = LTSpiceRawRead("TRAN - STEP.raw")
+
+print(LTR.get_trace_names())
+print(LTR.get_raw_property())
+
+IR1 = LTR.get_trace("I(R1)")
+x = LTR.get_trace('time')  # Gets the time axis
+steps = LTR.get_steps()
+for step in range(len(steps)):
+    # print(steps[step])
+    plt.plot(x.get_time_axis(step), IR1.get_wave(step), label=steps[step])
+
+plt.legend()  # order a legend
+plt.show()
  ```   
+
+### LTSpice_RawWrite.py ###
+The following example writes a RAW file with a 3 miliseconds transient simulation sine with a 
+10kHz and a cosine with 9.997kHz
+ ```python
+import numpy as np
+from PyLTSpice.LTSpice_RawWrite import Trace, LTSpiceRawWrite
+    
+LW = LTSpiceRawWrite()
+tx = Trace('time', np.arange(0.0, 3e-3, 997E-11))
+vy = Trace('N001', np.sin(2 * np.pi * tx.data * 10000))
+vz = Trace('N002', np.cos(2 * np.pi * tx.data * 9970))
+LW.add_trace(tx)
+LW.add_trace(vy)
+LW.add_trace(vz)
+LW.save("teste_w.raw")
+        
+ ```   
+
 
 ### LTSpice_Batch ###
 This module is used to launch LTSPice simulations. Results then can be processed with either the LTSpiceRawRead
@@ -88,46 +110,46 @@ Here follows an example of operation.
 ```python
 import os
 from PyLTSpice.LTSpiceBatch import SimCommander
- 
-# get script absolute path
-meAbsPath = os.path.dirname(os.path.realpath(__file__))
+
+def processing_data(raw_file, log_file):
+    print("Handling the simulation data of %s, log file %s" % (raw_file, log_file))
+
 # select spice model
-LTC = SimCommander(meAbsPath + "\\Batch_Test.asc")
- 
-LTC.set_parameters(res=0, cap=100e-6)  # Redefining parameters in the netlist
-LTC.set_component_value('R2', '2k')  # Redefining component values
+LTC = SimCommander("Batch_Test.asc")
+# set default arguments
+LTC.set_parameters(res=0, cap=100e-6)
+LTC.set_component_value('R2', '2k')
 LTC.set_component_value('R1', '4k')
- 
+LTC.set_element_model('V3', "SINE(0 1 3k 0 0 0)")
 # define simulation
 LTC.add_instructions(
     "; Simulation settings",
-    ".param run = 0"  # Commands can be set directly with the .param command instad of the set_parameters(...)
+    ".param run = 0"
 )
-def process_data(raw_file, log_file):
-    """This function is called after the completion of every simulation"""
-    print("Hint : use the LTRawRead to process the '%s'" % raw_file)
-    print("Hint : use the LTSteps to process the '%s'" % log_file)
-    
+
 for opamp in ('AD712', 'AD820'):
-    # Setting a model of the U1 Component. Note that subcircuits need the X prefix
     LTC.set_element_model('XU1', opamp)
     for supply_voltage in (5, 10, 15):
-        LTC.set_component_value('V1', supply_voltage)  # Set a voltage source value
+        LTC.set_component_value('V1', supply_voltage)
         LTC.set_component_value('V2', -supply_voltage)
-        LTC.run(callback=process_data)  # Runs the simulation with the updated netlist
-        # The run() returns the RAW filename and LOG filenames so that can be processed with
-        # the LTSpice_ReadRaw and LTSteps modules.
+        # overriding he automatic netlist naming
+        run_netlist_file = "{}_{}_{}.net".format(LTC.circuit_radic, opamp, supply_voltage)
+        LTC.run(run_filename=run_netlist_file, callback=processing_data)
 
-LTC.reset_netlist()  # This resets all the changes done to the checklist
-LTC.add_instructions(  # Changing the simulation file
+
+LTC.reset_netlist()
+LTC.add_instructions(
     "; Simulation settings",
     ".ac dec 30 10 1Meg",
     ".meas AC Gain MAX mag(V(out)) ; find the peak response and call it ""Gain""",
     ".meas AC Fcut TRIG mag(V(out))=Gain/sqrt(2) FALL=last"
 )
 
-raw, log = LTC.run()
+LTC.run()
 LTC.wait_completion()
+
+# Sim Statistics
+print('Successful/Total Simulations: ' + str(LTC.okSim) + '/' + str(LTC.runno))
 ```
 
 ### LTSteps.py ###
@@ -145,7 +167,7 @@ step_names = data.get_step_vars()
 meas_names = data.get_measure_names()
 
 # Printing Headers
-print(' '.join([f"{step:15s}" for step in step_names]), end='')  # Print steps names with no new line 
+print(' '.join([f"{step:15s}" for step in step_names]), end='')  # Print steps names with no new line
 print(' '.join([f"{name:15s}" for name in meas_names]), end='\n')
 # Printing data
 for i in range(data.step_count):
@@ -154,6 +176,7 @@ for i in range(data.step_count):
 
 print("Total number of measures found :", data.measure_count)
 ```
+
 The second possibility is to use the module directly on the command line
  `python -m PyLTSpice.LTSteps <filename> `
  The <filename> can be either be a log file (.log), a data export file (.txt) or a measurement output file (.meas)
