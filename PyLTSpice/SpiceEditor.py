@@ -56,48 +56,48 @@ SPICE_DOT_INSTRUCTIONS = (
 )
 
 REPLACE_REGXES = {
-    'A': r"^(A\w+)(\s+\S+){8}\s+(?P<value>.*)(\s+\w+\s*=\s*\S+)*\s*$",  # Special Functions, Parameter substitution not supported
-    'B': r"^(B[VI]?\w+)(\s+\S+){2}\s+(?P<value>.*)$",  # Behavioral source
-    'C': r"^(C\w+)(\s+\S+){2}\s+(?P<value>({)?(?(4).*}|([0-9\.E+-]+(Meg|[kmunp])?F?))).*$",  # Capacitor
-    'D': r"^(D\w+)(\s+\S+){2}\s+(?P<value>\w+).*$",  # Diode
-    'I': r"^(I\w+)(\s+\S+){2}\s+(?P<value>.*)$",  # Current Source
-    'E': r"^(E\w+)(\s+\S+){2,4}\s+(?P<value>.*)$",  # Voltage Dependent Voltage Source
+    'A': r"^(A§?\w+)(\s+\S+){8}\s+(?P<value>.*)(\s+\w+\s*=\s*\S+)*\s*$",  # Special Functions, Parameter substitution not supported
+    'B': r"^(B§?[VI]?\w+)(\s+\S+){2}\s+(?P<value>.*)$",  # Behavioral source
+    'C': r"^(C§?\w+)(\s+\S+){2}\s+(?P<value>({)?(?(4).*}|([0-9\.E+-]+(Meg|[kmunp])?F?))).*$",  # Capacitor
+    'D': r"^(D§?\w+)(\s+\S+){2}\s+(?P<value>\w+).*$",  # Diode
+    'I': r"^(I§?\w+)(\s+\S+){2}\s+(?P<value>.*)$",  # Current Source
+    'E': r"^(E§?\w+)(\s+\S+){2,4}\s+(?P<value>.*)$",  # Voltage Dependent Voltage Source
                                                         # this only supports changing gain values
-    'F': r"^(F\w+)(\s+\S+){2}\s+(?P<value>.*)$",  # Current Dependent Current Source
+    'F': r"^(F§?\w+)(\s+\S+){2}\s+(?P<value>.*)$",  # Current Dependent Current Source
                                                         # TODO: this implementation replaces everything after the 2
                                                         #       first nets
-    'G': r"^(G\w+)(\s+\S+){2,4}\s+(?P<value>.*)$",  # Voltage Dependent Current Source
+    'G': r"^(G§?\w+)(\s+\S+){2,4}\s+(?P<value>.*)$",  # Voltage Dependent Current Source
                                                         # this only supports changing gain values
-    'H': r"^(H\w+)(\s+\S+){2}\s+(?P<value>.*)$",  # Voltage Dependent Current Source
+    'H': r"^(H§?\w+)(\s+\S+){2}\s+(?P<value>.*)$",  # Voltage Dependent Current Source
                                                         # TODO: this implementation replaces everything after the 2
                                                         #       first nets
-    'I': r"^(I\w+)(\s+\S+){2}\s+(?P<value>.*)$",  # Current Source
+    'I': r"^(I§?\w+)(\s+\S+){2}\s+(?P<value>.*)$",  # Current Source
                                                         # TODO: this implementation replaces everything after the 2
                                                         #       first nets
-    'J': r"^(J\w+)(\s+\S+){3}\s+(?P<value>\w+).*$",  # JFET
-    'K': r"^(K\w+)(\s+\S+){2,4}\s+(?P<value>[\+\-]?[0-9\.E+-]+[kmunp]?).*$",  # Mutual Inductance
-    'L': r"^(L\w+)(\s+\S+){2}\s+(?P<value>({)?(?(4).*}|([0-9\.E+-]+(Meg|[kmunp])?H?))).*$",  # Inductance
-    'M': r"^(M\w+)(\s+\S+){3,4}\s+(?P<value>\w+).*$",  # MOSFET TODO: Parameters substitution not supported
-    'O': r"^(O\w+)(\s+\S+){4}\s+(?P<value>\w+).*$",  # Lossy Transmission Line TODO: Parameters substitution not supported
-    'Q': r"^(Q\w+)(\s+\S+){3}\s+(?P<value>\w+).*$",  # Bipolar TODO: Parameters substitution not supported
-    'R': r"^(R\w+)(\s+\S+){2}\s+(?P<value>({)?(?(4).*}|([0-9\.E+-]+(Meg|[kmunp])?R?))).*$",  # Resistors
-    'S': r"^(S\w+)(\s+\S+){4}\s+(?P<value>.*)$",  # Voltage Controlled Switch
-    'T': r"^(T\w+)(\s+\S+){4}\s+(?P<value>.*)$",  # Lossless Transmission
-    'U': r"^(U\w+)(\s+\S+){3}\s+(?P<value>.*)$",  # Uniform RC-line
-    'V': r"^(V\w+)(\s+\S+){2}\s+(?P<value>.*)$",  # Voltage Source
+    'J': r"^(J§?\w+)(\s+\S+){3}\s+(?P<value>\w+).*$",  # JFET
+    'K': r"^(K§?\w+)(\s+\S+){2,4}\s+(?P<value>[\+\-]?[0-9\.E+-]+[kmunp]?).*$",  # Mutual Inductance
+    'L': r"^(L§?\w+)(\s+\S+){2}\s+(?P<value>({)?(?(4).*}|([0-9\.E+-]+(Meg|[kmunp])?H?))).*$",  # Inductance
+    'M': r"^(M§?\w+)(\s+\S+){3,4}\s+(?P<value>\w+).*$",  # MOSFET TODO: Parameters substitution not supported
+    'O': r"^(O§?\w+)(\s+\S+){4}\s+(?P<value>\w+).*$",  # Lossy Transmission Line TODO: Parameters substitution not supported
+    'Q': r"^(Q§?\w+)(\s+\S+){3}\s+(?P<value>\w+).*$",  # Bipolar TODO: Parameters substitution not supported
+    'R': r"^(R§?\w+)(\s+\S+){2}\s+(?P<value>({)?(?(4).*}|([0-9\.E+-]+(Meg|[kmunp])?R?))).*$",  # Resistors
+    'S': r"^(S§?\w+)(\s+\S+){4}\s+(?P<value>.*)$",  # Voltage Controlled Switch
+    'T': r"^(T§?\w+)(\s+\S+){4}\s+(?P<value>.*)$",  # Lossless Transmission
+    'U': r"^(U§?\w+)(\s+\S+){3}\s+(?P<value>.*)$",  # Uniform RC-line
+    'V': r"^(V§?\w+)(\s+\S+){2}\s+(?P<value>.*)$",  # Voltage Source
                                                         # TODO: this implementation replaces everything after the 2
                                                         #       first nets
-    'W': r"^(W\w+)(\s+\S+){2}\s+(?P<value>.*)$",  # Current Controlled Switch
+    'W': r"^(W§?\w+)(\s+\S+){2}\s+(?P<value>.*)$",  # Current Controlled Switch
                                                         # TODO: this implementation replaces everything after the 2
                                                         #       first nets
-    'X': r"(X\w+)(\s+\S+){1,99}\s+(?P<value>\S+)(\s+\w+\s*=\s*\S+)*\s*$",  # Sub-circuit, Parameter substitution not supported
-    'Z': r"^(Z\w+)(\s+\S+){3}\s+(?P<value>\w+).*$",  # MESFET and IBGT. TODO: Parameters substitution not supported
+    'X': r"(X§?\w+)(\s+\S+){1,99}\s+(?P<value>\S+)(\s+\w+\s*=\s*\S+)*\s*$",  # Sub-circuit, Parameter substitution not supported
+    'Z': r"^(Z§?\w+)(\s+\S+){3}\s+(?P<value>\w+).*$",  # MESFET and IBGT. TODO: Parameters substitution not supported
 }
 
 PARAM_REGX = r"%s\s*=\s*(?P<value>[\w*/\.+-/{}()]*)"
 
 
-def format_eng(value):
+def format_eng(value) -> str:
     """
     Helper function for formating value with the SI qualifiers.  That is, it will use
 
@@ -110,11 +110,12 @@ def format_eng(value):
 
 
     :param value: float value to format
-    :paramtype value: float
-
+    :type value: float
     :return: String wiht the formatted value
     :rtype: str
     """
+    if value == 0.0:
+        return "0.0"  # This avoids a problematic log(0)
     e = floor(log(abs(value), 1000))
     if -4 <= e < 0:
         suffix = "pnum"[e]
