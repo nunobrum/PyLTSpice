@@ -224,6 +224,9 @@ A more detailed documentation is directly included in the source file docstrings
 * Alternative contact : nuno.brum@gmail.com
 
 ## History ##
+* Version 1.7\
+Running in Linux under wine is now possible
+
 * Version 1.6\
 Adding LTSpice_RawWrite. Adding documentation.
 

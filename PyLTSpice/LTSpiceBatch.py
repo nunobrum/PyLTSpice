@@ -107,10 +107,10 @@ END_LINE_TERM = '\n'
 logging.basicConfig(filename='LTSpiceBatch.log', level=logging.INFO)
 
 if sys.platform == "linux":
-    LTspice_exe = 'wine C:\\\\Program\\ Files\\\\LTC\\\\LTspiceXVII\\\\XVIIx64.exe'
-    LTspice_arg = {'run': ['-b', '-Run']}
+    LTspice_exe = ["wine", os.path.expanduser("~") + "/.wine/drive_c/Program Files/LTC/LTspiceXVII/XVIIx64.exe"]
+    LTspice_arg = {'netlist': ['-netlist'], 'run': ['-b', '-Run']}
 elif sys.platform == "darwin":
-    LTspice_exe = '/Applications/LTspice.app/Contents/MacOS/LTspice'
+    LTspice_exe = ['/Applications/LTspice.app/Contents/MacOS/LTspice']
     LTspice_arg = {'run': ['-b']}
 else:  # Windows
     LTspice_exe = [r"C:\Program Files\LTC\LTspiceXVII\XVIIx64.exe"]
@@ -283,18 +283,22 @@ class SimCommander(SpiceEditor):
         self.wait_completion()  # TODO: Kill all pending simulations
         self.logger.debug("Exiting SimCommander")
 
-
-    def setLTspiceRunCommand(self, run_command: str) -> None:
+    def setLTspiceRunCommand(self, run_command: Union[str, list]) -> None:
         """
         Manually setting the LTSpice run command
 
         :param path: String containing the command to be invoked to run LTSpice
-        :type path: str
+        :type path: str or list
         :return: Nothing
         :rtype: None
         """
         global LTspice_exe
-        LTspice_exe = run_command
+        if isinstance(run_command, str):
+            LTspice_exe = [run_command]
+        elif isinstance(run_command, list):
+            LTspice_exe = run_command
+        else:
+            raise TypeError("Expecting str or list objects")
 
 
     def add_LTspiceRunCmdLineSwitches(self, *args) -> None:
