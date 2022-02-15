@@ -234,7 +234,6 @@ class SimCommander(SpiceEditor):
         self.file_name, file_ext = os.path.splitext(os.path.basename(circuit_file))
         self.circuit_radic = os.path.join(self.file_path, self.file_name)
 
-        self.cmdline_switches = []
         self.parallel_sims = parallel_sims
         self.threads = []
 
@@ -314,7 +313,7 @@ class SimCommander(SpiceEditor):
         :returns: Nothing
         """
         global cmdline_switches
-        cmdline_switches = args
+        cmdline_switches = list(args)
 
     def run(self, run_filename: str = None, wait_resource: bool = True,
             callback: Callable[[str, str], Any] = None, timeout: float = 600) -> RunTask:
