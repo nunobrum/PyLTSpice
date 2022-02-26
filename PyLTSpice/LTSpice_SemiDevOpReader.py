@@ -22,8 +22,8 @@ import re
 def opLogReader(filename: str) -> dict:
     """
     This function is exclusively dedicated to retrieving operation point parameters of Semiconductor Devices. This is
-    handled separately from the main LogReader class because of it highly specificity and therefore not judged to be
-    of interest of the typical LTSpice user making board level simulations.
+    handled separately from the main LogReader class because of its specialization and therefore not judged to be
+    of interest to the typical LTSpice user making board level simulations.
 
     Below is an excerpt of a Semiconductor Device Operating Points log.py
 

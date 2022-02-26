@@ -61,7 +61,7 @@ class LTSpiceRawWrite(object):
         self.plot_name = plot_name
         self.offset = 0.0
         self.encoding = 'utf_16_le'
-        
+
     def _str_flags(self):
         flags = [self.flag_numtype]
         if self.flag_stepped:
@@ -81,7 +81,7 @@ class LTSpiceRawWrite(object):
 
     def add_trace(self, trace: Trace):
         """
-        Adds a trace to the RAW file. The trace needs to have the same size of the trace 0 ('time', 'frequency', etc..)
+        Adds a trace to the RAW file. The trace needs to have the same size as trace 0 ('time', 'frequency', etc..)
         The first trace added defines the X-Axis and therefore the type of RAW file being generated. If no plot name
         was defined, it will automatically assign a name.
         :param trace: Needs to be of the
@@ -107,7 +107,7 @@ class LTSpiceRawWrite(object):
                 raise ValueError("First Trace needs to be either 'time', 'frequency', 'param', 'voltage' or '...'")
         else:
             if len(self._traces[0]) != len(trace):
-                raise IndexError("The trace needs to be the same size of the trace 0")
+                raise IndexError("The trace needs to be the same size as trace 0")
         self._traces.append(trace)
 
     def save(self, filename: str):
@@ -186,7 +186,7 @@ class LTSpiceRawWrite(object):
             argument of this function
 
         :keyword step: by default only step 0 is added from the second raw. It is possible to add other steps, by
-            using this keyword parameter. This is useful when we want to "flatten" the multiple step runs into the same 
+            using this keyword parameter. This is useful when we want to "flatten" the multiple step runs into the same
             view.
         :keyword: minimum_timestep: This parameter forces the two axis to sync using a minimum time step. That is, all
             time increments that are less than this parameter will be suppressed.
@@ -337,7 +337,7 @@ if __name__ == '__main__':
                 print(t[ii], tx[ii])
                 equal = False
         print(equal)
-    
+
         v = LR.get_trace('N001')
         max_error = 1.5e-12
         for ii in range(len(vy)):
