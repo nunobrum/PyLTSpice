@@ -15,7 +15,7 @@
 Allows to launch LTSpice simulations from a Python Script, thus allowing to overcome the 3 dimensions STEP limitation on
 LTSpice, update resistor values, or component models.
 
-The code snipped below will simulate a circuit with two different diode models, sett the simulation
+The code snipped below will simulate a circuit with two different diode models, set the simulation
 temperature to 80 degrees, and update the values of R1 and R2 to 3.3k. ::
 
     LTC = SimCommander("my_circuit.asc")
