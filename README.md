@@ -4,8 +4,8 @@ PySpicer is a toolchain of python utilities design to interact with LTSpice Elec
 
 ## What is contained in this repository ##
 
-* __LTSteps.py__ 
-An utility that extracts from LTSpice output files data, and formats it for import in a spreadsheet,s uch like Excel or Calc. 
+* __LTSteps.py__
+An utility that extracts from LTSpice output files data, and formats it for import in a spreadsheet, such like Excel or Calc.
 
 * __LTSpice_RawRead.py__
 A pure python class that serves to read raw files into a python class.
@@ -14,7 +14,7 @@ A pure python class that serves to read raw files into a python class.
 A class to write RAW files that can be read by LTSpice Application.
 
 * __Histogram.py__
-A python script that uses numpy and matplotlib to create an histogram and calculate the sigma deviations. This is useful for Monte-Carlo analysis. 
+A python script that uses numpy and matplotlib to create an histogram and calculate the sigma deviations. This is useful for Monte-Carlo analysis.
 
 * __LTSpiceBatch.py__
 This is a script to launch LTSpice Simulations. This is useful because:
@@ -22,7 +22,7 @@ This is a script to launch LTSpice Simulations. This is useful because:
     - Can overcome the limitation of only stepping 3 parameters
     - Different types of simulations .TRAN .AC .NOISE can be run in a single batch
     - The RAW Files are smaller and easier to treat
-    - When used with the LTSpiceRaw_Reader.py and LTSteps.py, validattion of the circuit can be done automatically.
+    - When used with the LTSpiceRaw_Reader.py and LTSteps.py, validation of the circuit can be done automatically.
     - Different models can be simulated in a single batch, by using the following instructions:
         - `set_element_model('D1', '1N4148') # Replaces the Diode D1 with the model 1N4148 `  
         - `set_component_value('R2', '33k') # Replaces the value of R2 by 33k`  
@@ -42,7 +42,7 @@ This is a script to launch LTSpice Simulations. This is useful because:
 ### Using GITHub ###
 
  `git clone https://github.com/nunobrum/PyLTSpice.git `  
- 
+
 If using this method it would be good to add the path where you cloned the site to python path.
 
  `import sys `  
@@ -52,11 +52,11 @@ If using this method it would be good to add the path where you cloned the site 
 
 Here follows a quick outlook on how to use each of the tools.
 
-More comprehnsive documentation can be found in https://pyltspice.readthedocs.io/en/latest/
+More comprehensive documentation can be found in https://pyltspice.readthedocs.io/en/latest/
 
 ### LTSpice_RawRead.py ###
-The example below reads the data from a LTSpice Simulation called 
-"TRAN - STEP.raw" and displays all steps of the "I(R1)" trace in a matplotlib plot 
+The example below reads the data from a LTSpice Simulation called
+"TRAN - STEP.raw" and displays all steps of the "I(R1)" trace in a matplotlib plot
 
  ```python
 from PyLTSpice.LTSpice_RawRead import LTSpiceRawRead
@@ -80,12 +80,12 @@ plt.show()
  ```   
 
 ### LTSpice_RawWrite.py ###
-The following example writes a RAW file with a 3 miliseconds transient simulation sine with a 
+The following example writes a RAW file with a 3 milliseconds transient simulation sine with a
 10kHz and a cosine with 9.997kHz
  ```python
 import numpy as np
 from PyLTSpice.LTSpice_RawWrite import Trace, LTSpiceRawWrite
-    
+
 LW = LTSpiceRawWrite()
 tx = Trace('time', np.arange(0.0, 3e-3, 997E-11))
 vy = Trace('N001', np.sin(2 * np.pi * tx.data * 10000))
@@ -94,7 +94,7 @@ LW.add_trace(tx)
 LW.add_trace(vy)
 LW.add_trace(vz)
 LW.save("teste_w.raw")
-        
+
  ```   
 
 
@@ -102,7 +102,7 @@ LW.save("teste_w.raw")
 This module is used to launch LTSPice simulations. Results then can be processed with either the LTSpiceRawRead
 or with the LTSteps module to read the log file which can contain .MEAS results.
 
-The script will firstly invoke the LTSpice in command line to generate a netlist, and then this netlist can be 
+The script will firstly invoke the LTSpice in command line to generate a netlist, and then this netlist can be
 updated directly by the script, in order to change component values, parameters or simulation commands.
 
 Here follows an example of operation.
@@ -181,11 +181,11 @@ The second possibility is to use the module directly on the command line
  `python -m PyLTSpice.LTSteps <filename> `
  The <filename> can be either be a log file (.log), a data export file (.txt) or a measurement output file (.meas)
  This will process all the data and export it automatically into a text file with the extension (tlog, tsv, tmeas)
- where the data read is formatted into a more convinient tab separated format.
+ where the data read is formatted into a more convenient tab separated format.
  In case the <logfile> is not provided, the script will scan the directory and process the newest log, txt or out file found.
 
 ### Histogram.py ###
-This module uses the data inside on the filename to produce an histogram image. 
+This module uses the data inside on the filename to produce an histogram image.
  ```
 Usage: Histogram.py [options] LOG_FILE TRACE
 
@@ -212,7 +212,7 @@ Options:
   -i IMAGEFILE, --image=IMAGEFILE
                         Name of the image File. extension 'png'    
  ```
- 
+
 ### LTSpice_SemiDevOpReader.py ###
 This module is used to read from LTSpice log files Semiconductor Devices Operating Point Information.
 A more detailed documentation is directly included in the source file docstrings.
@@ -220,7 +220,7 @@ A more detailed documentation is directly included in the source file docstrings
 ## To whom do I talk to? ##
 
 * Tools website : [https://www.nunobrum.com/pyspicer.html](https://www.nunobrum.com/pyspicer.html)
-* Repo owner : [me@nunobrum.com](me@nunobrum.com) 
+* Repo owner : [me@nunobrum.com](me@nunobrum.com)
 * Alternative contact : nuno.brum@gmail.com
 
 ## History ##
@@ -254,13 +254,13 @@ Corrected the name of the returned raw file.\
 Added comments throughout the code and cleanup
 
 * Version 1.0\
-LTSpiceBatch.py: 
+LTSpiceBatch.py:
 Implemented an new approach (NOT BACKWARDS COMPATIBLE), that avoids the usage of the sim_settings.inc file.
 And allows to modify not only parameters, but also models and even the simulation commands.\
-LTSpice_RawRead.py: 
+LTSpice_RawRead.py:
 Added the get_time_axis method to the RawRead class to avoid the problems with negative values on
 time axis, when 2nd order compression is enabled in LTSpice.\
-LTSteps.py: 
+LTSteps.py:
 Modified the LTSteps so it can also read measurements on log files without any steps done.
 
 

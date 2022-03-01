@@ -152,7 +152,7 @@ def _get_group_regxstr(regstr, param):
 def get_line_command(line) -> str:
     """
     Retrives the type of SPICE command in the line.
-    Starts by removing the leading spaces and the evaluaties if it is a comment, a directive or a component.
+    Starts by removing the leading spaces and the evaluates if it is a comment, a directive or a component.
     """
     if isinstance(line, str):
         for i in range(len(line)):
@@ -173,17 +173,17 @@ def get_line_command(line) -> str:
                         j += 1
                     return line[i:j].upper()
                 else:
-                    raise SyntaxError('Irrecognized command in line "%s"' % line)
+                    raise SyntaxError('Unrecognized command in line "%s"' % line)
     elif isinstance(line, SpiceCircuit):
         return ".SUBCKT"
     else:
-        raise SyntaxError('Irrecognized command in line "{}"'.format(line))
+        raise SyntaxError('Unrecognized command in line "{}"'.format(line))
 
 
 def _first_token_upped(line):
     """
     (Private function. Not to be used directly)
-    Returns the first non space character in the line. IF a point '.' is found, then it gets the primitive associated.
+    Returns the first non space character in the line. If a point '.' is found, then it gets the primitive associated.
     """
     i = 0
     while i < len(line) and line[i] in (' ', '\t'):
@@ -555,7 +555,7 @@ class SpiceCircuit(object):
 class SpiceEditor(SpiceCircuit):
     """
     This class implements interfaces to manipulate SPICE netlist files. The class doesn't update the netlist file
-    itself. After implementing the modifications he/she should call the "write_netlist" method in order to write a new
+    itself. After implementing the modifications the user should call the "write_netlist" method to write a new
     netlist file.
 
     """
