@@ -94,7 +94,7 @@ REPLACE_REGXES = {
     'Z': r"^(Z§?\w+)(\s+\S+){3}\s+(?P<value>\w+).*$",  # MESFET and IBGT. TODO: Parameters substitution not supported
 }
 
-PARAM_REGX = r"%s\s*=\s*(?P<value>[\w*/\.+-/{}()]*)"
+PARAM_REGX = r"%s\s*(=\s*)?(?P<value>[\w*/\.+-/{}()]*)"
 
 
 def format_eng(value) -> str:
@@ -273,7 +273,7 @@ class SpiceCircuit(object):
 
     def _get_param_line(self, param: str) -> int:
         """Internal function. Do not use."""
-        search_param = re.compile(r"%s\s*=\s*" % param, re.IGNORECASE)  # Spice is case insensitive
+        search_param = re.compile(PARAM_REGX % param, re.IGNORECASE)  # Spice is case insensitive
         in_param_line = False  # This is needed to process multi-line commands
         line_no = 0
         while line_no < len(self.netlist):
@@ -393,8 +393,11 @@ class SpiceCircuit(object):
             regx = re.compile(PARAM_REGX % param, re.IGNORECASE)
             line = self.netlist[param_line]
             m = regx.search(line)
-            start, stop = m.span()
-            self.netlist[param_line] = line[:start] + "{}={}".format(param, value) + line[stop:]
+            if m:
+                start, stop = m.span()
+                self.netlist[param_line] = line[:start] + "{}={}".format(param, value) + line[stop:]
+            else:
+                raise ParameterNotFoundError
 
     def set_parameters(self, **kwargs):
         """Adds one or more parameters to the netlist.
@@ -690,4 +693,14 @@ if __name__ == '__main__':
     print("Setting C4 to 22nF")
     E.set_component_value("C4", 22e-9)
     E.set_component_value("C3", '120n')
+<<<<<<< HEAD
     E.write_netlist("..\\tests\\test_spice_editor.net")
+=======
+    E.set_parameters(
+            test_exiting_param_set1=24,
+            test_exiting_param_set2=25,
+            test_exiting_param_set3=26,
+            test_exiting_param_set4=27,
+            test_add_parameter=34.45,)
+    E.write_netlist("..\\tests\\test_spice_editor.net")
+>>>>>>> fed37d8fefd10405ed0a5a7fb5577b30cc1cefbd
