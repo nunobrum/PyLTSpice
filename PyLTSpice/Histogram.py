@@ -13,7 +13,7 @@
 """
 This module uses matplotlib to plot an histogram of a gaussian distribution and calculates the project n-sigma interval.
 
-The data can either collected from the clipboard or from a text file. Use the following command line text to call the
+The data can either collected from the clipboard or from a text file. Use the following command line text to call
 this module.
 
 .. code-block:: text

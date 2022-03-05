@@ -15,8 +15,8 @@
 Allows to launch LTSpice simulations from a Python Script, thus allowing to overcome the 3 dimensions STEP limitation on
 LTSpice, update resistor values, or component models.
 
-In the code snipped below will simulate a circuit with two different diode models, setting the simulation
-temperature to 80 degrees and updates the values of R1 and R2 to 3.3k. ::
+The code snipped below will simulate a circuit with two different diode models, set the simulation
+temperature to 80 degrees, and update the values of R1 and R2 to 3.3k. ::
 
     LTC = SimCommander("my_circuit.asc")
     LTC.set_parameters(temp=80)  # Sets the simulation temperature to be 80 degrees
@@ -55,7 +55,7 @@ The recommended way is to set the parameter ``parallel_sims`` in the class const
     LTC=SimCommander("my_circuit.asc", parallel_sims=8)
 
 The user then can launch a simulation with the updates done to the netlist by calling the run() method. Since the
-processes are not executed right aways, but rather just scheduled for simulation, the wait_completion() function is
+processes are not executed right away, but rather just scheduled for simulation, the wait_completion() function is
 needed if the user wants to execute code only after the completion of all scheduled simulations.
 
 The usage of wait_completion() is optional. Just note that the script will only end when all the scheduled tasks are
@@ -66,10 +66,10 @@ Callbacks
 ---------
 
 As seen above, the `wait_completion()` can be used to wait for all the simulations to be finished. However, this is
-not efficient on a multiprocessor point of view. Ideally, the post-processing should be also handled while other
-simulations are still running. For this purpose, the user can use a function call backs.
+not efficient from a multiprocessor point of view. Ideally, the post-processing should be also handled while other
+simulations are still running. For this purpose, the user can use a function call back.
 
-The callback function is called when the simulation has finished direclty by the thread that has handling the
+The callback function is called when the simulation has finished directly by the thread that has handling the
 simulation. A function callback receives two arguments.
 The RAW file and the LOG file names. Below is an example of a callback function::
 
@@ -81,7 +81,7 @@ The RAW file and the LOG file names. Below is an example of a callback function:
         log_info.read_measures()
         rise, measures = log_info.dataset["rise_time"]
 
-The callback function is optional. if there no callback function is given then thread is terminated just after the
+The callback function is optional. If  no callback function is given, the thread is terminated just after the
 simulation is finished.
 """
 __author__ = "Nuno Canto Brum <nuno.brum@gmail.com>"
@@ -141,7 +141,7 @@ class RunTask(threading.Thread):
     def __init__(self, run_no, netlist_file: str, callback: Callable[[str, str], Any], timeout=None, verbose=True):
         self.verbose = verbose
         self.timeout = timeout  # Thanks to Daniel Phili for implemnting this
-        
+
         threading.Thread.__init__(self)
         self.setName("sim%d" % run_no)
         self.run_no = run_no
@@ -227,7 +227,7 @@ class SimCommander(SpiceEditor):
 
         self.verbose = verbose
         self.timeout = timeout
-        
+
         self.file_path = os.path.dirname(circuit_file)
         if self.file_path == '':
             self.file_path = os.path.abspath(os.curdir)
@@ -326,16 +326,16 @@ class SimCommander(SpiceEditor):
             simulations files are generated.
         :type run_filename: str
         :param wait_resource:
-            Setting this parameter to False, will force the simulation to start immediately, irrespective of the number
+            Setting this parameter to False will force the simulation to start immediately, irrespective of the number
             of simulations already active.
-            By default the SimCommander class uses only four processors. This number can then be overridden by setting
+            By default the SimCommander class uses only four processors. This number can be overridden by setting
             the parameter ´parallel_sims´ to a different number.
             If there are more than ´parallel_sims´ simulations being done, the new one will be placed on hold till one
             of the other simulations are finished.
         :type wait_resource: bool
         :param callback:
-            The user can optionally give a callback function for when the simulation finishes, so that a processing can
-            be immediately done.
+            The user can optionally give a callback function for when the simulation finishes so that processing can
+            be done immediately.
         :type: callback: function(raw_file, log_file)
         :param timeout: Timeout to be used in waiting for resources. Default time is 600 seconds, i.e. 10 minutes.
         :type timeout: float

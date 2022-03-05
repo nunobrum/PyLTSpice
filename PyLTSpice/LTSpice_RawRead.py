@@ -20,7 +20,7 @@ RAW file.
 To understand why this is done so, in the next section follows a brief explanation of what is contained inside a RAW
 file.
 In case RAW file contains stepped data detected, i.e. when the .STEP command is used, then it will also try to open the
-simulation LOG file and try to obtain read the stepping information.
+simulation LOG file and read the stepping information.
 
 RAW File Structure
 ==================
@@ -28,7 +28,7 @@ RAW File Structure
 This section is written to help understand the why the structure of classes is defined as it is. You can gladly skip
 this section and get right down to business by seeing the examples section below.
 
-The RAW file starts by have a text preamble that contains information about the names of the traces the order they
+The RAW file starts with a text preamble that contains information about the names of the traces the order they
 appear on the binary part and some extra information.
 In the preamble, the lines are always started by one of the following identifiers:
 
@@ -47,12 +47,12 @@ In the preamble, the lines are always started by one of the following identifier
                       * "log" -> The preferred plot view of this data is logarithmic.
                       * "stepped" -> The simulation had .STEP primitives.
                       * "FastAccess" -> Order of the data is changed to speed up access. See Binary section for details.
-   
+
    + No. Variables:  => number of variables contained in this dataset. See section below for details.
 
    + No. Points:     => number of points per each variable in
 
-   + Offset:         => when the saved of data started
+   + Offset:         => when the saving of data started
 
    + Command:        => Name of the simulator executable generating this file.
 
@@ -64,7 +64,7 @@ In the preamble, the lines are always started by one of the following identifier
 
 Variables List
 --------------
-The variable list contains the list measurements saved in the raw file. The order of the variables defines how they are
+The variable list contains the list of measurements saved in the raw file. The order of the variables defines how they are
 stored in the binary section. The format is one variable per line, using the following format:
 
 <tab><ordinal number><tab><measurement><tab><type of measurement>
@@ -105,8 +105,8 @@ values, as exemplified below for a .TRAN simulation.
      <timestamp 0><trace 1><trace 2><trace 3><trace 4>.....<trace N><timestamp 1><trace 1><trace2 >...
 
 Depending on the type of simulation the type of data changes.
-On TRAN simulations s the timestamp is always stored as 8 bytes float (double) and trace values as a 4 bytes (single).
-On AC simulations the data is stored in omplex format, which includes a real part and an imaginary part, each with 8
+On TRAN simulations the timestamp is always stored as 8 bytes float (double) and trace values as a 4 bytes (single).
+On AC simulations the data is stored in complex format, which includes a real part and an imaginary part, each with 8
 bytes.
 The way we determine the size of the data is dividing the total block size by the number of points, then taking only
 the integer part.
@@ -138,7 +138,7 @@ Follows an example of the LTSpiceRawRead class usage. Information on the LTSpice
 Examples
 ========
 
-The example below demonstrates the usage of the LTSpiceRawRead class. It reads a .RAW file and uses matplotlib library
+The example below demonstrates the usage of the LTSpiceRawRead class. It reads a .RAW file and uses the matplotlib library
 to plot the results of three traces in two subplots. ::
 
     import matplotlib.pyplot as plt  # Imports the matplotlib library for plotting the results
@@ -188,7 +188,7 @@ except ImportError:
     USE_NNUMPY = False
 else:
     USE_NNUMPY = True
-    print("Found Numpy. WIll be used for storing data")
+    print("Found Numpy. Will be used for storing data")
 
 
 class DataSet(object):
@@ -443,7 +443,7 @@ class Axis(DataSet):
 
 
 class Trace(DataSet):
-    """This class is used to represent a trace . It derives from DataSet and implements the additional methods to
+    """This class is used to represent a trace. It derives from DataSet and implements the additional methods to
     support STEPed simulations.
     This class is constructed by the get_trace() command.
     Data can be accessed through the [] and len() operators, or by the get_wave() method.
