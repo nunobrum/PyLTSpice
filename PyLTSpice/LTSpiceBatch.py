@@ -9,7 +9,7 @@
 # Author:      Nuno Brum (nuno.brum@gmail.com)
 #
 # Created:     23-12-2016
-# Licence:     lGPL v3
+# Licence:     refer to the LICENSE file
 # -------------------------------------------------------------------------------
 """
 Allows to launch LTSpice simulations from a Python Script, thus allowing to overcome the 3 dimensions STEP limitation on

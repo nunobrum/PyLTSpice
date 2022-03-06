@@ -9,7 +9,7 @@
 # Author:      Nuno Brum (nuno.brum@gmail.com)
 #
 # Created:     23-12-2016
-# Licence:     General Public GNU License
+# Licence:     refer to the LICENSE file
 # -------------------------------------------------------------------------------
 
 """
@@ -719,7 +719,20 @@ class LTSpiceRawRead(object):
 
         # Finally, Check for Step Information
         if "stepped" in self.raw_params["Flags"]:
-            self._load_step_information(raw_filename)
+            try:
+                self._load_step_information(raw_filename)
+            except (UnicodeDecodeError, LTSPiceReadException):
+                print("LOG file not found or problems reading it. Auto-detecting steps")
+                number_of_steps = 0
+                for v in self.axis:
+                    if v == self.axis[0]:
+                        number_of_steps += 1
+                self.steps = [{'run': i+1} for i in range(number_of_steps)]
+
+            if not (self.steps is None):
+                # Individual access to the Trace Classes, this information is stored in the Axis
+                # which is always in position 0
+                self._traces[0]._set_steps(self.steps)
 
     def get_raw_property(self, property_name=None):
         """
@@ -812,11 +825,6 @@ class LTSpiceRawRead(object):
                 else:
                     self.steps.append(step_dict)
         log.close()
-        if not (self.steps is None):
-            # Individual access to the Trace Classes, this information is stored in the Axis
-            # which is always in position 0
-            self._traces[0]._set_steps(self.steps)
-            pass
 
     def __getitem__(self, item):
         """Helper function to access traces by using the [ ] operator."""
@@ -824,7 +832,7 @@ class LTSpiceRawRead(object):
 
     def get_steps(self, **kwargs):
         """
-        Returns the steps that correspond to the query set in the \*\*kwargs. parameters.
+        Returns the steps that correspond to the query set in the **kwargs parameters.
         Example:
 
         ::

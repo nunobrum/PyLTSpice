@@ -8,8 +8,7 @@
 # Author:      Nuno Brum (nuno.brum@gmail.com)
 #
 # Created:     19-09-2021
-# Licence:     Free
-# Version:     0.1  First Version
+# Licence:     refer to the LICENSE file
 # -------------------------------------------------------------------------------
 
 """

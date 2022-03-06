@@ -8,7 +8,7 @@
 # Author:      Nuno Brum (nuno.brum@gmail.com)
 #
 # Created:     30-08-2020
-# Licence:     lGPL v3
+# Licence:     refer to the LICENSE file
 # -------------------------------------------------------------------------------
 import os
 import traceback
@@ -693,9 +693,6 @@ if __name__ == '__main__':
     print("Setting C4 to 22nF")
     E.set_component_value("C4", 22e-9)
     E.set_component_value("C3", '120n')
-<<<<<<< HEAD
-    E.write_netlist("..\\tests\\test_spice_editor.net")
-=======
     E.set_parameters(
             test_exiting_param_set1=24,
             test_exiting_param_set2=25,
@@ -703,4 +700,3 @@ if __name__ == '__main__':
             test_exiting_param_set4=27,
             test_add_parameter=34.45,)
     E.write_netlist("..\\tests\\test_spice_editor.net")
->>>>>>> fed37d8fefd10405ed0a5a7fb5577b30cc1cefbd

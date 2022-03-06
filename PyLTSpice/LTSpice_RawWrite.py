@@ -8,7 +8,7 @@
 # Author:      Nuno Brum (nuno.brum@gmail.com)
 #
 # Created:     16-10-2021
-# Licence:     General Public GNU License
+# Licence:     refer to the LICENSE file
 # -------------------------------------------------------------------------------
 
 """

@@ -9,9 +9,7 @@
 # Author:      Nuno Brum (nuno.brum@gmail.com)
 #
 # Created:     19-05-2014
-# Licence:     Free
-# Version:     0.3  Transforming the procedure into a callable one in order
-#              to call them from a higher level script.
+# Licence:     refer to the LICENSE file
 # -------------------------------------------------------------------------------
 
 """

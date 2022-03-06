@@ -54,6 +54,10 @@ Here follows a quick outlook on how to use each of the tools.
 
 More comprehensive documentation can be found in https://pyltspice.readthedocs.io/en/latest/
 
+## LICENSE ##
+GNU V3 License
+(refer to the LICENSE file)
+
 ### LTSpice_RawRead.py ###
 The example below reads the data from a LTSpice Simulation called
 "TRAN - STEP.raw" and displays all steps of the "I(R1)" trace in a matplotlib plot
@@ -224,6 +228,11 @@ A more detailed documentation is directly included in the source file docstrings
 * Alternative contact : nuno.brum@gmail.com
 
 ## History ##
+* Version 1,8\
+Uniforming License reference across files and improvements on the documentation\
+An enormous thanks to Logan Herrera (lpherr) for the improvements in the documentation\
+Bugfix on the add_LTspiceRunCmdLineSwitches() ; Supporting .param name value format\
+Allowing the LTSpiceRawRead to proceed when the log file can't be found or when there are problems reading it.
 * Version 1.7\
 Running in Linux under wine is now possible
 

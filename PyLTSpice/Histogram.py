@@ -8,7 +8,7 @@
 # Author:      Nuno Brum (nuno.brum@gmail.com)
 #
 # Created:     17-01-2017
-# Licence:     Free
+# Licence:     refer to the LICENSE file
 # -------------------------------------------------------------------------------
 """
 This module uses matplotlib to plot an histogram of a gaussian distribution and calculates the project n-sigma interval.
