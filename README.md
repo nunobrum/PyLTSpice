@@ -199,7 +199,7 @@ Options:
   -c FILTERS, --condition=FILTERS
                         Filter condition writen in python. More than one
                         expression can be added but each expression should be
-                        preceded by -f. EXAMPLE: -c V(N001)>4 -c parameter==1
+                        preceded by -c. EXAMPLE: -c V(N001)>4 -c parameter==1
                         -c  I(V1)<0.5
   -f FORMAT, --format=FORMAT
                         Format string for the X axis. Example: -f %3.4f
