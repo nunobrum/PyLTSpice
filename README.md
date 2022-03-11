@@ -230,7 +230,7 @@ A more detailed documentation is directly included in the source file docstrings
 ## History ##
 * Version 1,8\
 Uniforming License reference across files and improvements on the documentation\
-An enormous thanks to Logan Herrera (lpherr) for the improvements in the documentation\
+An enormous and wholehearted thanks to Logan Herrera (lpherr) <logan.herrera.github@gmail.com> for the improvements in the documentation.\
 Bugfix on the add_LTspiceRunCmdLineSwitches() ; Supporting .param name value format\
 Allowing the LTSpiceRawRead to proceed when the log file can't be found or when there are problems reading it.
 * Version 1.7\
