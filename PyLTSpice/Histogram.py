@@ -36,7 +36,7 @@ The help can be obtained by calling the script without arguments
       -c FILTERS, --condition=FILTERS
                             Filter condition writen in python. More than one
                             expression can be added but each expression should be
-                            preceded by -f. EXAMPLE: -c V(N001)>4 -c parameter==1
+                            preceded by -c. EXAMPLE: -c V(N001)>4 -c parameter==1
                             -c  I(V1)<0.5
       -f FORMAT, --format=FORMAT
                             Format string for the X axis. Example: -f %3.4f
@@ -67,7 +67,7 @@ opts = OptionParser(usage=usage, version="%prog 0.1")
 opts.add_option('-s',"--sigma", action ="store", type="int", dest="sigma", default=3, help="Sigma to be used in the distribution fit. Default=3")
 opts.add_option('-n', "--nbins", action="store",  type="int", dest="nbins", default=20, help="Number of bins to be used in the histogram. Default=20")
 opts.add_option('-c', "--condition", action="append", type="string", dest="filters",
-                help="Filter condition writen in python. More than one expression can be added but each expression should be preceded by -f.\n" +
+                help="Filter condition writen in python. More than one expression can be added but each expression should be preceded by -c.\n" +
                      "EXAMPLE: -c V(N001)>4 -c parameter==1 -c  I(V1)<0.5" )
 opts.add_option('-f', "--format", action="store", type="string", dest="format", help="Format string for the X axis. Example: -f %3.4f")
 #opts.add_option('-p', "--scaling",action="store", type="string", dest="prescaling", help="Prescaling function to be applied to the input value.")
