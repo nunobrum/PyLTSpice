@@ -42,12 +42,12 @@ RAW file.
 To understand why this is done so, in the next section follows a brief explanation of what is contained inside a RAW
 file.
 In case RAW file contains stepped data detected, i.e. when the .STEP command is used, then it will also try to open the
-simulation LOG file and try to obtain read the stepping information.</p>
+simulation LOG file and read the stepping information.</p>
 <div class="section" id="raw-file-structure">
 <h2>RAW File Structure<a class="headerlink" href="#raw-file-structure" title="Permalink to this headline">¶</a></h2>
 <p>This section is written to help understand the why the structure of classes is defined as it is. You can gladly skip
 this section and get right down to business by seeing the examples section below.</p>
-<p>The RAW file starts by have a text preamble that contains information about the names of the traces the order they
+<p>The RAW file starts with a text preamble that contains information about the names of the traces the order they
 appear on the binary part and some extra information.
 In the preamble, the lines are always started by one of the following identifiers:</p>
 <blockquote>
@@ -70,7 +70,7 @@ In the preamble, the lines are always started by one of the following identifier
 </li>
 <li><p>No. Variables:  =&gt; number of variables contained in this dataset. See section below for details.</p></li>
 <li><p>No. Points:     =&gt; number of points per each variable in</p></li>
-<li><p>Offset:         =&gt; when the saved of data started</p></li>
+<li><p>Offset:         =&gt; when the saving of data started</p></li>
 <li><p>Command:        =&gt; Name of the simulator executable generating this file.</p></li>
 <li><p>Backannotation: =&gt; Backannotation alerts that occurred during simulation</p></li>
 <li><p>Variables:      =&gt; a list of variable, one per line as described below</p></li>
@@ -79,7 +79,7 @@ In the preamble, the lines are always started by one of the following identifier
 </div></blockquote>
 <div class="section" id="variables-list">
 <h3>Variables List<a class="headerlink" href="#variables-list" title="Permalink to this headline">¶</a></h3>
-<p>The variable list contains the list measurements saved in the raw file. The order of the variables defines how they are
+<p>The variable list contains the list of measurements saved in the raw file. The order of the variables defines how they are
 stored in the binary section. The format is one variable per line, using the following format:</p>
 <p>&lt;tab&gt;&lt;ordinal number&gt;&lt;tab&gt;&lt;measurement&gt;&lt;tab&gt;&lt;type of measurement&gt;</p>
 <p>Here is an example:</p>
@@ -117,8 +117,8 @@ values, as exemplified below for a .TRAN simulation.</p>
 <div><p>&lt;timestamp 0&gt;&lt;trace 1&gt;&lt;trace 2&gt;&lt;trace 3&gt;&lt;trace 4&gt;…..&lt;trace N&gt;&lt;timestamp 1&gt;&lt;trace 1&gt;&lt;trace2 &gt;…</p>
 </div></blockquote>
 <p>Depending on the type of simulation the type of data changes.
-On TRAN simulations s the timestamp is always stored as 8 bytes float (double) and trace values as a 4 bytes (single).
-On AC simulations the data is stored in omplex format, which includes a real part and an imaginary part, each with 8
+On TRAN simulations the timestamp is always stored as 8 bytes float (double) and trace values as a 4 bytes (single).
+On AC simulations the data is stored in complex format, which includes a real part and an imaginary part, each with 8
 bytes.
 The way we determine the size of the data is dividing the total block size by the number of points, then taking only
 the integer part.</p>
@@ -146,7 +146,7 @@ directory as the raw file in order to obtain the STEP information.</p>
 </div>
 <div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
-<p>The example below demonstrates the usage of the LTSpiceRawRead class. It reads a .RAW file and uses matplotlib library
+<p>The example below demonstrates the usage of the LTSpiceRawRead class. It reads a .RAW file and uses the matplotlib library
 to plot the results of three traces in two subplots.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>  <span class="c1"># Imports the matplotlib library for plotting the results</span>
 
@@ -614,14 +614,15 @@ the time trace have a negative value.</p>
 <dl class="py method">
 <dt id="PyLTSpice.LTSpice_RawRead.LTSpiceRawRead.get_steps">
 <code class="sig-name descname">get_steps</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#LTSpiceRawRead.get_steps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.LTSpiceRawRead.get_steps" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the steps that correspond to the query set in the **kwargs. parameters.
+<dd><p>Returns the steps that correspond to the query set in the <a href="#id1"><span class="problematic" id="id2">**</span></a>kwargs parameters.
 Example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">raw_read</span><span class="o">.</span><span class="n">get_steps</span><span class="p">(</span><span class="n">V5</span><span class="o">=</span><span class="mf">1.2</span><span class="p">,</span> <span class="n">TEMP</span><span class="o">=</span><span class="mi">25</span><span class="p">)</span>
-</pre></div>
-</div>
+<p>::python</p>
+<blockquote>
+<div><p>raw_read.get_steps(V5=1.2, TEMP=25)</p>
+</div></blockquote>
 <p>This will return all steps in which the voltage source V5 was set to 1.2V and the TEMP parameter is 24 degrees.
 This feature is only possible if a .log file with the same name as the .raw file exists in the same directory.
-Note: the correspondency between step numbers and .STEP information is stored on the .log file.</p>
+Note: the correspondence between step numbers and .STEP information is stored on the .log file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Key kwargs</dt>
 <dd class="field-odd"><p>key-value arguments in which the key correspond to a stepped parameter or source name, and the value is the
@@ -700,7 +701,7 @@ the time trace have a negative value.</p>
 <dt id="PyLTSpice.LTSpice_RawRead.Trace">
 <em class="property">class </em><code class="sig-prename descclassname">PyLTSpice.LTSpice_RawRead.</code><code class="sig-name descname">Trace</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">datatype</span></em>, <em class="sig-param"><span class="n">datalen</span></em>, <em class="sig-param"><span class="n">axis</span></em>, <em class="sig-param"><span class="n">numerical_type</span><span class="o">=</span><span class="default_value">'real'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#Trace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.Trace" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#PyLTSpice.LTSpice_RawRead.DataSet" title="PyLTSpice.LTSpice_RawRead.DataSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyLTSpice.LTSpice_RawRead.DataSet</span></code></a></p>
-<p>This class is used to represent a trace . It derives from DataSet and implements the additional methods to
+<p>This class is used to represent a trace. It derives from DataSet and implements the additional methods to
 support STEPed simulations.
 This class is constructed by the get_trace() command.
 Data can be accessed through the [] and len() operators, or by the get_wave() method.

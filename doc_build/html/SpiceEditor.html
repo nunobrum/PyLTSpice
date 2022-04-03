@@ -275,7 +275,7 @@ a float.</p>
 <em class="property">class </em><code class="sig-prename descclassname">PyLTSpice.SpiceEditor.</code><code class="sig-name descname">SpiceEditor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">netlist_file</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/SpiceEditor.html#SpiceEditor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.SpiceEditor.SpiceEditor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#PyLTSpice.SpiceEditor.SpiceCircuit" title="PyLTSpice.SpiceEditor.SpiceCircuit"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyLTSpice.SpiceEditor.SpiceCircuit</span></code></a></p>
 <p>This class implements interfaces to manipulate SPICE netlist files. The class doesn’t update the netlist file
-itself. After implementing the modifications he/she should call the “write_netlist” method in order to write a new
+itself. After implementing the modifications the user should call the “write_netlist” method to write a new
 netlist file.</p>
 <dl class="py method">
 <dt id="PyLTSpice.SpiceEditor.SpiceEditor.add_instruction">
@@ -357,7 +357,7 @@ and .subckt</p>
 
 <dl class="py function">
 <dt id="PyLTSpice.SpiceEditor.format_eng">
-<code class="sig-prename descclassname">PyLTSpice.SpiceEditor.</code><code class="sig-name descname">format_eng</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/SpiceEditor.html#format_eng"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.SpiceEditor.format_eng" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">PyLTSpice.SpiceEditor.</code><code class="sig-name descname">format_eng</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/PyLTSpice/SpiceEditor.html#format_eng"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.SpiceEditor.format_eng" title="Permalink to this definition">¶</a></dt>
 <dd><p>Helper function for formating value with the SI qualifiers.  That is, it will use</p>
 <blockquote>
 <div><ul class="simple">
@@ -386,7 +386,7 @@ and .subckt</p>
 <dt id="PyLTSpice.SpiceEditor.get_line_command">
 <code class="sig-prename descclassname">PyLTSpice.SpiceEditor.</code><code class="sig-name descname">get_line_command</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">line</span></em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/PyLTSpice/SpiceEditor.html#get_line_command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.SpiceEditor.get_line_command" title="Permalink to this definition">¶</a></dt>
 <dd><p>Retrives the type of SPICE command in the line.
-Starts by removing the leading spaces and the evaluaties if it is a comment, a directive or a component.</p>
+Starts by removing the leading spaces and the evaluates if it is a comment, a directive or a component.</p>
 </dd></dl>
 
 </div>

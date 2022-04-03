@@ -842,7 +842,7 @@ class LTSpiceRawRead(object):
 
         This will return all steps in which the voltage source V5 was set to 1.2V and the TEMP parameter is 24 degrees.
         This feature is only possible if a .log file with the same name as the .raw file exists in the same directory.
-        Note: the correspondency between step numbers and .STEP information is stored on the .log file.
+        Note: the correspondence between step numbers and .STEP information is stored on the .log file.
 
         :key kwargs:
 

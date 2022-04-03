@@ -43,7 +43,7 @@
 <span class="c1"># Author:      Nuno Brum (nuno.brum@gmail.com)</span>
 <span class="c1">#</span>
 <span class="c1"># Created:     23-12-2016</span>
-<span class="c1"># Licence:     General Public GNU License</span>
+<span class="c1"># Licence:     refer to the LICENSE file</span>
 <span class="c1"># -------------------------------------------------------------------------------</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
@@ -54,7 +54,7 @@
 <span class="sd">To understand why this is done so, in the next section follows a brief explanation of what is contained inside a RAW</span>
 <span class="sd">file.</span>
 <span class="sd">In case RAW file contains stepped data detected, i.e. when the .STEP command is used, then it will also try to open the</span>
-<span class="sd">simulation LOG file and try to obtain read the stepping information.</span>
+<span class="sd">simulation LOG file and read the stepping information.</span>
 
 <span class="sd">RAW File Structure</span>
 <span class="sd">==================</span>
@@ -62,7 +62,7 @@
 <span class="sd">This section is written to help understand the why the structure of classes is defined as it is. You can gladly skip</span>
 <span class="sd">this section and get right down to business by seeing the examples section below.</span>
 
-<span class="sd">The RAW file starts by have a text preamble that contains information about the names of the traces the order they</span>
+<span class="sd">The RAW file starts with a text preamble that contains information about the names of the traces the order they</span>
 <span class="sd">appear on the binary part and some extra information.</span>
 <span class="sd">In the preamble, the lines are always started by one of the following identifiers:</span>
 
@@ -81,12 +81,12 @@
 <span class="sd">                      * &quot;log&quot; -&gt; The preferred plot view of this data is logarithmic.</span>
 <span class="sd">                      * &quot;stepped&quot; -&gt; The simulation had .STEP primitives.</span>
 <span class="sd">                      * &quot;FastAccess&quot; -&gt; Order of the data is changed to speed up access. See Binary section for details.</span>
-<span class="sd">   </span>
+
 <span class="sd">   + No. Variables:  =&gt; number of variables contained in this dataset. See section below for details.</span>
 
 <span class="sd">   + No. Points:     =&gt; number of points per each variable in</span>
 
-<span class="sd">   + Offset:         =&gt; when the saved of data started</span>
+<span class="sd">   + Offset:         =&gt; when the saving of data started</span>
 
 <span class="sd">   + Command:        =&gt; Name of the simulator executable generating this file.</span>
 
@@ -98,7 +98,7 @@
 
 <span class="sd">Variables List</span>
 <span class="sd">--------------</span>
-<span class="sd">The variable list contains the list measurements saved in the raw file. The order of the variables defines how they are</span>
+<span class="sd">The variable list contains the list of measurements saved in the raw file. The order of the variables defines how they are</span>
 <span class="sd">stored in the binary section. The format is one variable per line, using the following format:</span>
 
 <span class="sd">&lt;tab&gt;&lt;ordinal number&gt;&lt;tab&gt;&lt;measurement&gt;&lt;tab&gt;&lt;type of measurement&gt;</span>
@@ -139,8 +139,8 @@
 <span class="sd">     &lt;timestamp 0&gt;&lt;trace 1&gt;&lt;trace 2&gt;&lt;trace 3&gt;&lt;trace 4&gt;.....&lt;trace N&gt;&lt;timestamp 1&gt;&lt;trace 1&gt;&lt;trace2 &gt;...</span>
 
 <span class="sd">Depending on the type of simulation the type of data changes.</span>
-<span class="sd">On TRAN simulations s the timestamp is always stored as 8 bytes float (double) and trace values as a 4 bytes (single).</span>
-<span class="sd">On AC simulations the data is stored in omplex format, which includes a real part and an imaginary part, each with 8</span>
+<span class="sd">On TRAN simulations the timestamp is always stored as 8 bytes float (double) and trace values as a 4 bytes (single).</span>
+<span class="sd">On AC simulations the data is stored in complex format, which includes a real part and an imaginary part, each with 8</span>
 <span class="sd">bytes.</span>
 <span class="sd">The way we determine the size of the data is dividing the total block size by the number of points, then taking only</span>
 <span class="sd">the integer part.</span>
@@ -172,7 +172,7 @@
 <span class="sd">Examples</span>
 <span class="sd">========</span>
 
-<span class="sd">The example below demonstrates the usage of the LTSpiceRawRead class. It reads a .RAW file and uses matplotlib library</span>
+<span class="sd">The example below demonstrates the usage of the LTSpiceRawRead class. It reads a .RAW file and uses the matplotlib library</span>
 <span class="sd">to plot the results of three traces in two subplots. ::</span>
 
 <span class="sd">    import matplotlib.pyplot as plt  # Imports the matplotlib library for plotting the results</span>
@@ -222,7 +222,7 @@
     <span class="n">USE_NNUMPY</span> <span class="o">=</span> <span class="kc">False</span>
 <span class="k">else</span><span class="p">:</span>
     <span class="n">USE_NNUMPY</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Found Numpy. WIll be used for storing data&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Found Numpy. Will be used for storing data&quot;</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="DataSet"><a class="viewcode-back" href="../../LTSpice_RawRead.html#PyLTSpice.LTSpice_RawRead.DataSet">[docs]</a><span class="k">class</span> <span class="nc">DataSet</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -477,7 +477,7 @@
 
 
 <div class="viewcode-block" id="Trace"><a class="viewcode-back" href="../../LTSpice_RawRead.html#PyLTSpice.LTSpice_RawRead.Trace">[docs]</a><span class="k">class</span> <span class="nc">Trace</span><span class="p">(</span><span class="n">DataSet</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;This class is used to represent a trace . It derives from DataSet and implements the additional methods to</span>
+    <span class="sd">&quot;&quot;&quot;This class is used to represent a trace. It derives from DataSet and implements the additional methods to</span>
 <span class="sd">    support STEPed simulations.</span>
 <span class="sd">    This class is constructed by the get_trace() command.</span>
 <span class="sd">    Data can be accessed through the [] and len() operators, or by the get_wave() method.</span>
@@ -753,7 +753,20 @@
 
         <span class="c1"># Finally, Check for Step Information</span>
         <span class="k">if</span> <span class="s2">&quot;stepped&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">raw_params</span><span class="p">[</span><span class="s2">&quot;Flags&quot;</span><span class="p">]:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_load_step_information</span><span class="p">(</span><span class="n">raw_filename</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_load_step_information</span><span class="p">(</span><span class="n">raw_filename</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;LOG file not found or problems reading it. Auto-detecting steps&quot;</span><span class="p">)</span>
+                <span class="n">number_of_steps</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">v</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                        <span class="n">number_of_steps</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">steps</span> <span class="o">=</span> <span class="p">[{</span><span class="s1">&#39;run&#39;</span><span class="p">:</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">}</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_steps</span><span class="p">)]</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">steps</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+                <span class="c1"># Individual access to the Trace Classes, this information is stored in the Axis</span>
+                <span class="c1"># which is always in position 0</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_traces</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">_set_steps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">)</span>
 
 <div class="viewcode-block" id="LTSpiceRawRead.get_raw_property"><a class="viewcode-back" href="../../LTSpice_RawRead.html#PyLTSpice.LTSpice_RawRead.LTSpiceRawRead.get_raw_property">[docs]</a>    <span class="k">def</span> <span class="nf">get_raw_property</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">property_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -825,9 +838,10 @@
             <span class="k">raise</span> <span class="n">LTSPiceReadException</span><span class="p">(</span><span class="s2">&quot;Invalid Filename. The file should end with &#39;.raw&#39;&quot;</span><span class="p">)</span>
         <span class="n">logfile</span> <span class="o">=</span> <span class="n">filename</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;log&#39;</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">log</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">logfile</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
-        <span class="k">except</span><span class="p">:</span>
+            <span class="n">log</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">logfile</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s1">&#39;replace&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">LTSPiceReadException</span><span class="p">(</span><span class="s2">&quot;Step information needs the &#39;.log&#39; file generated by LTSpice&quot;</span><span class="p">)</span>
+
         <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">log</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;.step&quot;</span><span class="p">):</span>
                 <span class="n">step_dict</span> <span class="o">=</span> <span class="p">{}</span>
@@ -846,11 +860,6 @@
                 <span class="k">else</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">step_dict</span><span class="p">)</span>
         <span class="n">log</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">steps</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
-            <span class="c1"># Individual access to the Trace Classes, this information is stored in the Axis</span>
-            <span class="c1"># which is always in position 0</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_traces</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">_set_steps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">)</span>
-            <span class="k">pass</span>
 
     <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Helper function to access traces by using the [ ] operator.&quot;&quot;&quot;</span>
@@ -858,16 +867,16 @@
 
 <div class="viewcode-block" id="LTSpiceRawRead.get_steps"><a class="viewcode-back" href="../../LTSpice_RawRead.html#PyLTSpice.LTSpice_RawRead.LTSpiceRawRead.get_steps">[docs]</a>    <span class="k">def</span> <span class="nf">get_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the steps that correspond to the query set in the \*\*kwargs. parameters.</span>
+<span class="sd">        Returns the steps that correspond to the query set in the **kwargs parameters.</span>
 <span class="sd">        Example:</span>
 
-<span class="sd">        ::</span>
+<span class="sd">        ::python</span>
 
 <span class="sd">            raw_read.get_steps(V5=1.2, TEMP=25)</span>
 
 <span class="sd">        This will return all steps in which the voltage source V5 was set to 1.2V and the TEMP parameter is 24 degrees.</span>
 <span class="sd">        This feature is only possible if a .log file with the same name as the .raw file exists in the same directory.</span>
-<span class="sd">        Note: the correspondency between step numbers and .STEP information is stored on the .log file.</span>
+<span class="sd">        Note: the correspondence between step numbers and .STEP information is stored on the .log file.</span>
 
 <span class="sd">        :key kwargs:</span>
 
@@ -876,6 +885,7 @@
 
 <span class="sd">        :return: The steps that match the query</span>
 <span class="sd">        :rtype: list[int]</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">steps</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># returns an single step</span>

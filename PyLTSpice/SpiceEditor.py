@@ -58,7 +58,7 @@ SPICE_DOT_INSTRUCTIONS = (
 REPLACE_REGXES = {
     'A': r"^(A§?\w+)(\s+\S+){8}\s+(?P<value>.*)(\s+\w+\s*=\s*\S+)*\s*$",  # Special Functions, Parameter substitution not supported
     'B': r"^(B§?[VI]?\w+)(\s+\S+){2}\s+(?P<value>.*)$",  # Behavioral source
-    'C': r"^(C§?\w+)(\s+\S+){2}\s+(?P<value>({)?(?(4).*}|([0-9\.E+-]+(Meg|[kmunp])?F?))).*$",  # Capacitor
+    'C': r"^(C§?\w+)(\s+\S+){2}\s+(?P<value>({)?(?(4).*}|([0-9\.E+-]+(Meg|[kmuµnp])?F?))).*$",  # Capacitor
     'D': r"^(D§?\w+)(\s+\S+){2}\s+(?P<value>\w+).*$",  # Diode
     'I': r"^(I§?\w+)(\s+\S+){2}\s+(?P<value>.*)$",  # Current Source
     'E': r"^(E§?\w+)(\s+\S+){2,4}\s+(?P<value>.*)$",  # Voltage Dependent Voltage Source
@@ -76,11 +76,11 @@ REPLACE_REGXES = {
                                                         #       first nets
     'J': r"^(J§?\w+)(\s+\S+){3}\s+(?P<value>\w+).*$",  # JFET
     'K': r"^(K§?\w+)(\s+\S+){2,4}\s+(?P<value>[\+\-]?[0-9\.E+-]+[kmunp]?).*$",  # Mutual Inductance
-    'L': r"^(L§?\w+)(\s+\S+){2}\s+(?P<value>({)?(?(4).*}|([0-9\.E+-]+(Meg|[kmunp])?H?))).*$",  # Inductance
+    'L': r"^(L§?\w+)(\s+\S+){2}\s+(?P<value>({)?(?(4).*}|([0-9\.E+-]+(Meg|[kmuµnp])?H?))).*$",  # Inductance
     'M': r"^(M§?\w+)(\s+\S+){3,4}\s+(?P<value>\w+).*$",  # MOSFET TODO: Parameters substitution not supported
     'O': r"^(O§?\w+)(\s+\S+){4}\s+(?P<value>\w+).*$",  # Lossy Transmission Line TODO: Parameters substitution not supported
     'Q': r"^(Q§?\w+)(\s+\S+){3}\s+(?P<value>\w+).*$",  # Bipolar TODO: Parameters substitution not supported
-    'R': r"^(R§?\w+)(\s+\S+){2}\s+(?P<value>({)?(?(4).*}|([0-9\.E+-]+(Meg|[kmunp])?R?))).*$",  # Resistors
+    'R': r"^(R§?\w+)(\s+\S+){2}\s+(?P<value>({)?(?(4).*}|([0-9\.E+-]+(Meg|[kmuµnp])?R?))).*$",  # Resistors
     'S': r"^(S§?\w+)(\s+\S+){4}\s+(?P<value>.*)$",  # Voltage Controlled Switch
     'T': r"^(T§?\w+)(\s+\S+){4}\s+(?P<value>.*)$",  # Lossless Transmission
     'U': r"^(U§?\w+)(\s+\S+){3}\s+(?P<value>.*)$",  # Uniform RC-line
@@ -117,8 +117,8 @@ def format_eng(value) -> str:
     if value == 0.0:
         return "0.0"  # This avoids a problematic log(0)
     e = floor(log(abs(value), 1000))
-    if -4 <= e < 0:
-        suffix = "pnum"[e]
+    if -5 <= e < 0:
+        suffix = "fpnum"[e]
     elif e == 0:
         suffix = ''
     elif e == 1:
@@ -128,6 +128,52 @@ def format_eng(value) -> str:
     else:
         return '{:E}'.format(value)
     return '{:g}{:}'.format(value* 1000**-e, suffix)
+
+
+def scan_eng(value: str) -> float:
+    """
+    Converts a string to a float, considering SI multipliers
+
+        * f for femto (10E-15)
+        * p for pico (10E-12)
+        * n for nano (10E-9)
+        * u or µ for micro (10E-6)
+        * m for mili (10E-3)
+        * k for kilo (10E+3)
+        * Meg for Mega (10E+6)
+
+    The extra unit qualifiers such as V for volts or F for Farads are ignored.
+
+
+    :param value: string to be converted to float
+    :type value: str
+    :return:
+    :rtype: float
+    :raises: ValueError when the value cannot be converted.
+    """
+    # Search for the last digit on the string. Assuming that all after the last number are SI qualifiers and units.
+    x = len (value)
+    while x > 0:
+        if value[x-1] in "0123456789":
+            break
+        x -= 1
+    suffix = value[x:]  # this is the non numeric part at the end
+    f = float(value[:x])  # this is the numeric part. Can raise ValueError.
+
+    if suffix[0] in "fpnuµmk":
+        return f * {
+            'f': 1.0e-15,
+            'p': 1.0e-12,
+            'n': 1.0e-09,
+            'u': 1.0e-06,
+            'µ': 1.0e-06,
+            'm': 1.0e-03,
+            'k': 1.0e+03,
+        }[suffix[0]]
+    elif suffix.startswith("Meg"):
+        return f * 1E6
+    else:
+        raise f
 
 
 def _get_group_regxstr(regstr, param):
@@ -479,6 +525,22 @@ class SpiceCircuit(object):
         """
         return self._get_component_info(element)['value']
 
+    def get_component_floatvalue(self, element: str) -> str:
+        """
+        Returns the value of a component retrieved from the netlist.
+
+        :param element: Reference of the circuit element to search for.
+        :type element: str
+
+        :return: value of the circuit element in float type
+        :rtype: float
+
+        :raises: ComponentNotFoundError - In case the component is not found
+
+                 NotImplementedError - for not supported operations
+        """
+        return scan_eng(self._get_component_info(element)['value'])
+
     def set_component_values(self, **kwargs):
         """
         Adds one or more components on the netlist. The argument is in the form of a key-value pair where each
@@ -690,9 +752,15 @@ if __name__ == '__main__':
     print(E.get_parameter('I2'))
     print(E.get_components())
     print(E.get_components('RC'))
+    print("Setting C1 to 1µF")
+    E.set_component_value("C1", '1µF')
     print("Setting C4 to 22nF")
     E.set_component_value("C4", 22e-9)
+    print("Setting C3 to 120nF")
     E.set_component_value("C3", '120n')
+    print(E.get_component_floatvalue("C1"))
+    print(E.get_component_floatvalue("C3"))
+    print(E.get_component_floatvalue("C4"))
     E.set_parameters(
             test_exiting_param_set1=24,
             test_exiting_param_set2=25,

@@ -228,7 +228,13 @@ A more detailed documentation is directly included in the source file docstrings
 * Alternative contact : nuno.brum@gmail.com
 
 ## History ##
-* Version 1,8\
+* Version 1.9\
+Adding support for µ character in the SpiceEditor.\
+Adding get_component_floatvalue() method in the netlist manipulating class that handles the conversion of 
+  numeric fields into a float. This function takes into account the engineering qualifiers 'k' for kilos, 'm' or milis, 
+  'u' or 'µ' for microns, 'n' for nanos, 'f' for femtos and 'Meg' for Megas.
+
+* Version 1.8\
 Uniforming License reference across files and improvements on the documentation\
 An enormous and wholehearted thanks to Logan Herrera (lpherr) <logan.herrera.github@gmail.com> for the improvements in the documentation.\
 Bugfix on the add_LTspiceRunCmdLineSwitches() ; Supporting .param name value format\

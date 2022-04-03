@@ -37,8 +37,8 @@
 <span id="ltspicebatch-py"></span><h1>LTSpiceBatch.py<a class="headerlink" href="#module-PyLTSpice.LTSpiceBatch" title="Permalink to this headline">¶</a></h1>
 <p>Allows to launch LTSpice simulations from a Python Script, thus allowing to overcome the 3 dimensions STEP limitation on
 LTSpice, update resistor values, or component models.</p>
-<p>In the code snipped below will simulate a circuit with two different diode models, setting the simulation
-temperature to 80 degrees and updates the values of R1 and R2 to 3.3k.</p>
+<p>The code snipped below will simulate a circuit with two different diode models, set the simulation
+temperature to 80 degrees, and update the values of R1 and R2 to 3.3k.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">LTC</span> <span class="o">=</span> <span class="n">SimCommander</span><span class="p">(</span><span class="s2">&quot;my_circuit.asc&quot;</span><span class="p">)</span>
 <span class="n">LTC</span><span class="o">.</span><span class="n">set_parameters</span><span class="p">(</span><span class="n">temp</span><span class="o">=</span><span class="mi">80</span><span class="p">)</span>  <span class="c1"># Sets the simulation temperature to be 80 degrees</span>
 <span class="n">LTC</span><span class="o">.</span><span class="n">set_component_value</span><span class="p">(</span><span class="s1">&#39;R2&#39;</span><span class="p">,</span> <span class="s1">&#39;3.3k&#39;</span><span class="p">)</span>  <span class="c1">#  Updates the resistor R2 value to be 3.3k</span>
@@ -74,7 +74,7 @@ run() call by setting <code class="docutils literal notranslate"><span class="pr
 </pre></div>
 </div>
 <p>The user then can launch a simulation with the updates done to the netlist by calling the run() method. Since the
-processes are not executed right aways, but rather just scheduled for simulation, the wait_completion() function is
+processes are not executed right away, but rather just scheduled for simulation, the wait_completion() function is
 needed if the user wants to execute code only after the completion of all scheduled simulations.</p>
 <p>The usage of wait_completion() is optional. Just note that the script will only end when all the scheduled tasks are
 executed.</p>
@@ -82,9 +82,9 @@ executed.</p>
 <div class="section" id="callbacks">
 <h2>Callbacks<a class="headerlink" href="#callbacks" title="Permalink to this headline">¶</a></h2>
 <p>As seen above, the <cite>wait_completion()</cite> can be used to wait for all the simulations to be finished. However, this is
-not efficient on a multiprocessor point of view. Ideally, the post-processing should be also handled while other
-simulations are still running. For this purpose, the user can use a function call backs.</p>
-<p>The callback function is called when the simulation has finished direclty by the thread that has handling the
+not efficient from a multiprocessor point of view. Ideally, the post-processing should be also handled while other
+simulations are still running. For this purpose, the user can use a function call back.</p>
+<p>The callback function is called when the simulation has finished directly by the thread that has handling the
 simulation. A function callback receives two arguments.
 The RAW file and the LOG file names. Below is an example of a callback function:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">processing_data</span><span class="p">(</span><span class="n">raw_filename</span><span class="p">,</span> <span class="n">log_filename</span><span class="p">):</span>
@@ -96,7 +96,7 @@ The RAW file and the LOG file names. Below is an example of a callback function:
     <span class="n">rise</span><span class="p">,</span> <span class="n">measures</span> <span class="o">=</span> <span class="n">log_info</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="s2">&quot;rise_time&quot;</span><span class="p">]</span>
 </pre></div>
 </div>
-<p>The callback function is optional. if there no callback function is given then thread is terminated just after the
+<p>The callback function is optional. If  no callback function is given, the thread is terminated just after the
 simulation is finished.</p>
 <dl class="py class">
 <dt id="PyLTSpice.LTSpiceBatch.SimCommander">
@@ -123,7 +123,7 @@ setting the solver to alternate. See Command Line Switches information on LTSpic
 
 <dl class="py method">
 <dt id="PyLTSpice.LTSpiceBatch.SimCommander.run">
-<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">run_filename</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">wait_resource</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">callback</span><span class="p">:</span> <span class="n">Callable<span class="p">[</span><span class="p">[</span>str<span class="p">, </span>str<span class="p">]</span><span class="p">, </span>Any<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; int<a class="reference internal" href="_modules/PyLTSpice/LTSpiceBatch.html#SimCommander.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpiceBatch.SimCommander.run" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">run_filename</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">wait_resource</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">callback</span><span class="p">:</span> <span class="n">Callable<span class="p">[</span><span class="p">[</span>str<span class="p">, </span>str<span class="p">]</span><span class="p">, </span>Any<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">timeout</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">600</span></em><span class="sig-paren">)</span> &#x2192; PyLTSpice.LTSpiceBatch.RunTask<a class="reference internal" href="_modules/PyLTSpice/LTSpiceBatch.html#SimCommander.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpiceBatch.SimCommander.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Executes a simulation run with the conditions set by the user.
 Conditions are set by the set_parameter, set_component_value or add_instruction functions.</p>
 <dl class="field-list simple">
@@ -131,32 +131,33 @@ Conditions are set by the set_parameter, set_component_value or add_instruction 
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>run_filename</strong> (<em>str</em>) – The name of the netlist can be optionally overridden if the user wants to have a better control of how the
 simulations files are generated.</p></li>
-<li><p><strong>wait_resource</strong> (<em>bool</em>) – Setting this parameter to False, will force the simulation to start immediately, irrespective of the number
+<li><p><strong>wait_resource</strong> (<em>bool</em>) – Setting this parameter to False will force the simulation to start immediately, irrespective of the number
 of simulations already active.
-By default the SimCommander class uses only four processors. This number can then be overridden by setting
+By default the SimCommander class uses only four processors. This number can be overridden by setting
 the parameter ´parallel_sims´ to a different number.
 If there are more than ´parallel_sims´ simulations being done, the new one will be placed on hold till one
 of the other simulations are finished.</p></li>
-<li><p><strong>callback</strong> – The user can optionally give a callback function for when the simulation finishes, so that a processing can
-be immediately done.</p></li>
+<li><p><strong>callback</strong> – The user can optionally give a callback function for when the simulation finishes so that processing can
+be done immediately.</p></li>
+<li><p><strong>timeout</strong> (<em>float</em>) – Timeout to be used in waiting for resources. Default time is 600 seconds, i.e. 10 minutes.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Type</dt>
 <dd class="field-even"><p>callback: function(raw_file, log_file)</p>
 </dd>
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Nothing</p>
+<dd class="field-odd"><p>The task object of type RunTask</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt id="PyLTSpice.LTSpiceBatch.SimCommander.setLTspiceRunCommand">
-<code class="sig-name descname">setLTspiceRunCommand</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">run_command</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/PyLTSpice/LTSpiceBatch.html#SimCommander.setLTspiceRunCommand"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpiceBatch.SimCommander.setLTspiceRunCommand" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">setLTspiceRunCommand</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">run_command</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>list<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/PyLTSpice/LTSpiceBatch.html#SimCommander.setLTspiceRunCommand"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpiceBatch.SimCommander.setLTspiceRunCommand" title="Permalink to this definition">¶</a></dt>
 <dd><p>Manually setting the LTSpice run command</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>path</strong> (<em>str</em>) – String containing the command to be invoked to run LTSpice</p>
+<dd class="field-odd"><p><strong>path</strong> (<em>str</em><em> or </em><em>list</em>) – String containing the command to be invoked to run LTSpice</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Nothing</p>

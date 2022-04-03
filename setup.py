@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name='PyLTSpice',
-    version='1.7',
+    version='1.9',
     scripts=['PyLTSpice/__init__.py',
              'PyLTSpice/Histogram.py',
              'PyLTSpice/LTSpice_RawRead.py',
@@ -25,7 +25,7 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: GNU Lesser General Public License v3",
+        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Operating System :: OS Independent",
     ],
 )
