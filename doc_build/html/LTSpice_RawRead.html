@@ -616,10 +616,9 @@ the time trace have a negative value.</p>
 <code class="sig-name descname">get_steps</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#LTSpiceRawRead.get_steps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.LTSpiceRawRead.get_steps" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the steps that correspond to the query set in the <a href="#id1"><span class="problematic" id="id2">**</span></a>kwargs parameters.
 Example:</p>
-<p>::python</p>
-<blockquote>
-<div><p>raw_read.get_steps(V5=1.2, TEMP=25)</p>
-</div></blockquote>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">raw_read</span><span class="o">.</span><span class="n">get_steps</span><span class="p">(</span><span class="n">V5</span><span class="o">=</span><span class="mf">1.2</span><span class="p">,</span> <span class="n">TEMP</span><span class="o">=</span><span class="mi">25</span><span class="p">)</span>
+</pre></div>
+</div>
 <p>This will return all steps in which the voltage source V5 was set to 1.2V and the TEMP parameter is 24 degrees.
 This feature is only possible if a .log file with the same name as the .raw file exists in the same directory.
 Note: the correspondence between step numbers and .STEP information is stored on the .log file.</p>

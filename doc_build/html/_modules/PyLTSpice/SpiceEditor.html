@@ -92,7 +92,7 @@
 <span class="n">REPLACE_REGXES</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s1">&#39;A&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(A§?\w+)(\s+\S+)</span><span class="si">{8}</span><span class="s2">\s+(?P&lt;value&gt;.*)(\s+\w+\s*=\s*\S+)*\s*$&quot;</span><span class="p">,</span>  <span class="c1"># Special Functions, Parameter substitution not supported</span>
     <span class="s1">&#39;B&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(B§?[VI]?\w+)(\s+\S+)</span><span class="si">{2}</span><span class="s2">\s+(?P&lt;value&gt;.*)$&quot;</span><span class="p">,</span>  <span class="c1"># Behavioral source</span>
-    <span class="s1">&#39;C&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(C§?\w+)(\s+\S+)</span><span class="si">{2}</span><span class="s2">\s+(?P&lt;value&gt;({)?(?(4).*}|([0-9\.E+-]+(Meg|[kmunp])?F?))).*$&quot;</span><span class="p">,</span>  <span class="c1"># Capacitor</span>
+    <span class="s1">&#39;C&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(C§?\w+)(\s+\S+)</span><span class="si">{2}</span><span class="s2">\s+(?P&lt;value&gt;({)?(?(4).*}|([0-9\.E+-]+(Meg|[kmuµnp])?F?))).*$&quot;</span><span class="p">,</span>  <span class="c1"># Capacitor</span>
     <span class="s1">&#39;D&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(D§?\w+)(\s+\S+)</span><span class="si">{2}</span><span class="s2">\s+(?P&lt;value&gt;\w+).*$&quot;</span><span class="p">,</span>  <span class="c1"># Diode</span>
     <span class="s1">&#39;I&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(I§?\w+)(\s+\S+)</span><span class="si">{2}</span><span class="s2">\s+(?P&lt;value&gt;.*)$&quot;</span><span class="p">,</span>  <span class="c1"># Current Source</span>
     <span class="s1">&#39;E&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(E§?\w+)(\s+\S+){2,4}\s+(?P&lt;value&gt;.*)$&quot;</span><span class="p">,</span>  <span class="c1"># Voltage Dependent Voltage Source</span>
@@ -110,11 +110,11 @@
                                                         <span class="c1">#       first nets</span>
     <span class="s1">&#39;J&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(J§?\w+)(\s+\S+)</span><span class="si">{3}</span><span class="s2">\s+(?P&lt;value&gt;\w+).*$&quot;</span><span class="p">,</span>  <span class="c1"># JFET</span>
     <span class="s1">&#39;K&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(K§?\w+)(\s+\S+){2,4}\s+(?P&lt;value&gt;[\+\-]?[0-9\.E+-]+[kmunp]?).*$&quot;</span><span class="p">,</span>  <span class="c1"># Mutual Inductance</span>
-    <span class="s1">&#39;L&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(L§?\w+)(\s+\S+)</span><span class="si">{2}</span><span class="s2">\s+(?P&lt;value&gt;({)?(?(4).*}|([0-9\.E+-]+(Meg|[kmunp])?H?))).*$&quot;</span><span class="p">,</span>  <span class="c1"># Inductance</span>
+    <span class="s1">&#39;L&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(L§?\w+)(\s+\S+)</span><span class="si">{2}</span><span class="s2">\s+(?P&lt;value&gt;({)?(?(4).*}|([0-9\.E+-]+(Meg|[kmuµnp])?H?))).*$&quot;</span><span class="p">,</span>  <span class="c1"># Inductance</span>
     <span class="s1">&#39;M&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(M§?\w+)(\s+\S+){3,4}\s+(?P&lt;value&gt;\w+).*$&quot;</span><span class="p">,</span>  <span class="c1"># MOSFET TODO: Parameters substitution not supported</span>
     <span class="s1">&#39;O&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(O§?\w+)(\s+\S+)</span><span class="si">{4}</span><span class="s2">\s+(?P&lt;value&gt;\w+).*$&quot;</span><span class="p">,</span>  <span class="c1"># Lossy Transmission Line TODO: Parameters substitution not supported</span>
     <span class="s1">&#39;Q&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(Q§?\w+)(\s+\S+)</span><span class="si">{3}</span><span class="s2">\s+(?P&lt;value&gt;\w+).*$&quot;</span><span class="p">,</span>  <span class="c1"># Bipolar TODO: Parameters substitution not supported</span>
-    <span class="s1">&#39;R&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(R§?\w+)(\s+\S+)</span><span class="si">{2}</span><span class="s2">\s+(?P&lt;value&gt;({)?(?(4).*}|([0-9\.E+-]+(Meg|[kmunp])?R?))).*$&quot;</span><span class="p">,</span>  <span class="c1"># Resistors</span>
+    <span class="s1">&#39;R&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(R§?\w+)(\s+\S+)</span><span class="si">{2}</span><span class="s2">\s+(?P&lt;value&gt;({)?(?(4).*}|([0-9\.E+-]+(Meg|[kmuµnp])?R?))).*$&quot;</span><span class="p">,</span>  <span class="c1"># Resistors</span>
     <span class="s1">&#39;S&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(S§?\w+)(\s+\S+)</span><span class="si">{4}</span><span class="s2">\s+(?P&lt;value&gt;.*)$&quot;</span><span class="p">,</span>  <span class="c1"># Voltage Controlled Switch</span>
     <span class="s1">&#39;T&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(T§?\w+)(\s+\S+)</span><span class="si">{4}</span><span class="s2">\s+(?P&lt;value&gt;.*)$&quot;</span><span class="p">,</span>  <span class="c1"># Lossless Transmission</span>
     <span class="s1">&#39;U&#39;</span><span class="p">:</span> <span class="sa">r</span><span class="s2">&quot;^(U§?\w+)(\s+\S+)</span><span class="si">{3}</span><span class="s2">\s+(?P&lt;value&gt;.*)$&quot;</span><span class="p">,</span>  <span class="c1"># Uniform RC-line</span>
@@ -151,8 +151,8 @@
     <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
         <span class="k">return</span> <span class="s2">&quot;0.0&quot;</span>  <span class="c1"># This avoids a problematic log(0)</span>
     <span class="n">e</span> <span class="o">=</span> <span class="n">floor</span><span class="p">(</span><span class="n">log</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">value</span><span class="p">),</span> <span class="mi">1000</span><span class="p">))</span>
-    <span class="k">if</span> <span class="o">-</span><span class="mi">4</span> <span class="o">&lt;=</span> <span class="n">e</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">suffix</span> <span class="o">=</span> <span class="s2">&quot;pnum&quot;</span><span class="p">[</span><span class="n">e</span><span class="p">]</span>
+    <span class="k">if</span> <span class="o">-</span><span class="mi">5</span> <span class="o">&lt;=</span> <span class="n">e</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">suffix</span> <span class="o">=</span> <span class="s2">&quot;fpnum&quot;</span><span class="p">[</span><span class="n">e</span><span class="p">]</span>
     <span class="k">elif</span> <span class="n">e</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">suffix</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
     <span class="k">elif</span> <span class="n">e</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
@@ -162,6 +162,52 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{:E}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
     <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{:g}{:}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">value</span><span class="o">*</span> <span class="mi">1000</span><span class="o">**-</span><span class="n">e</span><span class="p">,</span> <span class="n">suffix</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="scan_eng"><a class="viewcode-back" href="../../SpiceEditor.html#PyLTSpice.SpiceEditor.scan_eng">[docs]</a><span class="k">def</span> <span class="nf">scan_eng</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts a string to a float, considering SI multipliers</span>
+
+<span class="sd">        * f for femto (10E-15)</span>
+<span class="sd">        * p for pico (10E-12)</span>
+<span class="sd">        * n for nano (10E-9)</span>
+<span class="sd">        * u or µ for micro (10E-6)</span>
+<span class="sd">        * m for mili (10E-3)</span>
+<span class="sd">        * k for kilo (10E+3)</span>
+<span class="sd">        * Meg for Mega (10E+6)</span>
+
+<span class="sd">    The extra unit qualifiers such as V for volts or F for Farads are ignored.</span>
+
+
+<span class="sd">    :param value: string to be converted to float</span>
+<span class="sd">    :type value: str</span>
+<span class="sd">    :return:</span>
+<span class="sd">    :rtype: float</span>
+<span class="sd">    :raises: ValueError when the value cannot be converted.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Search for the last digit on the string. Assuming that all after the last number are SI qualifiers and units.</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="nb">len</span> <span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">while</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">value</span><span class="p">[</span><span class="n">x</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="ow">in</span> <span class="s2">&quot;0123456789&quot;</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="n">x</span> <span class="o">-=</span> <span class="mi">1</span>
+    <span class="n">suffix</span> <span class="o">=</span> <span class="n">value</span><span class="p">[</span><span class="n">x</span><span class="p">:]</span>  <span class="c1"># this is the non numeric part at the end</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">[:</span><span class="n">x</span><span class="p">])</span>  <span class="c1"># this is the numeric part. Can raise ValueError.</span>
+
+    <span class="k">if</span> <span class="n">suffix</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="s2">&quot;fpnuµmk&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">f</span> <span class="o">*</span> <span class="p">{</span>
+            <span class="s1">&#39;f&#39;</span><span class="p">:</span> <span class="mf">1.0e-15</span><span class="p">,</span>
+            <span class="s1">&#39;p&#39;</span><span class="p">:</span> <span class="mf">1.0e-12</span><span class="p">,</span>
+            <span class="s1">&#39;n&#39;</span><span class="p">:</span> <span class="mf">1.0e-09</span><span class="p">,</span>
+            <span class="s1">&#39;u&#39;</span><span class="p">:</span> <span class="mf">1.0e-06</span><span class="p">,</span>
+            <span class="s1">&#39;µ&#39;</span><span class="p">:</span> <span class="mf">1.0e-06</span><span class="p">,</span>
+            <span class="s1">&#39;m&#39;</span><span class="p">:</span> <span class="mf">1.0e-03</span><span class="p">,</span>
+            <span class="s1">&#39;k&#39;</span><span class="p">:</span> <span class="mf">1.0e+03</span><span class="p">,</span>
+        <span class="p">}[</span><span class="n">suffix</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+    <span class="k">elif</span> <span class="n">suffix</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;Meg&quot;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">f</span> <span class="o">*</span> <span class="mf">1E6</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">f</span></div>
 
 
 <span class="k">def</span> <span class="nf">_get_group_regxstr</span><span class="p">(</span><span class="n">regstr</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
@@ -513,6 +559,22 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_component_info</span><span class="p">(</span><span class="n">element</span><span class="p">)[</span><span class="s1">&#39;value&#39;</span><span class="p">]</span></div>
 
+<div class="viewcode-block" id="SpiceCircuit.get_component_floatvalue"><a class="viewcode-back" href="../../SpiceEditor.html#PyLTSpice.SpiceEditor.SpiceCircuit.get_component_floatvalue">[docs]</a>    <span class="k">def</span> <span class="nf">get_component_floatvalue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">element</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the value of a component retrieved from the netlist.</span>
+
+<span class="sd">        :param element: Reference of the circuit element to search for.</span>
+<span class="sd">        :type element: str</span>
+
+<span class="sd">        :return: value of the circuit element in float type</span>
+<span class="sd">        :rtype: float</span>
+
+<span class="sd">        :raises: ComponentNotFoundError - In case the component is not found</span>
+
+<span class="sd">                 NotImplementedError - for not supported operations</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">scan_eng</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_component_info</span><span class="p">(</span><span class="n">element</span><span class="p">)[</span><span class="s1">&#39;value&#39;</span><span class="p">])</span></div>
+
 <div class="viewcode-block" id="SpiceCircuit.set_component_values"><a class="viewcode-back" href="../../SpiceEditor.html#PyLTSpice.SpiceEditor.SpiceCircuit.set_component_values">[docs]</a>    <span class="k">def</span> <span class="nf">set_component_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Adds one or more components on the netlist. The argument is in the form of a key-value pair where each</span>
@@ -724,9 +786,15 @@
     <span class="nb">print</span><span class="p">(</span><span class="n">E</span><span class="o">.</span><span class="n">get_parameter</span><span class="p">(</span><span class="s1">&#39;I2&#39;</span><span class="p">))</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">E</span><span class="o">.</span><span class="n">get_components</span><span class="p">())</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">E</span><span class="o">.</span><span class="n">get_components</span><span class="p">(</span><span class="s1">&#39;RC&#39;</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Setting C1 to 1µF&quot;</span><span class="p">)</span>
+    <span class="n">E</span><span class="o">.</span><span class="n">set_component_value</span><span class="p">(</span><span class="s2">&quot;C1&quot;</span><span class="p">,</span> <span class="s1">&#39;1µF&#39;</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Setting C4 to 22nF&quot;</span><span class="p">)</span>
     <span class="n">E</span><span class="o">.</span><span class="n">set_component_value</span><span class="p">(</span><span class="s2">&quot;C4&quot;</span><span class="p">,</span> <span class="mf">22e-9</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Setting C3 to 120nF&quot;</span><span class="p">)</span>
     <span class="n">E</span><span class="o">.</span><span class="n">set_component_value</span><span class="p">(</span><span class="s2">&quot;C3&quot;</span><span class="p">,</span> <span class="s1">&#39;120n&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">E</span><span class="o">.</span><span class="n">get_component_floatvalue</span><span class="p">(</span><span class="s2">&quot;C1&quot;</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">E</span><span class="o">.</span><span class="n">get_component_floatvalue</span><span class="p">(</span><span class="s2">&quot;C3&quot;</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">E</span><span class="o">.</span><span class="n">get_component_floatvalue</span><span class="p">(</span><span class="s2">&quot;C4&quot;</span><span class="p">))</span>
     <span class="n">E</span><span class="o">.</span><span class="n">set_parameters</span><span class="p">(</span>
             <span class="n">test_exiting_param_set1</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span>
             <span class="n">test_exiting_param_set2</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span>

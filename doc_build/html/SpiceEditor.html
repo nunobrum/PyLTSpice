@@ -65,6 +65,27 @@ is represented as a SpiceCircuit object.</p>
 <dd></dd></dl>
 
 <dl class="py method">
+<dt id="PyLTSpice.SpiceEditor.SpiceCircuit.get_component_floatvalue">
+<code class="sig-name descname">get_component_floatvalue</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">element</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/PyLTSpice/SpiceEditor.html#SpiceCircuit.get_component_floatvalue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.SpiceEditor.SpiceCircuit.get_component_floatvalue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the value of a component retrieved from the netlist.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>element</strong> (<em>str</em>) – Reference of the circuit element to search for.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>value of the circuit element in float type</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p>ComponentNotFoundError - In case the component is not found</p>
+<p>NotImplementedError - for not supported operations</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt id="PyLTSpice.SpiceEditor.SpiceCircuit.get_component_value">
 <code class="sig-name descname">get_component_value</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">element</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/PyLTSpice/SpiceEditor.html#SpiceCircuit.get_component_value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.SpiceEditor.SpiceCircuit.get_component_value" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the value of a component retrieved from the netlist.</p>
@@ -387,6 +408,38 @@ and .subckt</p>
 <code class="sig-prename descclassname">PyLTSpice.SpiceEditor.</code><code class="sig-name descname">get_line_command</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">line</span></em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/PyLTSpice/SpiceEditor.html#get_line_command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.SpiceEditor.get_line_command" title="Permalink to this definition">¶</a></dt>
 <dd><p>Retrives the type of SPICE command in the line.
 Starts by removing the leading spaces and the evaluates if it is a comment, a directive or a component.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="PyLTSpice.SpiceEditor.scan_eng">
+<code class="sig-prename descclassname">PyLTSpice.SpiceEditor.</code><code class="sig-name descname">scan_eng</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; float<a class="reference internal" href="_modules/PyLTSpice/SpiceEditor.html#scan_eng"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.SpiceEditor.scan_eng" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts a string to a float, considering SI multipliers</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>f for femto (10E-15)</p></li>
+<li><p>p for pico (10E-12)</p></li>
+<li><p>n for nano (10E-9)</p></li>
+<li><p>u or µ for micro (10E-6)</p></li>
+<li><p>m for mili (10E-3)</p></li>
+<li><p>k for kilo (10E+3)</p></li>
+<li><p>Meg for Mega (10E+6)</p></li>
+</ul>
+</div></blockquote>
+<p>The extra unit qualifiers such as V for volts or F for Farads are ignored.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>value</strong> (<em>str</em>) – string to be converted to float</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p>ValueError when the value cannot be converted.</p>
+</dd>
+</dl>
 </dd></dl>
 
 </div>
