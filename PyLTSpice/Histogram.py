@@ -56,26 +56,36 @@ __copyright__ = "Copyright 2017, Fribourg Switzerland"
 
 #!/usr/bin/env python
 import numpy as np
-import matplotlib.mlab as mlab
+from scipy.stats import norm
 import matplotlib.pyplot as plt
 
 from optparse import OptionParser
 
 usage = "usage: %prog [options] LOG_FILE TRACE"
 opts = OptionParser(usage=usage, version="%prog 0.1")
-#opts.add_option('v', "var", action="store", type="string", dest="trace", help="The trace to be used in the histogram")
-opts.add_option('-s',"--sigma", action ="store", type="int", dest="sigma", default=3, help="Sigma to be used in the distribution fit. Default=3")
-opts.add_option('-n', "--nbins", action="store",  type="int", dest="nbins", default=20, help="Number of bins to be used in the histogram. Default=20")
+# opts.add_option('v', "var", action="store", type="string", dest="trace", help="The trace to be used in the histogram")
+opts.add_option('-s',"--sigma", action ="store", type="int", dest="sigma", default=3,
+                help="Sigma to be used in the distribution fit. Default=3")
+opts.add_option('-n', "--nbins", action="store",  type="int", dest="nbins", default=20,
+                help="Number of bins to be used in the histogram. Default=20")
 opts.add_option('-c', "--condition", action="append", type="string", dest="filters",
-                help="Filter condition writen in python. More than one expression can be added but each expression should be preceded by -c.\n" +
+                help="Filter condition writen in python. More than one expression can be added but each expression "
+                     "should be preceded by -c.\n" +
                      "EXAMPLE: -c V(N001)>4 -c parameter==1 -c  I(V1)<0.5" )
-opts.add_option('-f', "--format", action="store", type="string", dest="format", help="Format string for the X axis. Example: -f %3.4f")
-#opts.add_option('-p', "--scaling",action="store", type="string", dest="prescaling", help="Prescaling function to be applied to the input value.")
-opts.add_option('-t', "--title", action="store", type="string", dest="title", help="Title to appear on the top of the histogram.")
-opts.add_option('-r', "--range", action="store", type="string", dest="range", help="Range of the X axis to use for the histogram in the form min:max. Example: -r -1:1")
-opts.add_option('-C', "--clipboard", action="store_true", dest="clipboard", help="If the data from the clipboard is to be used.")
-#opts.add_option('-x', "--xname", action="store", dest="xname", help="Name for the variable displayed")
-opts.add_option('-i', "--image", action="store", type="string", dest="imagefile", help="Name of the image File. extension 'png'")
+opts.add_option('-f', "--format", action="store", type="string", dest="format",
+                help="Format string for the X axis. Example: -f %3.4f")
+# opts.add_option('-p', "--scaling",action="store", type="string", dest="prescaling",
+# help="Prescaling function to be applied to the input value.")
+opts.add_option('-t', "--title", action="store", type="string", dest="title",
+                help="Title to appear on the top of the histogram.")
+opts.add_option('-r', "--range", action="store", type="string", dest="range",
+                help="Range of the X axis to use for the histogram in the form min:max. Example: -r -1:1")
+opts.add_option('-C', "--clipboard", action="store_true", dest="clipboard",
+                help="If the data from the clipboard is to be used.")
+# opts.add_option('-x', "--xname", action="store", dest="xname", help="Name for the variable displayed")
+opts.add_option('-o', "--output", action="store", type="string", dest="imagefile",
+                help="Output the image to a file. Argument is the name of the image File with png extension.\n"
+                     "Example: -o image.png")
 
 (options, args) = opts.parse_args()
 
@@ -97,9 +107,8 @@ if options.clipboard:
         try:
             values.append(float(line))
         except ValueError:
-            print("Failed to process ")
-            print(line)
-elif len(args)==0:
+            print("Failed to convert line: '", line, "'")
+elif len(args) == 0:
     opts.print_help()
     exit(-1)
 else:
@@ -200,15 +209,11 @@ else:
     print("Mean is " + fmt % mu)
     print("Standard Deviation is " + fmt % sd)
     print(("Sigma %d boundaries are " + fmt + " and " + fmt) % (options.sigma, sigmin, sigmax))
-    n, bins, patches = plt.hist(x, options.nbins, normed=True, facecolor='green', alpha=0.75, range=(axisXmin, axisXmax))
+    n, bins, patches = plt.hist(x, options.nbins, density=True, facecolor='green', alpha=0.75, range=(axisXmin, axisXmax))
     axisYmax = n.max() * 1.1
 
     # add a 'best fit' line
-    if hasattr(mlab, 'normpdf'):  # This was deprecated on version 2.2 of mlab
-        y = mlab.normpdf(bins, mu, sd)
-    else:
-        from scipy.stats import norm
-        y = norm.pdf(bins, mu, sd)
+    y = norm.pdf(bins, mu, sd)
 
     l = plt.plot(bins, y, 'r--', linewidth=1)
     plt.axvspan(mu - options.sigma*sd, mu + options.sigma*sd, alpha=0.2, color="cyan")
