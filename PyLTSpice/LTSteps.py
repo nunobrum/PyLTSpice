@@ -652,10 +652,16 @@ if __name__ == "__main__":
             data.split_complex_values_on_datasets()
             data.export_data(fname_out)
         elif filename.endswith(".mout"):
-            steps = LTSpiceLogReader(filename.rstrip('mout') + 'log', read_measures=False)
-            data = LTSpiceLogReader(filename, step_set=steps.stepset)
-            data.stepset = steps.stepset
+            log_file = filename.rstrip('mout') + 'log'
+            if os.path.exists(log_file):
+                steps = LTSpiceLogReader(log_file, read_measures=False)
+                data = LTSpiceLogReader(filename, step_set=steps.stepset)
+                data.stepset = steps.stepset
+            else:
+                # just reformats
+                data = LTSpiceLogReader(filename)
             data.split_complex_values_on_datasets()
+            data.export_data(fname_out)
             data.export_data(fname_out)
 
     # input("Press Enter to Continue")
