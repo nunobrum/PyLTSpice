@@ -25,7 +25,7 @@ for file in files:
             tr = ltr.get_trace(name)
             print(name)
             print('step {:d} {}'.format(step, tr.get_wave(step)))
-            control_file.write("\n\nSTEP : %d\r\n" % step)
+            control_file.write("\r\n\r\nSTEP : %d\r\n" % step)
             for v in tr.get_wave(step):
                 control_file.write("{}\n".format(v))
         control_file.write("\r\n\r\n")

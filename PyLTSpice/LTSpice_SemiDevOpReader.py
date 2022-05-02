@@ -99,7 +99,7 @@ def opLogReader(filename: str) -> dict:
                 where = match.group(1)
                 dataset[where] = {}  # Creates a dictionary for each component type
             else:
-                cols = re.split(r'\s+', line.rstrip('\n'))
+                cols = re.split(r'\s+', line.rstrip('\r\n'))
                 if len(cols) > 1 and (cols[0].endswith(":") or cols[0] == 'Gmb'):  # The last 'or condition solves an
                     # LTSpice bug where the Gmb parameter is not suffixed by :  - Thanks to Amitkumar for finding this.
                     if cols[0] == "Name:":
