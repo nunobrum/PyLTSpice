@@ -169,7 +169,7 @@ class RunTask(threading.Thread):
 
         # print simulation time
         sim_time = time.strftime("%H:%M:%S", time.gmtime(clock_function() - self.start_time))
-        netlist_radic = self.netlist_file.rstrip('.net')
+        netlist_radic, extension = os.path.splitext(self.netlist_file)
         self.log_file = netlist_radic + '.log'
 
         # Cleanup everything
@@ -453,7 +453,7 @@ class LTCommander(SimCommander):
             retcode = run_function(cmd_run)
 
             # process the logfile, user can rename it
-            netlist_radic = run_netlist_file.rstrip('.net')
+            netlist_radic, extension = os.path.splitext(run_netlist_file)
             raw_file = netlist_radic + '.raw'
             log_file = netlist_radic + '.log'
             # print simulation time

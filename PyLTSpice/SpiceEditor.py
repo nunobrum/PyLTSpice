@@ -15,7 +15,7 @@ import traceback
 import re
 import logging
 from math import log, floor
-from typing import Union, Optional
+from typing import Union, Optional, List
 
 __author__ = "Nuno Canto Brum <nuno.brum@gmail.com>"
 __copyright__ = "Copyright 2021, Fribourg Switzerland"
@@ -56,42 +56,42 @@ SPICE_DOT_INSTRUCTIONS = (
 )
 
 REPLACE_REGXES = {
-    'A': r"^(A§?\w+)(\s+\S+){8}\s+(?P<value>.*)(\s+\w+\s*=\s*\S+)*\s*$",  # Special Functions, Parameter substitution not supported
-    'B': r"^(B§?[VI]?\w+)(\s+\S+){2}\s+(?P<value>.*)$",  # Behavioral source
-    'C': r"^(C§?\w+)(\s+\S+){2}\s+(?P<value>({)?(?(4).*}|([0-9\.E+-]+(Meg|[kmuµnp])?F?))).*$",  # Capacitor
-    'D': r"^(D§?\w+)(\s+\S+){2}\s+(?P<value>\w+).*$",  # Diode
-    'I': r"^(I§?\w+)(\s+\S+){2}\s+(?P<value>.*)$",  # Current Source
-    'E': r"^(E§?\w+)(\s+\S+){2,4}\s+(?P<value>.*)$",  # Voltage Dependent Voltage Source
+    'A': r"^(?P<designator>A§?\w+)(?P<nodes>(\s+\S+){8})\s+(?P<value>.*)(\s+\w+\s*=\s*\S+)*\s*$",  # Special Functions, Parameter substitution not supported
+    'B': r"^(?P<designator>B§?[VI]?\w+)(?P<nodes>(\s+\S+){2})\s+(?P<value>.*)$",  # Behavioral source
+    'C': r"^(?P<designator>C§?\w+)(?P<nodes>(\s+\S+){2})\s+(?P<value>({)?(?(5).*}|([0-9\.E+-]+(Meg|[kmuµnpf])?F?))).*$",  # Capacitor
+    'D': r"^(?P<designator>D§?\w+)(?P<nodes>(\s+\S+){2})\s+(?P<value>\w+).*$",  # Diode
+    'I': r"^(?P<designator>I§?\w+)(?P<nodes>(\s+\S+){2})\s+(?P<value>.*)$",  # Current Source
+    'E': r"^(?P<designator>E§?\w+)(?P<nodes>(\s+\S+){2,4}\s+(?P<value>.*)$",  # Voltage Dependent Voltage Source
                                                         # this only supports changing gain values
-    'F': r"^(F§?\w+)(\s+\S+){2}\s+(?P<value>.*)$",  # Current Dependent Current Source
+    'F': r"^(?P<designator>F§?\w+)(?P<nodes>(\s+\S+){2})\s+(?P<value>.*)$",  # Current Dependent Current Source
                                                         # TODO: this implementation replaces everything after the 2
                                                         #       first nets
-    'G': r"^(G§?\w+)(\s+\S+){2,4}\s+(?P<value>.*)$",  # Voltage Dependent Current Source
+    'G': r"^(?P<designator>G§?\w+)(?P<nodes>(\s+\S+){2,4})\s+(?P<value>.*)$",  # Voltage Dependent Current Source
                                                         # this only supports changing gain values
-    'H': r"^(H§?\w+)(\s+\S+){2}\s+(?P<value>.*)$",  # Voltage Dependent Current Source
+    'H': r"^(?P<designator>H§?\w+)(?P<nodes>(\s+\S+){2})\s+(?P<value>.*)$",  # Voltage Dependent Current Source
                                                         # TODO: this implementation replaces everything after the 2
                                                         #       first nets
-    'I': r"^(I§?\w+)(\s+\S+){2}\s+(?P<value>.*)$",  # Current Source
+    'I': r"^(?P<designator>I§?\w+)(?P<nodes>(\s+\S+){2})\s+(?P<value>.*)$",  # Current Source
                                                         # TODO: this implementation replaces everything after the 2
                                                         #       first nets
-    'J': r"^(J§?\w+)(\s+\S+){3}\s+(?P<value>\w+).*$",  # JFET
-    'K': r"^(K§?\w+)(\s+\S+){2,4}\s+(?P<value>[\+\-]?[0-9\.E+-]+[kmunp]?).*$",  # Mutual Inductance
-    'L': r"^(L§?\w+)(\s+\S+){2}\s+(?P<value>({)?(?(4).*}|([0-9\.E+-]+(Meg|[kmuµnp])?H?))).*$",  # Inductance
-    'M': r"^(M§?\w+)(\s+\S+){3,4}\s+(?P<value>\w+).*$",  # MOSFET TODO: Parameters substitution not supported
-    'O': r"^(O§?\w+)(\s+\S+){4}\s+(?P<value>\w+).*$",  # Lossy Transmission Line TODO: Parameters substitution not supported
-    'Q': r"^(Q§?\w+)(\s+\S+){3}\s+(?P<value>\w+).*$",  # Bipolar TODO: Parameters substitution not supported
-    'R': r"^(R§?\w+)(\s+\S+){2}\s+(?P<value>({)?(?(4).*}|([0-9\.E+-]+(Meg|[kmuµnp])?R?))).*$",  # Resistors
-    'S': r"^(S§?\w+)(\s+\S+){4}\s+(?P<value>.*)$",  # Voltage Controlled Switch
-    'T': r"^(T§?\w+)(\s+\S+){4}\s+(?P<value>.*)$",  # Lossless Transmission
-    'U': r"^(U§?\w+)(\s+\S+){3}\s+(?P<value>.*)$",  # Uniform RC-line
-    'V': r"^(V§?\w+)(\s+\S+){2}\s+(?P<value>.*)$",  # Voltage Source
+    'J': r"^(?P<designator>J§?\w+)(?P<nodes>(\s+\S+){3})\s+(?P<value>\w+).*$",  # JFET
+    'K': r"^(?P<designator>K§?\w+)(?P<nodes>(\s+\S+){2,4})\s+(?P<value>[\+\-]?[0-9\.E+-]+[kmuµnpf]?).*$",  # Mutual Inductance
+    'L': r"^(?P<designator>L§?\w+)(?P<nodes>(\s+\S+){2})\s+(?P<value>({)?(?(5).*}|([0-9\.E+-]+(Meg|[kmuµnpf])?H?))).*$",  # Inductance
+    'M': r"^(?P<designator>M§?\w+)(?P<nodes>(\s+\S+){3,4})\s+(?P<value>\w+).*$",  # MOSFET TODO: Parameters substitution not supported
+    'O': r"^(?P<designator>O§?\w+)(?P<nodes>(\s+\S+){4})\s+(?P<value>\w+).*$",  # Lossy Transmission Line TODO: Parameters substitution not supported
+    'Q': r"^(?P<designator>Q§?\w+)(?P<nodes>(\s+\S+){3})\s+(?P<value>\w+).*$",  # Bipolar TODO: Parameters substitution not supported
+    'R': r"^(?P<designator>R§?\w+)(?P<nodes>(\s+\S+){2})\s+(?P<value>({)?(?(5).*}|([0-9\.E+-]+(Meg|[kmuµnpf])?R?))).*$", # Resistors
+    'S': r"^(?P<designator>S§?\w+)(?P<nodes>(\s+\S+){4})\s+(?P<value>.*)$",  # Voltage Controlled Switch
+    'T': r"^(?P<designator>T§?\w+)(?P<nodes>(\s+\S+){4})\s+(?P<value>.*)$",  # Lossless Transmission
+    'U': r"^(?P<designator>U§?\w+)(?P<nodes>(\s+\S+){3})\s+(?P<value>.*)$",  # Uniform RC-line
+    'V': r"^(?P<designator>V§?\w+)(?P<nodes>(\s+\S+){2})\s+(?P<value>.*)$",  # Voltage Source
                                                         # TODO: this implementation replaces everything after the 2
                                                         #       first nets
-    'W': r"^(W§?\w+)(\s+\S+){2}\s+(?P<value>.*)$",  # Current Controlled Switch
+    'W': r"^(?P<designator>W§?\w+)(?P<nodes>(\s+\S+){2})\s+(?P<value>.*)$",  # Current Controlled Switch
                                                         # TODO: this implementation replaces everything after the 2
                                                         #       first nets
-    'X': r"(X§?\w+)(\s+\S+){1,99}\s+(?P<value>\S+)(\s+\w+\s*=\s*\S+)*\s*$",  # Sub-circuit, Parameter substitution not supported
-    'Z': r"^(Z§?\w+)(\s+\S+){3}\s+(?P<value>\w+).*$",  # MESFET and IBGT. TODO: Parameters substitution not supported
+    'X': r"^(?P<designator>X§?\w+)(?P<nodes>(\s+\S+){1,99})\s+(?P<value>\S+)(\s+\w+\s*=\s*\S+)*\s*$",  # Sub-circuit, Parameter substitution not supported
+    'Z': r"^(?P<designator>Z§?\w+)(?P<nodes>(\s+\S+){3})\s+(?P<value>\w+).*$",  # MESFET and IBGT. TODO: Parameters substitution not supported
 }
 
 PARAM_REGX = r"%s\s*(=\s*)?(?P<value>[\w*/\.+-/{}()]*)"
@@ -174,25 +174,6 @@ def scan_eng(value: str) -> float:
         return f * 1E6
     else:
         raise f
-
-
-def _get_group_regxstr(regstr, param):
-    """(Private function. Not to be used directly)
-    Helper function to parse regular expressions."""
-    a = regstr.find("(?P<%s>" % param)
-    if a != -1:
-        b = a + 1
-        parenthesis_count = 0
-        while b < len(regstr):
-            if regstr[b] == ')':
-                if parenthesis_count == 0:
-                    return regstr[a:b + 1]
-                else:
-                    parenthesis_count -= 1
-            elif regstr[b] == '(':
-                parenthesis_count += 1
-            b += 1
-    return None
 
 
 def get_line_command(line) -> str:
@@ -345,14 +326,7 @@ class SpiceCircuit(object):
             print("Got '{}'".format(component))
             return
 
-        if isinstance(value, str):
-            regxvaluestr = _get_group_regxstr(regxstr, 'value')
-            regexvalue = re.compile(regxvaluestr, re.IGNORECASE)
-            m = regexvalue.match(value)
-            if m is None:
-                raise ValueError("Value is not in the good format. Expecting ""{}"". Got ""{}""".format(regxvaluestr,
-                                                                                                        value))
-        else:
+        if isinstance(value, (int, float)):
             value = format_eng(value)
 
         line_no = self._getline_startingwith(component)
@@ -368,8 +342,16 @@ class SpiceCircuit(object):
             line = line[:start] + value + line[end:]
             self.netlist[line_no] = line
 
-    def _get_component_info(self, component) -> Optional[dict]:
-        """Internal function. Do not use."""
+    def get_component_info(self, component) -> dict:
+        """
+        Retrieves the component information as defined in the corresponding REGEX. The line number is also added.
+
+        :param component: Reference of the component
+        :type component: str
+        :return: Dictionary with the component information
+        :rtype: dict
+        :raises: NotImplementedError when the line doesn't match the expected REGEX.
+        """
         prefix = component[0]  # Using the first letter of the component to identify what is it
         regxstr = REPLACE_REGXES.get(prefix, None)  # Obtain RegX to make the update
 
@@ -386,10 +368,10 @@ class SpiceCircuit(object):
             error_msg = 'Unsupported line "{}"\nExpected format is "{}"'.format(line, regxstr)
             self.logger.error(error_msg)
             raise NotImplementedError(error_msg)
-            # print("Unsupported line ""{}""".format(line))
-        else:
-            info = m.groupdict()
-            return info
+
+        info = m.groupdict()
+        info['line'] = line_no  # adding the line number to the component information
+        return info
 
     def get_parameter(self, param: str) -> str:
         """
@@ -513,7 +495,7 @@ class SpiceCircuit(object):
         """
         Returns the value of a component retrieved from the netlist.
 
-        :param element: Reference of the circuit element to search for.
+        :param element: Reference of the circuit element to get the value.
         :type element: str
 
         :return: value of the circuit element .
@@ -523,13 +505,13 @@ class SpiceCircuit(object):
 
                  NotImplementedError - for not supported operations
         """
-        return self._get_component_info(element)['value']
+        return self.get_component_info(element)['value']
 
     def get_component_floatvalue(self, element: str) -> str:
         """
         Returns the value of a component retrieved from the netlist.
 
-        :param element: Reference of the circuit element to search for.
+        :param element: Reference of the circuit element to get the value in float format.
         :type element: str
 
         :return: value of the circuit element in float type
@@ -539,7 +521,26 @@ class SpiceCircuit(object):
 
                  NotImplementedError - for not supported operations
         """
-        return scan_eng(self._get_component_info(element)['value'])
+        return scan_eng(self.get_component_info(element)['value'])
+
+    def get_component_nodes(self, elemment: str) -> List[str]:
+        """
+        Returns the nodes to which the component is attached to.
+
+        :param elemment: Reference of the circuit element to get the nodes.
+        :type elemment: str
+        :return: List of nodes
+        :rtype: list
+        """
+        nodes = self.get_component_info(element)['nodes']
+        nodes = nodes.replace('\t', '')  # Remove any tabs if they exist
+        nodes = nodes.replace('\r', '')  # Remove carriage returns
+        nodes = nodes.replace('\n', '')  # Remove new lines
+        # nodes = nodes.replace('+', '')  # Rem
+        nodes = nodes.split(' ')  # Remove any spaces if they exist
+        while('' in nodes):  # remove empty elements on the list
+            nodes.remove('')
+        return nodes
 
     def set_component_values(self, **kwargs):
         """
@@ -610,7 +611,7 @@ class SpiceCircuit(object):
         :raises: ComponentNotFoundError - When the component doesn't exist on the netlist.
         """
         line = self._getline_startingwith(designator)
-        del self.netlist[line]  # Deletes the line
+        self.netlist[line] = ''  # Blanks the line
 
     def get_all_nodes(self):
         # TODO: Implement a function that retrieves all nodes existing on a Netlist
