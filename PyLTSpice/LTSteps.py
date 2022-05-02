@@ -342,7 +342,7 @@ class LTSpiceLogReader(object):
             if line.startswith(".step"):
                 # message(line)
                 self.step_count += 1
-                tokens = line.strip('\n').split(' ')
+                tokens = line.strip('\r\n').split(' ')
                 for tok in tokens[1:]:
                     lhs, rhs = tok.split("=")
                     # Try to convert to int or float
@@ -393,7 +393,7 @@ class LTSpiceLogReader(object):
         headers = []  # Initializing an empty parameters
         measurements = []
         while line:
-            line = line.strip('\n')
+            line = line.strip('\r\n')
             if line.startswith("Measurement: "):
                 if dataname:  # If previous measurement was saved
                     # store the info
@@ -631,11 +631,11 @@ if __name__ == "__main__":
 
     fname_out = None
     if filename.endswith('.txt'):
-        fname_out = filename.rstrip('txt') + 'tsv'
+        fname_out = filename[:-len('txt')] + 'tsv'
     elif filename.endswith('.log'):
-        fname_out = filename.rstrip('log') + 'tlog'
+        fname_out = filename[:-len('log')] + 'tlog'
     elif filename.endswith('.mout'):
-        fname_out = filename.rstrip('mout') + 'tmout'
+        fname_out = filename[:-len('mout')] + 'tmout'
     else:
         print("Error in file type")
         print("This tool only supports the following extensions :'.txt','.log','.mout'")
@@ -652,7 +652,7 @@ if __name__ == "__main__":
             data.split_complex_values_on_datasets()
             data.export_data(fname_out)
         elif filename.endswith(".mout"):
-            log_file = filename.rstrip('mout') + 'log'
+            log_file = filename[:len('mout')] + 'log'
             if os.path.exists(log_file):
                 steps = LTSpiceLogReader(log_file, read_measures=False)
                 data = LTSpiceLogReader(filename, step_set=steps.stepset)
