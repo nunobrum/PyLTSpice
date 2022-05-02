@@ -64,7 +64,7 @@ from optparse import OptionParser
 usage = "usage: %prog [options] LOG_FILE TRACE"
 opts = OptionParser(usage=usage, version="%prog 0.1")
 # opts.add_option('v', "var", action="store", type="string", dest="trace", help="The trace to be used in the histogram")
-opts.add_option('-s',"--sigma", action ="store", type="int", dest="sigma", default=3,
+opts.add_option('-s', "--sigma", action="store", type="int", dest="sigma", default=3,
                 help="Sigma to be used in the distribution fit. Default=3")
 opts.add_option('-n', "--nbins", action="store",  type="int", dest="nbins", default=20,
                 help="Number of bins to be used in the histogram. Default=20")
@@ -86,7 +86,8 @@ opts.add_option('-C', "--clipboard", action="store_true", dest="clipboard",
 opts.add_option('-o', "--output", action="store", type="string", dest="imagefile",
                 help="Output the image to a file. Argument is the name of the image File with png extension.\n"
                      "Example: -o image.png")
-
+opts.add_option('-1', "--nonorm", action="store_false", dest="normalized", default=True,
+                help="Doesn't normalize the histogram so that area of the bell curve is 1.")
 (options, args) = opts.parse_args()
 
 values = []
@@ -135,7 +136,7 @@ else:
         print("No filters defined")
 
     log = open(logfile,'r')
-    header = log.readline().rstrip('\n')
+    header = log.readline().rstrip('\r\n')
     vars = header.split('\t')
     try:
         sav_col = vars.index(TRACE)
@@ -209,16 +210,19 @@ else:
     print("Mean is " + fmt % mu)
     print("Standard Deviation is " + fmt % sd)
     print(("Sigma %d boundaries are " + fmt + " and " + fmt) % (options.sigma, sigmin, sigmax))
-    n, bins, patches = plt.hist(x, options.nbins, density=True, facecolor='green', alpha=0.75, range=(axisXmin, axisXmax))
+    n, bins, patches = plt.hist(x, options.nbins, density=options.normalized, facecolor='green', alpha=0.75,
+                                range=(axisXmin, axisXmax))
     axisYmax = n.max() * 1.1
 
-    # add a 'best fit' line
-    y = norm.pdf(bins, mu, sd)
-
-    l = plt.plot(bins, y, 'r--', linewidth=1)
-    plt.axvspan(mu - options.sigma*sd, mu + options.sigma*sd, alpha=0.2, color="cyan")
+    if options.normalized:
+        # add a 'best fit' line
+        y = norm.pdf(bins, mu, sd)
+        l = plt.plot(bins, y, 'r--', linewidth=1)
+        plt.axvspan(mu - options.sigma*sd, mu + options.sigma*sd, alpha=0.2, color="cyan")
+        plt.ylabel('Distribution [Normalised]')
+    else:
+        plt.ylabel('Distribution')
     plt.xlabel(TRACE)
-    plt.ylabel('Distribution [Normalised]')
 
     if options.title is None:
         title = (r'$\mathrm{Histogram\ of\ %s:}\ \mu='+fmt+r',\ stdev='+fmt+r',\ \sigma=%d$') % (TRACE, mu, sd, options.sigma)
