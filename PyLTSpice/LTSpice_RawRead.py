@@ -177,18 +177,120 @@ to plot the results of three traces in two subplots. ::
 __author__ = "Nuno Canto Brum <nuno.brum@gmail.com>"
 __copyright__ = "Copyright 2017, Fribourg Switzerland"
 
-import os
 from binascii import b2a_hex
+from collections import OrderedDict
 from struct import unpack
-from typing import Union
+from typing import Union, List, Tuple
+from detect_encoding import detect_encoding
 
 try:
-    from numpy import zeros, array, complex128, abs as numpy_abs
+    from numpy import zeros, array, complex128, abs as np_abs, single, double, frombuffer, angle
 except ImportError:
     USE_NNUMPY = False
 else:
     USE_NNUMPY = True
     print("Found Numpy. Will be used for storing data")
+
+
+def read_float64(f):
+    """
+    Reads a 64 bit float value, normally associated with the plot X axis.
+    The codification is done as follows:
+
+    =====  === === === ===   === === === ===
+    bit#   7   6   5   4     3   2   1   0
+    =====  === === === ===   === === === ===
+    Byte7  SGM SGE E9  E8    E7  E6  E5  E4
+    Byte6  E3  E2  E1  E0    M51 M50 M49 M48
+    Byte5  M47 M46 M45 M44   M43 M42 M41 M40
+    Byte4  M39 M38 M37 M36   M35 M34 M33 M32
+    Byte3  M31 M30 M29 M28   M27 M26 M25 M24
+    Byte2  M23 M22 M21 M20   M19 M18 M17 M16
+    Byte1  M15 M14 M13 M12   M11 M10 M9  M8
+    Byte0  M7  M6  M5  M4    M3  M2  M1  M0
+    =====  === === === ===   === === === ===
+
+    Legend:
+
+    SGM - Signal of Mantissa: 0 - Positive 1 - Negative
+
+    SGE - Signal of Exponent: 0 - Positive 1 - Negative
+
+    E[9:0] - Exponent
+
+    M[51:0] - Mantissa.
+
+    :param f: data stream to convert to float value
+    :type f: file
+    :returns: double precision float
+    :rtype: float
+    """
+    s = f.read(8)
+    return unpack("d", s)[0]
+
+
+def read_complex(f):
+    """
+    Used to convert a 16 byte stream into a complex data point. Usually used for the .AC simulations.
+    The encoding is the same as for the set_pointB8() but two values are encoded. First one is the real part and
+    the second is the complex part.
+
+    :param f: data stream
+    :type f: file
+    :return: complex value
+    :rtype: complex
+    """
+    s = f.read(16)
+    (re, im) = unpack('dd', s)
+    return complex(re, im)
+
+
+def read_float32(f):
+    """
+    Reads a 32bit float (single precision) from a stream. This is how most real values are stored in the RAW file.
+    This codification uses 4 bytes as follows:
+
+    =====  === === === ===   === === === ===
+    bit#   7   6   5   4     3   2   1   0
+    =====  === === === ===   === === === ===
+    Byte3  SGM SGE E6  E5    E4  E3  E2  E1
+    Byte2  E0  M22 M21 M20   M19 M18 M17 M16
+    Byte1  M15 M14 M13 M12   M11 M10 M9  M8
+    Byte0  M7  M6  M5  M4    M3  M2  M1  M0
+    =====  === === === ===   === === === ===
+
+    Legend:
+
+    SGM - Signal of Mantissa: 0 - Positive 1 - Negative
+
+    SGE - Signal of Exponent: 0 - Positive 1 - Negative
+
+    E[6:0] - Exponent
+
+    M[22:0] - Mantissa.
+
+    :param f: data stream to read from
+    :type f: file
+    :returns: float value
+    :rtype: float
+    """
+    s = f.read(4)
+    return unpack("f", s)[0]
+
+
+def consume4bytes(f):
+    """Used to advance the file pointer 4 bytes"""
+    f.read(4)
+
+
+def consume8bytes(f):
+    """Used to advance the file pointer 8 bytes"""
+    f.read(8)
+
+
+def consume16bytes(f):
+    """Used to advance the file pointer 16 bytes"""
+    f.read(16)
 
 
 class DataSet(object):
@@ -201,124 +303,33 @@ class DataSet(object):
     If numpy is available, the numpy vector can be retrieved by using the get_wave() method.
     """
 
-    def __init__(self, name, datatype, datalen, numerical_type='real'):
+    def __init__(self, name, whattype, datalen, numerical_type='real'):
         """Base Class for both Axis and Trace Classes.
         Defines the common operations between both."""
         self.name = name
-        self.type = datatype
+        self.whattype = whattype
         self.numerical_type = numerical_type
         if USE_NNUMPY:
-            if numerical_type == 'real':
-                self.data = zeros(datalen)
+            if whattype == 'time':
+                self.data = zeros(datalen, dtype=double)
+            elif numerical_type == 'real':
+                self.data = zeros(datalen, dtype=single)
             elif numerical_type == 'complex':
-                self.data = zeros(datalen, complex128)
+                self.data = zeros(datalen, dtype=complex128)
+            else:
+                raise NotImplementedError
         else:
             self.data = [None for _ in range(datalen)]
-
-    def set_pointA(self, n, value):
-        """
-        Conversion function to be used on ASCII RAW Files.
-        :param n: number of the point to set
-        :type n:int
-        :param value: the Value of the point being set.
-        :type value: float
-        :returns: Nothing
-        """
-        assert isinstance(value, float)
-        self.data[n] = value
-
-    def set_pointB8(self, n, value) -> None:
-        """
-        Function that converts the variable 0, normally associated with the plot X axis.
-        The codification is done as follows:
-
-        =====  === === === ===   === === === ===
-        bit#   7   6   5   4     3   2   1   0
-        =====  === === === ===   === === === ===
-        Byte7  SGM SGE E9  E8    E7  E6  E5  E4
-        Byte6  E3  E2  E1  E0    M51 M50 M49 M48
-        Byte5  M47 M46 M45 M44   M43 M42 M41 M40
-        Byte4  M39 M38 M37 M36   M35 M34 M33 M32
-        Byte3  M31 M30 M29 M28   M27 M26 M25 M24
-        Byte2  M23 M22 M21 M20   M19 M18 M17 M16
-        Byte1  M15 M14 M13 M12   M11 M10 M9  M8
-        Byte0  M7  M6  M5  M4    M3  M2  M1  M0
-        =====  === === === ===   === === === ===
-
-        Legend:
-
-        SGM - Signal of Mantissa: 0 - Positive 1 - Negative
-
-        SGE - Signal of Exponent: 0 - Positive 1 - Negative
-
-        E[9:0] - Exponent
-
-        M[51:0] - Mantissa.
-
-        :param n: number of the point to set
-        :type n: int
-        :param value: data stream to convert to float value
-        :type value: bytes
-        :returns: Nothing
-        """
-        self.data[n] = unpack("d", value)[0]
-
-    def set_pointB16(self, n, value) -> None:
-        """
-        Used to convert a 16 byte stream into a complex data point. Usually used for the .AC simulations.
-        The encoding is the same as for the set_pointB8() but two values are encoded. First one is the real part and
-        the second is the complex part.
-
-        :param n: number of the point to set
-        :type n: int
-        :param value: data stream to convert to complex value
-        :type value: bytes
-        :return: Nothing
-        """
-        (re, im) = unpack('dd', value)
-        self.data[n] = complex(re, im)
-
-    def set_pointB4(self, n, value) -> None:
-        """
-        Function that converts a normal trace into float on a Binary storage. This codification uses 4 bytes.
-        The codification is done as follows:
-
-        =====  === === === ===   === === === ===
-        bit#   7   6   5   4     3   2   1   0
-        =====  === === === ===   === === === ===
-        Byte3  SGM SGE E6  E5    E4  E3  E2  E1
-        Byte2  E0  M22 M21 M20   M19 M18 M17 M16
-        Byte1  M15 M14 M13 M12   M11 M10 M9  M8
-        Byte0  M7  M6  M5  M4    M3  M2  M1  M0
-        =====  === === === ===   === === === ===
-
-        Legend:
-
-        SGM - Signal of Mantissa: 0 - Positive 1 - Negative
-
-        SGE - Signal of Exponent: 0 - Positive 1 - Negative
-
-        E[6:0] - Exponent
-
-        M[22:0] - Mantissa.
-
-        :param n: number of the point to set
-        :type n: int
-        :param value: data stream to convert to float
-        :type value: bytes
-        :return: Nothing
-        """
-        self.data[n] = unpack("f", value)[0]
 
     def __str__(self):
         if isinstance(self.data[0], float):
             # data = ["%e" % value for value in self.data]
-            return "name:'%s'\ntype:'%s'\nlen:%d\n%s" % (self.name, self.type, len(self.data), str(self.data))
+            return "name:'%s'\ntype:'%s'\nlen:%d\n%s" % (self.name, self.whattype, len(self.data), str(self.data))
         elif isinstance(self.data[0], complex):
-            return "name: {}\ntype: {}\nlen: {:d}\n{}".format(self.name, self.type, len(self.data), str(self.data))
+            return "name: {}\ntype: {}\nlen: {:d}\n{}".format(self.name, self.whattype, len(self.data), str(self.data))
         else:
             data = [b2a_hex(value) for value in self.data]
-            return "name:'%s'\ntype:'%s'\nlen:%d\n%s" % (self.name, self.type, len(self.data), str(data))
+            return "name:'%s'\ntype:'%s'\nlen:%d\n%s" % (self.name, self.whattype, len(self.data), str(data))
 
     def __getitem__(self, item):
         return self.data.__getitem__(item)
@@ -337,9 +348,17 @@ class DataSet(object):
         return self.data[n]
 
     def get_wave(self):
+        """
+        :return: Internal data array
+        :rtype: list or numpy.array
+        """
         return self.data
 
-    def get_len(self):
+    def get_len(self) -> int:
+        """
+        :return: The number of data points
+        :rtype: int
+        """
         return len(self.data)
 
 
@@ -353,11 +372,11 @@ class Axis(DataSet):
     IF Numpy is available, get_wave() will return a numpy array.
     """
 
-    def __init__(self, name, datatype, datalen, numerical_type='real'):
-        super().__init__(name, datatype, datalen, numerical_type)
+    def __init__(self, name: str, whattype: str, datalen: int, numerical_type: str ='real'):
+        super().__init__(name, whattype, datalen, numerical_type)
         self.step_info = None
 
-    def _set_steps(self, step_info):
+    def _set_steps(self, step_info: List[dict]):
         self.step_info = step_info
 
         self.step_offsets = [None for _ in range(len(step_info))]
@@ -379,7 +398,7 @@ class Axis(DataSet):
             raise LTSPiceReadException("The file a different number of steps than expected.\n" +
                                        "Expecting %d got %d" % (len(self.step_offsets), k))
 
-    def step_offset(self, step):
+    def step_offset(self, step: int):
         """
         In Stepped RAW files, several simulations runs are stored in the same RAW file. This function returns the
         offset within the binary stream where each step starts.
@@ -400,7 +419,7 @@ class Axis(DataSet):
             else:
                 return self.step_offsets[step]
 
-    def get_wave(self, step=0):
+    def get_wave(self, step: int =0):
         """
         Returns an the vector containing the wave values. If numpy is installed, data is returned as a numpy array.
         If not, the wave is returned as a list of floats.
@@ -421,7 +440,7 @@ class Axis(DataSet):
         else:
             return self.data[self.step_offset(step):self.step_offset(step + 1)]
 
-    def get_time_axis(self, step=0):
+    def get_time_axis(self, step: int = 0):
         """
         Returns the time axis raw data. Please note that the time axis may not have a constant time step. LTSpice will
         increase the time-step in simulation phases where there aren't value changes, and decrease time step in
@@ -433,7 +452,7 @@ class Axis(DataSet):
         :rtype: list[float] or numpy.array
         """
         if USE_NNUMPY:
-            return numpy_abs(self.get_wave(step))
+            return np_abs(self.get_wave(step))
         else:
             shallow_copy = self.get_wave(step).copy()
             for i in range(len(shallow_copy)):
@@ -450,11 +469,11 @@ class Trace(DataSet):
     If numpy is available the get_wave() method will return a numpy array.
     """
 
-    def __init__(self, name, datatype, datalen, axis, numerical_type='real'):
-        super().__init__(name, datatype, datalen, numerical_type)
+    def __init__(self, name, whattype, datalen, axis, numerical_type='real'):
+        super().__init__(name, whattype, datalen, numerical_type)
         self.axis = axis
 
-    def get_point(self, n, step=0):
+    def get_point(self, n: int, step: int = 0):
         """
         Implementation of the [] operator. Do not use this method directly.
 
@@ -502,23 +521,12 @@ class Op(Trace):
 class DummyTrace(object):
     """Dummy Trace for bypassing traces while reading"""
 
-    def __init__(self, name, datatype):
+    def __init__(self, name, whattype):
         """Base Class for both Axis and Trace Classes.
         Defines the common operations between both."""
         self.name = name
-        self.type = datatype
-
-    def set_pointA(self, n, value):
-        pass
-
-    def set_pointB8(self, n, value):
-        pass
-
-    def set_pointB4(self, n, value):
-        pass
-
-    def set_pointB16(self, n, value):
-        pass
+        self.whattype = whattype
+        self.data = None
 
 
 class LTSPiceReadException(Exception):
@@ -532,8 +540,9 @@ class LTSpiceRawRead(object):
     :param raw_filename: The file containing the RAW data to be read
     :type raw_filename: str
     :param traces_to_read:
-        A string containing the list of traces to be read. If None is provided, only the header is read and all trace
-        data is discarded. If a '*' wildcard is given or no parameter at all then all traces are read.
+        A string or a list containing the list of traces to be read. If None is provided, only the header is read and
+        all trace data is discarded. If a '*' wildcard is given or no parameter at all then all traces are read.
+    :type traces_to_read: str, list or tuple
     :key headeronly:
         Used to only load the header information and skip the trace data entirely. Use `headeronly=True`.
     """
@@ -551,11 +560,11 @@ class LTSpiceRawRead(object):
         "Backannotation"
     ]
 
-    def __init__(self, raw_filename, traces_to_read='*', **kwargs):
+    def __init__(self, raw_filename: str, traces_to_read: Union[str, List[str], Tuple[str], None] = '*', **kwargs):
         self.verbose = kwargs.get('verbose', True)
         assert isinstance(raw_filename, str), "RAW filename is expected to be a string"
         if traces_to_read is not None:
-            assert isinstance(traces_to_read, (str, list)), "traces_to_read must be a string, a list or None"
+            assert isinstance(traces_to_read, (str, list, tuple)), "traces_to_read must be a string, a list or None"
 
         raw_file_size = os.stat(raw_filename).st_size  # Get the file size in order to know the data size
         raw_file = open(raw_filename, "rb")
@@ -569,9 +578,10 @@ class LTSpiceRawRead(object):
             self.encoding = 'utf_16_le'
             sz_enc = 2
             line = 'Tit'
-
+        if self.verbose:
+            print("Reading file with encoding ", self.encoding)
         # Storing the filename as part of the dictionary
-        self.raw_params = {"Filename": raw_filename}  # Initializing the dictionary that contains all raw file info
+        self.raw_params = OrderedDict(Filename=raw_filename)  # Initializing the dictionary that contains all raw file info
         self.backannotations = []  # Storing backannotations
         header = []
         while True:
@@ -597,6 +607,7 @@ class LTSpiceRawRead(object):
         self._traces = []
         self.steps = None
         self.axis = None  # Creating the axis
+        self.flags = self.raw_params['Flags'].split()
         if 'complex' in self.raw_params['Flags']:
             numerical_type = 'complex'
         else:
@@ -634,71 +645,83 @@ class LTSpiceRawRead(object):
             # But first check whether how data is stored.
             self.block_size = (raw_file_size - self.binary_start) // self.nPoints
             self.data_size = self.block_size // self.nVariables
+
+            scan_functions = []
+            for trace in self._traces:
+                if self.data_size == 8:
+                    if trace.data is None:
+                        fun = consume8bytes
+                    else:
+                        fun = read_float64
+                elif self.data_size == 16:
+                    if trace.data is None:
+                        fun = consume16bytes
+                    else:
+                        fun = read_complex
+                else:  # data size is only 4 bytes
+                    if len(scan_functions) == 0:  # This is the axis
+                        fun = read_float64
+                    else:
+                        if trace.data is None:
+                            fun = consume4bytes
+                        else:
+                            fun = read_float32
+                scan_functions.append(fun)
+
             if "fastaccess" in self.raw_params["Flags"]:
                 if self.verbose:
                     print("Fast access")
                 # A fast access means that the traces are grouped together.
-                for var in self._traces:
+                for i, var in enumerate(self._traces):
                     if isinstance(var, DummyTrace):
                         # TODO: replace this by a seek
                         raw_file.read(self.nPoints * self.data_size)
                     else:
-                        if self.data_size == 8 or isinstance(var, Axis):
+                        if USE_NNUMPY:
+                            if self.data_size == 8:
+                                s = raw_file.read(self.nPoints * 8)
+                                var.data = frombuffer(s, dtype=double)
+                            elif self.data_size == 16:
+                                s = raw_file.read(self.nPoints * 16)
+                                var.data = frombuffer(s, dtype=complex)
+                            else:
+                                if i == 0:
+                                    s = raw_file.read(self.nPoints * 8)
+                                    var.data = frombuffer(s, dtype=double)
+                                else:
+                                    s = raw_file.read(self.nPoints * 4)
+                                    var.data = frombuffer(s, dtype=single)
+                        else:
                             for point in range(self.nPoints):
-                                value = raw_file.read(8)
-                                var.set_pointB8(point, value)
-                        elif self.data_size == 16:
-                            for point in range(self.nPoints):
-                                value = raw_file.read(16)
-                                var.set_pointB16(point, value)
-                        else:  # Data size is 4
-                            for point in range(self.nPoints):
-                                value = raw_file.read(4)
-                                var.set_pointB4(point, value)
+                                var.data[point] = scan_functions[i](raw_file)
 
             else:
                 if self.verbose:
                     print("Normal access")
                 # This is the default save after a simulation where the traces are scattered
-                if self.data_size == 8:
-                    for point in range(self.nPoints):
-                        for var in self._traces:
-                            value = raw_file.read(8)
-                            var.set_pointB8(point, value)
-                elif self.data_size == 16:
-                    for point in range(self.nPoints):
-                        for var in self._traces:
-                            value = raw_file.read(16)
-                            var.set_pointB16(point, value)
-                else:  # data size is only 4 bytes
-                    for point in range(self.nPoints):
-                        value = raw_file.read(8)  # first variable (ex:time) is always 8 bytes
-                        self._traces[0].set_pointB8(point, value)
-                        for var in self._traces[1:]:
-                            value = raw_file.read(4)
-                            var.set_pointB4(point, value)
+                for point in range(self.nPoints):
+                    for i, var in enumerate(self._traces):
+                        value = scan_functions[i](raw_file)
+                        if value is not None:
+                            var.data[point] = value
 
         elif self.raw_type == "Values:":
             # Will start the reading of ASCII Values
             for point in range(self.nPoints):
                 first_var = True
                 for var in self._traces:
-                    line = raw_file.readline() \
-                        .decode(encoding=self.encoding, errors='ignore')
-                    # raw_file.seek(raw_file.tell() + self.offset)  # Move past 0x00 from prev. line
-                    # print(line)
-
+                    line = raw_file.readline().decode(encoding=self.encoding, errors='ignore')
                     if first_var:
                         first_var = False
                         spoint = line.split("\t", 1)[0]
-                        # print(spoint)
+
                         if point != int(spoint):
                             print("Error Reading File")
                             break
-                        value = float(line[len(spoint):-1])
+                        value = line[len(spoint):-1]
                     else:
-                        value = float(line[:-1])
-                    var.set_pointA(point, value)
+                        value = line[:-1]
+                    var.data[point] = float(value)
         else:
             raw_file.close()
             raise LTSPiceReadException("Unsupported RAW File. ""%s""" % self.raw_type)
@@ -722,7 +745,7 @@ class LTSpiceRawRead(object):
             try:
                 self._load_step_information(raw_filename)
             except Exception:
-                print("LOG file not found or problems reading it. Auto-detecting steps")
+                print("LOG file not found or problems happened while reading it. Auto-detecting steps")
                 number_of_steps = 0
                 for v in self.axis:
                     if v == self.axis[0]:
@@ -768,13 +791,15 @@ class LTSpiceRawRead(object):
         :type trace_ref: str or int
         :return: An object containing the requested trace
         :rtype: DataSet subclass
+        :raises IndexError: When a trace is not found
         """
         if isinstance(trace_ref, str):
             for trace in self._traces:
-                if trace_ref == trace.name:
+                if trace_ref.upper() == trace.name.upper():  # The trace names are case insensitive
                     # assert isinstance(trace, DataSet)
                     return trace
-            return None
+            raise IndexError(f"{self} doesn't contain trace \"{trace_ref}\"\n"
+                             f"Valid traces are {[trc.name for trc in self._traces]}")
         else:
             return self._traces[trace_ref]
 
@@ -791,9 +816,14 @@ class LTSpiceRawRead(object):
         """
         This function is equivalent to get_trace(0).get_wave(step) instruction.
         It also implements a workaround on a LTSpice issue when using 2nd Order compression, where some values on
-        the time trace have a negative value."""
+        the time trace have a negative value.
+        :param step: Step number
+        :type step: int
+        :returns: Array with the X axis
+        :rtype: list[float] or numpy.array
+        """
         axis = self.get_trace(0)
-        if axis.type == 'time':
+        if axis.whattype == 'time':
             return axis.get_time_axis(step)
         else:
             return axis.get_wave(step)
@@ -804,9 +834,12 @@ class LTSpiceRawRead(object):
             raise LTSPiceReadException("Invalid Filename. The file should end with '.raw'")
         logfile = filename[:-3] + 'log'
         try:
-            log = open(logfile, 'r', errors='replace')
+            encoding = detect_encoding(logfile, "Circuit:")
+            log = open(logfile, 'r', errors='replace', encoding=encoding)
         except OSError:
             raise LTSPiceReadException("Step information needs the '.log' file generated by LTSpice")
+        except UnicodeError:
+            raise LTSPiceReadException("Unable to parse log file and obtain .STEP information. Check Unicode")
 
         for line in log:
             if line.startswith(".step"):
@@ -882,41 +915,85 @@ if __name__ == "__main__":
     import os
     from os.path import split as pathsplit
     from os.path import join as pathjoin
+    from numpy import abs as mag
+
+    def what_to_units(whattype):
+        "Determines the unit to display on the plot Y axis"
+        if 'voltage' in whattype:
+            return 'V'
+        if 'current' in whattype:
+            return 'A'
 
     directory = os.getcwd()
 
     if len(sys.argv) > 1:
         raw_filename = sys.argv[1]
+        trace_names = sys.argv[2:]
+        if len(trace_names) == 0:
+            trace_names = '*'
     else:
         test_directory = pathjoin(pathsplit(directory)[0], 'test_files')
-        filename = 'testfile.raw'
+        filename = 'testfile_5.raw'
+        trace_names = ('V(in)', 'V(out)')
         raw_filename = pathjoin(test_directory, filename)
 
-    LTR = RawRead(raw_filename)
+    LTR = RawRead(raw_filename, trace_names, verbose=True)
+    for param, value in LTR.raw_params.items():
+        print("{}: {}{}".format(param, " "*(20-len(param)), str(value).strip()))
 
-    print(LTR.get_trace_names())
-    print(LTR.get_raw_property())
-
-    plt.figure()
-
-    volt_1 = LTR.get_trace('V(in)')
-    volt_2 = LTR.get_trace('V(out)')
-    # steps = LTR.get_steps(ana=4.0)
+    if trace_names == '*':
+        print("Add the traces to plot after the raw file")
+        exit(0)
+    traces = [LTR.get_trace(trace) for trace in trace_names]
     steps = LTR.get_steps()
-    print(steps)
-    fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
-    for ax in (ax1, ax2):
-        ax.grid(True)
+    print("Steps read are :", list(steps))
+    if 'complex' in LTR.flags:
+        n_axis = len(traces) * 2
+    else:
+        n_axis = len(traces)
 
-    plt.xlim([0.9e-3, 1.2e-3])
-    x = LTR.get_axis(0)  # Zero is always the X axis
-    ax1.plot(x, volt_1.get_wave(0))
-    for step in steps:
-        x = LTR.get_axis(step)  # Zero is always the X axis
-        ax2.plot(x, volt_2.get_wave(step), label=str(LTR.steps[step]))
-        # plt.plot(y.get_wave(step))
-        # plt.plot(x.get_wave(step),marker='x')
-        # plt.plot(x.get_wave(step), y.get_wave(step), label=LTR.steps[step])
+    fig, axis_set = plt.subplots(n_axis, 1, sharex='all')
+    write_labels = True
+
+    for i, trace in enumerate(traces):
+        if 'complex' in LTR.flags:
+            axises = axis_set[2*i: 2*i + 2]  # Returns two axis
+        else:
+            if n_axis == 1:
+                axises = [axis_set]  # Needs to return a list
+            else:
+                axises = axis_set[i:i+1]  # Returns just one axis but enclosed in a list
+        magnitude = True
+        for ax in axises:
+            ax.grid(True)
+            if 'log' in LTR.flags:
+                ax.set_xscale('log')
+            for step in steps:
+                x = LTR.get_axis(step)
+                y = traces[i].get_wave(step)
+                if 'complex' in LTR.flags:
+                    x = mag(x)
+                    if magnitude:
+                        ax.set_yscale('log')
+                        y = mag(y)
+                    else:
+                        y = angle(y, deg=True)
+                if write_labels:
+                    ax.plot(x, y, label=str(LTR.steps[step]))
+                else:
+                    ax.plot(x, y)
+            write_labels = False
+
+            if 'complex' in LTR.flags:
+                if magnitude:
+                    title = f"{trace.name} Mag [db{what_to_units(trace.whattype)}]"
+                    magnitude = False
+                else:
+                    title = f"{trace.name} Phase [deg]"
+            else:
+                title = f"{trace.name} [{what_to_units(trace.whattype)}]"
+            ax.set_title(title)
+
     plt.figlegend()
     plt.show()
 '''

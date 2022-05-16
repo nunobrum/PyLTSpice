@@ -20,7 +20,7 @@ Stepper.add_instructions(
     ".param run = 0"
 )
 Stepper.set_parameter('test_param2', 20)
-Stepper.add_model_sweep('XU1',('AD712', 'AD820'))
+Stepper.add_model_sweep('XU1', ('AD712', 'AD820'))
 Stepper.add_value_sweep('V1', (5, 10, 15))
 # Stepper.add_value_sweep('V1', (-5, -10, -15))
 

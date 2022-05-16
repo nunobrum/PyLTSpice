@@ -27,19 +27,21 @@ if USE_NNUMPY:
 class Trace(DataSet):
     """Helper class representing a trace. This class is based on DataSet, therefore, it doesn't support STEPPED data."""
 
-    def __init__(self, name, data):
-        if name == 'time':
-            datatype = 'time'
-            numerical_type = 'real'
-        elif name == 'frequency':
-            datatype = 'frequency'
-            numerical_type = 'complex'
-        else:
-            datatype = 'voltage'
-            numerical_type = 'real'
+    def __init__(self, name, whattype, data, numerical_type=''):
+        if numerical_type == '':
+            if name == 'time':
+                numerical_type = 'real'
+            elif name == 'frequency':
+                numerical_type = 'complex'
+            else:
+                if isinstance(data[0], float):
+                    numerical_type = 'real'
+                elif isinstance(data[0], complex):
+                    numerical_type = 'complex'
+                else:
+                    raise NotImplemented
 
-        DataSet.__init__(self, name, datatype, 0)
-        self.numerical_type = numerical_type
+        DataSet.__init__(self, name, whattype, len(data), numerical_type=numerical_type)
         if USE_NNUMPY and isinstance(data, (list, tuple)):
             self.data = array(data)
         else:
@@ -53,14 +55,14 @@ class LTSpiceRawWrite(object):
 
     """
 
-    def __init__(self, plot_name='', fastacces=True):
+    def __init__(self, plot_name='', fastacces=True, numtype='real', encoding='utf_16_le'):
         self._traces = list()
-        self.flag_numtype = 'real'
+        self.flag_numtype = numtype
         self.flag_stepped = False
         self.flag_fastaccess = fastacces
         self.plot_name = plot_name
         self.offset = 0.0
-        self.encoding = 'utf_16_le'
+        self.encoding = encoding
 
     def _str_flags(self):
         flags = [self.flag_numtype]
@@ -69,15 +71,6 @@ class LTSpiceRawWrite(object):
         if self.flag_fastaccess:
             flags.append('fastaccess')
         return ' '.join(flags)
-
-    def _format_for_trace(self, datatype):
-        if datatype == 'time':
-            fmt = 'd'
-        elif datatype == 'frequency':
-            fmt = 'dd'
-        else:
-            fmt = 'f'
-        return fmt
 
     def add_trace(self, trace: Trace):
         """
@@ -91,16 +84,16 @@ class LTSpiceRawWrite(object):
         """
         assert isinstance(trace, Trace), "The trace needs to be of the type ""Trace"""
         if self.plot_name is None or len(self._traces) == 0:
-            if trace.type == 'time':
-                self.plot_name = self.plot_name or 'Time Transient'
+            if trace.whattype == 'time':
+                self.plot_name = self.plot_name or 'Transient Analysis'
                 self.flag_numtype = 'real'
-            elif trace.type == 'frequency':
+            elif trace.whattype == 'frequency':
                 self.plot_name = self.plot_name or 'AC Analysis'
                 self.flag_numtype = 'complex'
-            elif trace.type in ('voltage', 'current'):
+            elif trace.whattype in ('voltage', 'current'):
                 self.plot_name = self.plot_name or 'DC transfer characteristic'
                 self.flag_numtype = 'real'
-            elif trace.type == 'param':
+            elif trace.whattype == 'param':
                 self.plot_name = self.plot_name or 'Operating Point'
                 self.flag_numtype = 'real'
             else:
@@ -134,23 +127,23 @@ class LTSpiceRawWrite(object):
         f.write("Backannotation: \n".encode(self.encoding))
         f.write("Variables:\n".encode(self.encoding))
         for i, trace in enumerate(self._traces):
-            f.write("\t{0}\t{1}\t{2}\n".format(i, trace.name, trace.type).encode(self.encoding))
+            f.write("\t{0}\t{1}\t{2}\n".format(i, trace.name, trace.whattype).encode(self.encoding))
         total_bytes = 0
         f.write("Binary:\n".encode(self.encoding))
-        if self.flag_fastaccess:
+        if self.flag_fastaccess and self.flag_numtype != 'complex':  # Don't know why, but complex RAW files aren't
+            # converted to FastAccess
             for trace in self._traces:
-                if False: #USE_NNUMPY:
-                    # TODO: Implement a faster save using the numpy methods
-                    f.write(trace.data.pack('dd'))
+                if USE_NNUMPY:
+                    f.write(trace.data.tobytes())
                 else:
-                    fmt = self._format_for_trace(trace.type)
+                    fmt = tobytes_for_trace(trace)
                     for value in trace.data:
-                        f.write(pack(fmt, value))
+                        f.write(fmt(value))
         else:
+            fmts = {trace: tobytes_for_trace(trace) for trace in self._traces}
             for i in range(len(self._traces[0])):
                 for trace in self._traces:
-                    fmt = self._format_for_trace(trace.type)
-                    total_bytes += f.write(pack(fmt, trace[i]))
+                    total_bytes += f.write(fmts[trace](trace[i]))
         f.close()
 
     def _rename_netlabel(self, name, rename_format: str, *kwargs) -> str:
@@ -170,12 +163,12 @@ class LTSpiceRawWrite(object):
         return False
 
     def add_traces_from_raw(self, other: LTSpiceRawRead, trace_filter: Union[list, tuple], **kwargs):
-        skip_doc ="""
+        """
         *(Not fully implemented)*
 
         Merge two LTSpiceRawWrite classes together resulting in a new instance
-        :param other: another instance of the LTSpiceRawWrite class.
-        :type other: LTSpiceRawWrite
+        :param other: an instance of the LTSpiceRawRead class where the traces are going to be copied from.
+        :type other: LTSpiceRawRead
         :param trace_filter: A list of signals that should be imported into the new file
         :type trace_filter: list
         :keyword force_axis_alignment: If two raw files don't have the same axis, an attempt is made to sync the two
@@ -190,9 +183,14 @@ class LTSpiceRawWrite(object):
             view.
         :keyword: minimum_timestep: This parameter forces the two axis to sync using a minimum time step. That is, all
             time increments that are less than this parameter will be suppressed.
-        :return: A new instance of LTSpiceRawWrite with
-        :rtype: LTSpiceRawWrite
+        :returns: Nothing
         """
+        force_axis_alignment = kwargs.get('force_axis_alignment', False)
+        admissible_error = kwargs.get('admissible_error', 1e-11)
+        rename_format = kwargs.get('rename_format', '{}')
+        from_step = kwargs.get('step', 0)
+        minimum_timestep = kwargs.get('fixed_timestep', 0.0)
+
         for flag in other.get_raw_property('Flags').split(' '):
             if flag in ('real', 'complex'):
                 other_flag_num_type = flag
@@ -200,22 +198,24 @@ class LTSpiceRawWrite(object):
         else:
             other_flag_num_type = 'real'
 
-        if (self.flag_numtype != other_flag_num_type) or (self._traces[0].type != other.get_trace(0).type):
-            raise ValueError("The two instances should have the same type")
-        force_axis_alignment = kwargs.get('force_axis_alignment', False)
-        admissible_error = kwargs.get('admissible_error', 1e-11)
-        rename_format = kwargs.get('rename_format', '{}')
-        from_step = kwargs.get('step', 0)
-        minimum_timestep = kwargs.get('fixed_timestep', 0.0)
-
-        if len(self._traces) == 0:  # if no X axis is present, copy from the first one
-            new_axis = Trace(other.get_trace(0).name, other.get_axis(from_step))
+        if len(self._traces):  # there are already traces
+            if self.flag_numtype != other_flag_num_type:
+                raise ValueError("The two instances should have the same type:\n"
+                                 f"Source is {other_flag_num_type} and Destination is {self.flag_numtype}")
+            if self._traces[0].whattype != other.get_trace(0).whattype:
+                raise ValueError("The two instances should have the same axis type:\n"
+                                 f"Source is {other.get_trace(0).whattype} and Destination is {self._traces[0].whattype}")
+        else:  # No traces are present
+            # if no X axis is present, copy from the first one
+            self.flag_numtype = other_flag_num_type
+            oaxis = other.get_trace(0)
+            new_axis = Trace(oaxis.name, oaxis.whattype, other.get_axis(from_step))
             self._traces.append(new_axis)
             force_axis_alignment = False
-        my_axis = self._traces[0].get_wave()
-        other_axis = other.get_axis()
 
         if force_axis_alignment or minimum_timestep > 0.0:
+            my_axis = self._traces[0].get_wave()
+            other_axis = other.get_axis(from_step)
             new_axis = []
             if minimum_timestep > 0.0:
                 raise NotImplementedError
@@ -264,10 +264,12 @@ class LTSpiceRawWrite(object):
                     self._traces.append(Trace(trace, existing_data[trace]))
 
         else:
-            assert len(self._traces[0]) == len(other.get_axis()), "The two instances should have the same size"
-            for trace in trace_filter:
-                data = other.get_trace(trace).get_wave(from_step)
-                self._traces.append(Trace(rename_format.format(trace, **kwargs), data))
+            assert len(self._traces[0]) == len(other.get_axis(from_step)), "The two instances should have the same size"
+            for trace_name in trace_filter:
+                trace = other.get_trace(trace_name)
+                new_name = rename_format.format(trace_name, **kwargs)
+                data = trace.get_wave(from_step)
+                self._traces.append(Trace(new_name, trace.whattype, data, numerical_type=trace.numerical_type))
 
     def get_trace(self, trace_ref):
         """
@@ -283,13 +285,34 @@ class LTSpiceRawWrite(object):
                 if trace_ref == trace.name:
                     # assert isinstance(trace, DataSet)
                     return trace
-            return None
+            raise IndexError(f"{self} doesn't contain trace \"{trace_ref}\"\n"
+                             f"Valid traces are {[trc.name for trc in self._traces]}")
         else:
             return self._traces[trace_ref]
 
     def __getitem__(self, item):
         """Helper function to access traces by using the [ ] operator."""
         return self.get_trace(item)
+
+
+if USE_NNUMPY:
+    def tobytes_for_trace(trace: Trace):
+        def tobytes(value):
+            return value.tobytes()
+        return tobytes
+else:
+    def tobytes_for_trace(trace: Trace):
+        whattype = trace.whattype
+        if whattype == 'time':
+            def tobytes(value):
+                return pack('d', value)
+        elif whattype == 'frequency' or trace.numerical_type == 'complex':
+            def tobytes(value):
+                return pack('dd', value.real, value.imag)
+        else:
+            def tobytes(value):
+                return pack('f', value)
+        return tobytes
 
 
 if __name__ == '__main__':
@@ -301,7 +324,7 @@ if __name__ == '__main__':
         raw_type = ''  # Initialization of parameters that need to be overridden by the file header
         wave_size = 0
         for line in f:
-            tokens = line.rstrip('\n').split(',')
+            tokens = line.rstrip('\r\n').split(',')
             if len(tokens) == 4:
                 if tokens[0] == 'Segments' and tokens[2] == 'SegmentSize':
                     wave_size = int(tokens[1]) * int(tokens[3])
@@ -348,4 +371,21 @@ if __name__ == '__main__':
         print(max_error)
         """
 
-    test_axis_sync()
+    def test_write_ac():
+        LW = LTSpiceRawWrite()
+        LR = LTSpiceRawRead("..\\tests\\PI_Filter.raw")
+        LW.add_traces_from_raw(LR, ('V(N002)',))
+        LW.save("..\\tests\\PI_filter_rewritten.raw")
+
+    def test_write_tran():
+        LR = LTSpiceRawRead("..\\tests\\TRAN - STEP.raw")
+        LW = LTSpiceRawWrite()
+        LW.add_traces_from_raw(LR, ('V(out)', 'I(C1)'))
+        LW.flag_fastaccess = False
+        LW.save("..\\tests\\TRAN - STEP0_normal.raw")
+        LW.flag_fastaccess = True
+        LW.save("..\\tests\\TRAN - STEP0_fast.raw")
+
+    # test_axis_sync()
+    test_write_ac()
+    test_write_tran()

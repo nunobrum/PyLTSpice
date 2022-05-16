@@ -85,6 +85,7 @@ import os
 import sys
 from collections import OrderedDict
 from typing import Union, Iterable, List
+from PyLTSpice.detect_encoding import detect_encoding
 
 if __name__ == "__main__":
     def message(*strs):
@@ -93,13 +94,6 @@ if __name__ == "__main__":
 else:
     def message(*strs):
         pass
-
-
-def enc_norm(line):
-    if len(line) > 1 and line[0] == '\0':  # This is to decode the LTSpice XVII encoding (unable to find the exact code)
-        return line[1::2]  # Removes zeros from the encoding
-    else:
-        return line  # Return as is
 
 
 class LTComplex(object):
@@ -147,7 +141,7 @@ def try_convert_value(value: str) -> Union[int, float, str]:
     return ans
 
 
-def try_convert_values(values: Iterable[str]) -> List[str]:
+def try_convert_values(values: Iterable[str]) -> List[Union[int, float, str]]:
     """
     Same as try_convert_values but applicable to an iterable
 
@@ -187,17 +181,17 @@ def reformat_LTSpice_export(export_file: str, tabular_file: str):
     :rtype: None
 
     """
-    fin = open(export_file, 'r')
-    fout = open(tabular_file, 'w')
+    encoding = detect_encoding(export_file)
+    fin = open(export_file, 'r', encoding=encoding)
+    fout = open(tabular_file, 'w', encoding=encoding)
 
-    headers = enc_norm(fin.readline())
+    headers = fin.readline()
     # writing header
     go_header = True
     run_no = 0  # Just to avoid warning, this is later overridden by the step information
     param_values = ""  # Just to avoid warning, this is later overridden by the step information
     regx = re.compile(r"Step Information: ([\w=\d\. -]+) +\(Run: (\d*)/\d*\)\n")
     for line in fin:
-        line = enc_norm(line)
         if line.startswith("Step Information:"):
             match = regx.match(line)
             # message(line, end="")
@@ -249,8 +243,9 @@ class LTSpiceExport(object):
     """
 
     def __init__(self, export_filename: str):
-        fin = open(export_filename, 'r')
-        file_header = enc_norm(fin.readline())
+        self.encoding = detect_encoding(export_filename)
+        fin = open(export_filename, 'r', encoding=self.encoding)
+        file_header = fin.readline()
 
         self.headers = file_header.split('\t')
         # Set to read header
@@ -261,7 +256,6 @@ class LTSpiceExport(object):
 
         regx = re.compile(r"Step Information: ([\w=\d\. -]+) +\(Run: (\d*)/\d*\)\n")
         for line in fin:
-            line = enc_norm(line)
             if line.startswith("Step Information:"):
                 match = regx.match(line)
                 # message(line, end="")
@@ -323,7 +317,8 @@ class LTSpiceLogReader(object):
 
     def __init__(self, log_filename: str, read_measures=True, step_set={}):
         self.logname = log_filename
-        fin = open(log_filename, 'r')
+        self.encoding = detect_encoding(log_filename, "Circuit:")
+        fin = open(log_filename, 'r', encoding=self.encoding)
         self.step_count = len(step_set)
         self.stepset = step_set
         self.dataset = OrderedDict()  # Dictionary in which the order of the keys is kept
@@ -335,8 +330,7 @@ class LTSpiceLogReader(object):
                 re.IGNORECASE)
 
         message("Processing LOG file", log_filename)
-
-        line = enc_norm(fin.readline())
+        line = fin.readline()
 
         while line:
             if line.startswith(".step"):
@@ -385,7 +379,7 @@ class LTSpiceLogReader(object):
                     for k, title in enumerate(headers):
                         self.dataset[title] = [
                             try_convert_value(measurements[k])]  # need to be a list for compatibility
-            line = enc_norm(fin.readline())
+            line = fin.readline()
 
         # message("Reading Measurements")
         dataname = None
@@ -423,7 +417,7 @@ class LTSpiceLogReader(object):
                 else:
                     message("->", line)
 
-            line = enc_norm(fin.readline())  # advance to the next line
+            line = fin.readline()  # advance to the next line
 
         # storing the last data into the dataset
         message("Storing Measurement %s" % dataname)
@@ -573,7 +567,7 @@ class LTSpiceLogReader(object):
             print("Empty data set. Exiting without writing file.")
             return
 
-        fout = open(export_file, mode)
+        fout = open(export_file, mode, encoding=self.encoding)
 
         if append_with_line_prefix is not None:  # if an append it will write the filename first
             fout.write('user info\t')

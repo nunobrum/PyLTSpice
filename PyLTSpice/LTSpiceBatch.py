@@ -257,7 +257,7 @@ class SimCommander(SpiceEditor):
             if self.verbose:
                 print("Creating Netlist")
             retcode = run_function(cmd_netlist)
-            if retcode == 0:
+            if retcode == 0 and os.path.exists(netlist_file):
                 if self.verbose:
                     print("The Netlist was successfully created")
             else:
@@ -524,3 +524,9 @@ if __name__ == "__main__":
         LTC.add_instruction(".savebias {} internal time={}".format(bias_file, tduration))
         tstart = tstop
         LTC.run(callback=callback_function)
+        
+    LTC.reset_netlist()
+    LTC.add_instruction('.ac dec 40 1m 1G')
+    LTC.set_component_value('V1', 'AC 1 0')
+    LTC.run(callback=callback_function)
+    LTC.wait_completion()
