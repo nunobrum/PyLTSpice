@@ -177,11 +177,12 @@ to plot the results of three traces in two subplots. ::
 __author__ = "Nuno Canto Brum <nuno.brum@gmail.com>"
 __copyright__ = "Copyright 2017, Fribourg Switzerland"
 
+import os
 from binascii import b2a_hex
 from collections import OrderedDict
 from struct import unpack
 from typing import Union, List, Tuple
-from detect_encoding import detect_encoding
+from PyLTSpice.detect_encoding import detect_encoding
 
 try:
     from numpy import zeros, array, complex128, abs as np_abs, single, double, frombuffer, angle
