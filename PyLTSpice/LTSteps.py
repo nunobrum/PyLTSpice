@@ -320,7 +320,8 @@ class LTSpiceLogReader(object):
         self.encoding = detect_encoding(log_filename, "Circuit:")
         fin = open(log_filename, 'r', encoding=self.encoding)
         self.step_count = len(step_set)
-        self.stepset = step_set
+        self.stepset = step_set.copy()  # A copy is done since the dictionary is a mutable object.
+        # Changes in step_set would be propagated to object on the call
         self.dataset = OrderedDict()  # Dictionary in which the order of the keys is kept
         self.measure_count = 0
 
@@ -539,8 +540,8 @@ class LTSpiceLogReader(object):
         """
         for param in list(self.dataset.keys()):
             if len(self.dataset[param]) > 0 and isinstance(self.dataset[param][0], LTComplex):
-                self.dataset[param+'_mag'] = [v.mag for v in self.dataset[param]]
-                self.dataset[param+'_ph'] = [v.ph for v in self.dataset[param]]
+                self.dataset[param + '_mag'] = [v.mag for v in self.dataset[param]]
+                self.dataset[param + '_ph'] = [v.ph for v in self.dataset[param]]
 
     def export_data(self, export_file: str, append_with_line_prefix=None):
         """
