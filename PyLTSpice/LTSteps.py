@@ -118,16 +118,18 @@ class LTComplex(object):
         return f"{self.mag},{self.ph}"
 
 
-def try_convert_value(value: str) -> Union[int, float, str]:
+def try_convert_value(value: Union[str, int, float]) -> Union[int, float, str]:
     """
     Tries to convert the string into an integer and if it fails, tries to convert to a float, if it fails, then returns the
     value as string.
 
     :param value: value to convert
-    :type value: str
+    :type value: str, int or float
     :return: converted value, if applicable
     :rtype: int, float, str
     """
+    if isinstance(value, (int, float)):
+        return value
     try:
         ans = int(value)
     except ValueError:
