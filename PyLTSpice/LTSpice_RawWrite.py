@@ -21,7 +21,7 @@ from PyLTSpice.LTSpice_RawRead import DataSet, USE_NNUMPY, LTSpiceRawRead
 from struct import pack
 
 if USE_NNUMPY:
-    from numpy import array
+    from numpy import array, float32 as float32
 
 
 class Trace(DataSet):
@@ -34,7 +34,7 @@ class Trace(DataSet):
             elif name == 'frequency':
                 numerical_type = 'complex'
             else:
-                if isinstance(data[0], float):
+                if USE_NNUMPY and isinstance(data[0], float32) or isinstance(data[0], float):
                     numerical_type = 'real'
                 elif isinstance(data[0], complex):
                     numerical_type = 'complex'
@@ -162,7 +162,7 @@ class LTSpiceRawWrite(object):
                 return True
         return False
 
-    def add_traces_from_raw(self, other: LTSpiceRawRead, trace_filter: Union[list, tuple], **kwargs):
+    def add_traces_from_raw(self, other: LTSpiceRawRead, trace_filter: Union[list, tuple, str], **kwargs):
         """
         *(Not fully implemented)*
 
@@ -170,13 +170,13 @@ class LTSpiceRawWrite(object):
         :param other: an instance of the LTSpiceRawRead class where the traces are going to be copied from.
         :type other: LTSpiceRawRead
         :param trace_filter: A list of signals that should be imported into the new file
-        :type trace_filter: list
+        :type trace_filter: list, Tuple, or just a string for one trace
         :keyword force_axis_alignment: If two raw files don't have the same axis, an attempt is made to sync the two
         :keyword admissible_error: maximum error allowed in the sync between the two axis
         :keyword rename_format: when adding traces with the same name, it is possible to define a rename format.
             For example, if there are two traces named N001 in order to avoid duplicate names the
             rename format can be defined as "{}_{kwarg_name} where kwarg_name is passed as a keyword
-            argument of this function
+            argument of this function. If just one trace is being added, this can be used to simply give the new name.
 
         :keyword step: by default only step 0 is added from the second raw. It is possible to add other steps, by
             using this keyword parameter. This is useful when we want to "flatten" the multiple step runs into the same
@@ -190,6 +190,8 @@ class LTSpiceRawWrite(object):
         rename_format = kwargs.get('rename_format', '{}')
         from_step = kwargs.get('step', 0)
         minimum_timestep = kwargs.get('fixed_timestep', 0.0)
+        if isinstance(trace_filter, str):
+            trace_filter = [trace_filter]
 
         for flag in other.get_raw_property('Flags').split(' '):
             if flag in ('real', 'complex'):
@@ -223,16 +225,22 @@ class LTSpiceRawWrite(object):
                 i = 0  # incomming data counter
                 e = 0  # existing data counter
                 existing_data = {}
+                existing_types = {}
                 incoming_data = {}
+                incoming_types = {}
                 new_traces = {}
                 updated_traces = {}
 
-                for new_trace in trace_filter:
-                    new_traces[new_trace] = []
-                    incoming_data[new_trace] = other.get_trace(new_trace).get_wave(from_step)
+                for trace_name in trace_filter:
+                    new_name = rename_format.format(trace_name, **kwargs)
+                    new_traces[new_name] = []
+                    otrace = other.get_trace(trace_name)
+                    incoming_data[new_name] = otrace.get_wave(from_step)
+                    incoming_types[new_name] = otrace.whattype
                 for trace in self._traces[1:]:  # not considering axis
                     updated_traces[trace.name] = []
-                    existing_data[trace.name] = self.get_trace(trace.name).get_wave()
+                    existing_data[trace.name] = trace.get_wave()
+                    existing_types[trace.name] = trace.whattype
 
                 axis_name = self._traces[0].name  # Saving the trace name for recreating all the traces
 
@@ -250,21 +258,23 @@ class LTSpiceRawWrite(object):
                         new_axis.append(my_axis[e])
                         e += 1
                     for trace in incoming_data:
-                        new_traces[trace].append(incoming_data[trace][i])
+                        new_traces[trace].append(incoming_data[trace][i])  # TODO: Interpolate values
                     for trace in existing_data:
-                        updated_traces[trace].append(existing_data[trace][e])
+                        updated_traces[trace].append(existing_data[trace][e])  # TODO: Interpolate values
 
+                axis_whattype = self._traces[0].whattype
                 self._traces.clear()  # Cleaning class list of traces
                 # Creating the New Axis
-                self._traces.append(Trace(axis_name, new_axis))
+                self._traces.append(Trace(axis_name, axis_whattype, new_axis))
                 # Now recreating all tre traces
                 for trace in incoming_data:
-                    self._traces.append(Trace(trace, incoming_data[trace]))
+                    self._traces.append(Trace(trace, incoming_types[trace], new_traces[trace]))
                 for trace in existing_data:
-                    self._traces.append(Trace(trace, existing_data[trace]))
+                    self._traces.append(Trace(trace, existing_types[trace], updated_traces[trace]))
 
         else:
-            assert len(self._traces[0]) == len(other.get_axis(from_step)), "The two instances should have the same size"
+            assert len(self._traces[0]) == len(other.get_axis(from_step)), \
+                "The two instances should have the same size. To avoid this use force_axis_alignment=True option"
             for trace_name in trace_filter:
                 trace = other.get_trace(trace_name)
                 new_name = rename_format.format(trace_name, **kwargs)
@@ -374,8 +384,13 @@ if __name__ == '__main__':
     def test_write_ac():
         LW = LTSpiceRawWrite()
         LR = LTSpiceRawRead("..\\tests\\PI_Filter.raw")
+        LR1 = LTSpiceRawRead("..\\tests\\PI_Filter_resampled.raw")
         LW.add_traces_from_raw(LR, ('V(N002)',))
+        LW.add_traces_from_raw(LR1, 'V(N002)', rename_format='N002_resampled', force_axis_alignment=True)
+        LW.flag_fastaccess = False
         LW.save("..\\tests\\PI_filter_rewritten.raw")
+        LW.flag_fastaccess = True
+        LW.save("..\\tests\\PI_filter_rewritten_fast.raw")
 
     def test_write_tran():
         LR = LTSpiceRawRead("..\\tests\\TRAN - STEP.raw")
