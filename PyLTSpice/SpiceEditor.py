@@ -21,7 +21,9 @@ from PyLTSpice.detect_encoding import detect_encoding
 __author__ = "Nuno Canto Brum <nuno.brum@gmail.com>"
 __copyright__ = "Copyright 2021, Fribourg Switzerland"
 
-END_LINE_TERM = '\n'
+END_LINE_TERM = '\n'  #: This controls the end of line terminator used
+SUBCIRCUIT_DIVIDER = ':'  #: This controls the Subcircuit divider when setting component values inside subcircuits.
+                          # Ex: Editor.set_component
 
 # A Spice netlist can only have one of the instructions below, otherwise an error will be raised
 UNIQUE_SIMULATION_DOT_INSTRUCTIONS = ('.AC', '.DC', '.TRAN', '.NOISE', '.DC', '.TF')
@@ -59,44 +61,49 @@ SPICE_DOT_INSTRUCTIONS = (
 REPLACE_REGXES = {
     'A': r"",  # Special Functions, Parameter substitution not supported
     'B': r"^(?P<designator>B§?[VI]?\w+)(?P<nodes>(\s+\S+){2})\s+(?P<value>.*)$",  # Behavioral source
-    'C': r"^(?P<designator>C§?\w+)(?P<nodes>(\s+\S+){2})\s+(?P<value>({)?(?(5).*}|([0-9\.E+-]+(Meg|[kmuµnpf])?F?))).*$",  # Capacitor
+    'C': r"^(?P<designator>C§?\w+)(?P<nodes>(\s+\S+){2})(?P<model>\s+\w+)?\s+(?P<value>({)?(?(6).*}|([0-9\.E+-]+(Meg|[kmuµnpf])?F?))).*$",  # Capacitor
     'D': r"^(?P<designator>D§?\w+)(?P<nodes>(\s+\S+){2})\s+(?P<value>\w+).*$",  # Diode
     'I': r"^(?P<designator>I§?\w+)(?P<nodes>(\s+\S+){2})\s+(?P<value>.*)$",  # Current Source
-    'E': r"^(?P<designator>E§?\w+)(?P<nodes>(\s+\S+){2,4}\s+(?P<value>.*)$",  # Voltage Dependent Voltage Source
+    'E': r"^(?P<designator>E§?\w+)(?P<nodes>(\s+\S+){2,4})\s+(?P<value>.*)$",  # Voltage Dependent Voltage Source
                                                         # this only supports changing gain values
     'F': r"^(?P<designator>F§?\w+)(?P<nodes>(\s+\S+){2})\s+(?P<value>.*)$",  # Current Dependent Current Source
-                                                        # TODO: this implementation replaces everything after the 2
-                                                        #       first nets
+                                                        # This implementation replaces everything after the 2 first nets
     'G': r"^(?P<designator>G§?\w+)(?P<nodes>(\s+\S+){2,4})\s+(?P<value>.*)$",  # Voltage Dependent Current Source
-                                                        # this only supports changing gain values
+                                                        # This only supports changing gain values
     'H': r"^(?P<designator>H§?\w+)(?P<nodes>(\s+\S+){2})\s+(?P<value>.*)$",  # Voltage Dependent Current Source
-                                                        # TODO: this implementation replaces everything after the 2
-                                                        #       first nets
+                                                        # This implementation replaces everything after the 2 first nets
     'I': r"^(?P<designator>I§?\w+)(?P<nodes>(\s+\S+){2})\s+(?P<value>.*)$",  # Current Source
-                                                        # TODO: this implementation replaces everything after the 2
-                                                        #       first nets
+                                                        # This implementation replaces everything after the 2 first nets
     'J': r"^(?P<designator>J§?\w+)(?P<nodes>(\s+\S+){3})\s+(?P<value>\w+).*$",  # JFET
     'K': r"^(?P<designator>K§?\w+)(?P<nodes>(\s+\S+){2,4})\s+(?P<value>[\+\-]?[0-9\.E+-]+[kmuµnpf]?).*$",  # Mutual Inductance
     'L': r"^(?P<designator>L§?\w+)(?P<nodes>(\s+\S+){2})\s+(?P<value>({)?(?(5).*}|([0-9\.E+-]+(Meg|[kmuµnpf])?H?))).*$",  # Inductance
     'M': r"^(?P<designator>M§?\w+)(?P<nodes>(\s+\S+){3,4})\s+(?P<value>\w+).*$",  # MOSFET TODO: Parameters substitution not supported
     'O': r"^(?P<designator>O§?\w+)(?P<nodes>(\s+\S+){4})\s+(?P<value>\w+).*$",  # Lossy Transmission Line TODO: Parameters substitution not supported
     'Q': r"^(?P<designator>Q§?\w+)(?P<nodes>(\s+\S+){3,4})\s+(?P<value>\w+).*$",  # Bipolar TODO: Parameters substitution not supported
-    'R': r"^(?P<designator>R§?\w+)(?P<nodes>(\s+\S+){2})\s+(?P<value>({)?(?(5).*}|([0-9\.E+-]+(Meg|[kmuµnpf])?R?))).*$", # Resistors
+    'R': r"^(?P<designator>R§?\w+)(?P<nodes>(\s+\S+){2})(?P<model>\s+\w+)?\s+(?P<value>({)?(?(6).*}|([0-9\.E+-]+(Meg|[kmuµnpf])?R?))).*$", # Resistors
     'S': r"^(?P<designator>S§?\w+)(?P<nodes>(\s+\S+){4})\s+(?P<value>.*)$",  # Voltage Controlled Switch
     'T': r"^(?P<designator>T§?\w+)(?P<nodes>(\s+\S+){4})\s+(?P<value>.*)$",  # Lossless Transmission
     'U': r"^(?P<designator>U§?\w+)(?P<nodes>(\s+\S+){3})\s+(?P<value>.*)$",  # Uniform RC-line
     'V': r"^(?P<designator>V§?\w+)(?P<nodes>(\s+\S+){2})\s+(?P<value>.*)$",  # Voltage Source
-                                                        # TODO: this implementation replaces everything after the 2
-                                                        #       first nets
+                                                        # This implementation replaces everything after the 2 first nets
     'W': r"^(?P<designator>W§?\w+)(?P<nodes>(\s+\S+){2})\s+(?P<value>.*)$",  # Current Controlled Switch
-                                                        # TODO: this implementation replaces everything after the 2
-                                                        #       first nets
+                                                        # This implementation replaces everything after the 2 first nets
     'X': r"^(?P<designator>X§?\w+)(?P<nodes>(\s+\S+){1,99})\s+(?P<value>\w+)(\s+\w+\s*=\s*\S+)*\s*$",  # Sub-circuit, Parameter substitution not supported
     'Z': r"^(?P<designator>Z§?\w+)(?P<nodes>(\s+\S+){3})\s+(?P<value>\w+).*$",  # MESFET and IBGT. TODO: Parameters substitution not supported
 }
 
-PARAM_REGX = r"%s\s*(=\s*)?(?P<value>[\w*/\.+-/{}()]*)"
-SUBCIRCUIT_DIVIDER = ':'
+
+
+
+PARAM_REGEX = r"%s\s*(=\s*)?(?P<value>[\w*/\.+-/{}()]*)"
+SUBCKT_CLAUSE_FIND = r"^.SUBCKT\s+"
+
+# Code Optimization objects, avoiding repeated compilation of regular expressions
+component_replace_regexs = {prefix: re.compile(pattern, re.IGNORECASE) for prefix, pattern in REPLACE_REGXES.items()}
+subcircuit_regex = re.compile(r"^.SUBCKT\s+(?P<name>\w+)", re.IGNORECASE)
+lib_inc_regex = re.compile(r"^\.(LIB|INC)\s+(.*)$", re.IGNORECASE)
+
+LibSearchPaths = []
 
 def format_eng(value) -> str:
     """
@@ -172,9 +179,9 @@ def scan_eng(value: str) -> float:
             'k': 1.0e+03,
         }[suffix[0]]
     elif suffix.startswith("Meg"):
-        return f * 1E6
+        return f * 1E+6
     else:
-        raise f
+        return f
 
 
 def get_line_command(line) -> str:
@@ -235,6 +242,13 @@ class ComponentNotFoundError(Exception):
 
 class ParameterNotFoundError(Exception):
     """ParameterNotFound Error"""
+    def __init__(self, parameter):
+        super().__init__(f'Parameter "{parameter}" not found')
+
+class UnrecognizedSyntaxError(Exception):
+    """Line doesn't match expected Spice syntax"""
+    def __init__(self, line, regex):
+        super().__init__(f'Line: "{line}" doesn\'t match regular expression "{regex}"')
 
 
 class SpiceCircuit(object):
@@ -258,7 +272,7 @@ class SpiceCircuit(object):
         # If the line is not found, then -1 is returned.
         substr_upper = substr.upper()
         for line_no, line in enumerate(self.netlist):
-            if isinstance(line, list):  # If it is a subcircuit it will simply ignore it.
+            if isinstance(line, SpiceCircuit):  # If it is a subcircuit it will simply ignore it.
                 continue
             line_upcase = _first_token_upped(line)
             if line_upcase == substr_upper:
@@ -299,9 +313,11 @@ class SpiceCircuit(object):
             else:
                 f.write(command)
 
-    def _get_param_line(self, param: str) -> int:
-        """Internal function. Do not use."""
-        search_param = re.compile(PARAM_REGX % param, re.IGNORECASE)  # Spice is case insensitive
+    def _get_line_matching(self, command, search_expression):
+        """
+        Internal function. Do not use. Returns a line starting with command and matching the search with the regular
+        expression
+        """
         in_param_line = False  # This is needed to process multi-line commands
         line_no = 0
         while line_no < len(self.netlist):
@@ -310,78 +326,88 @@ class SpiceCircuit(object):
                 line_no += 1
                 continue
             cmd = get_line_command(line)
-            if cmd == '.PARAM':
-                if search_param.search(line):
-                    return line_no
+            if cmd == command:
+                match = search_expression.search(line)
+                if match:
+                    return line_no, match
             line_no += 1
-        else:
-            raise ParameterNotFoundError(f'Parameter "{param}" not found')
+        return -1, None  # If it fails, it returns an invalid line number and No match
 
-    def _get_subcircuit(self, subckt_name: str) -> 'SubCircuit':
+    def _get_subcircuit(self, instance_name: str) -> 'SubCircuit':
         """Internal function. Do not use."""
+        global LibSearchPaths
+        if SUBCIRCUIT_DIVIDER in instance_name:
+            subcircuit_ref, sub_subcircuits = instance_name.split(SUBCIRCUIT_DIVIDER, 1)
+        else:
+            subcircuit_ref = instance_name
+
+        line_no = self._getline_startingwith(subcircuit_ref)
+        sub_circuit_instance = self.netlist[line_no]
+        regex = component_replace_regexs['X'] # The subcircuit instance regex
+        m = regex.search(sub_circuit_instance)
+        if m:
+            subcircuit_name = m.group('value')  # last_token of the line before Params:
+        else:
+            raise UnrecognizedSyntaxError(sub_circuit_instance, regxstr)
+
         line_no = 0
-        reg_subckt = re.compile(r".SUBCKT\s+{}".format(subckt_name), re.IGNORECASE)
-        reg_lib = re.compile(r"^\.(LIB|INC)\s+(.*)$")
+        reg_subckt = re.compile(SUBCKT_CLAUSE_FIND + subcircuit_name, re.IGNORECASE)
+
         libs_list = []
+        sub_circuit = None
         while line_no < len(self.netlist):
             line = self.netlist[line_no]
-            if isinstance(line, SpiceCircuit):  # If it is a subcircuit it will simply ignore it.
-                m = reg_subckt.match(line.netlist[0])
-                if m:
-                    return line
+            if isinstance(line, SpiceCircuit) and line.name() == subcircuit_name:
+                sub_circuit = line # The circuit was already found
+                break
             else:
-                m = reg_lib.match(line)
+                m = lib_inc_regex.match(line)
                 if m:     # For compatibility issues not using the walruss operator here
-                    libs_list = m.group(1)
+                    libs_list.append( m.group(2) )
             line_no += 1
-        # If we reached here is because the subciruit was not found. Search for it in declared libraries
-        for lib in libs_list:
-            if os.path.exists(lib):
-                lib_filename = lib
-            else:
-                lib_filename = os.path.join(os.path.expanduser('~'),"Documents\\LTspiceXVII\\lib\\sub", lib)
-                if not os.path.exists(lib_filename):
+        if sub_circuit is None:
+            # If we reached here is because the subciruit was not found. Search for it in declared libraries
+            libs_list_full_path = []
+            for lib in libs_list:
+                if os.path.exists(lib):
+                    libs_list_full_path.append(lib)
                     continue
+                lib_filename = os.path.join(os.path.expanduser('~'),"Documents\\LTspiceXVII\\lib\\sub", lib)
+                if os.path.exists(lib_filename):
+                    libs_list_full_path.append(lib)
+                    continue
+                for path in LibSearchPaths:
+                    lib_filename= os.path.join(path, lib)
+                    if os.path.exists(lib_filename):
+                        libs_list_full_path.append(lib_filename)
+                        continue
+
+
             # If it reached here, we have a valid lib_filename
-            subckt = SpiceEditor.find_subckt_in_lib(lib_filename, subckt_name)
-            if subckt:
-                return subckt
+            for lib_path in libs_list_full_path:
+                sub_circuit = SpiceEditor.find_subckt_in_lib(lib_path, subcircuit_name)
+                if sub_circuit:
+                    break
+        if sub_circuit:
+            if SUBCIRCUIT_DIVIDER in instance_name:
+                return sub_circuit._get_subcircuit(sub_subcircuits)
+            else:
+                return sub_circuit
         else:
             # The search was not successful
-            raise SubcircuitNotFoundError(f'Subcircuit "{subckt_name}" not found')
+            raise ComponentNotFoundError(f'Subcircuit "{subcircuit_name}" not found')
 
 
     def _set_model_and_value(self, component, value):
         """Internal function. Do not use."""
         prefix = component[0]  # Using the first letter of the component to identify what is it
-        regxstr = REPLACE_REGXES.get(prefix, None)  # Obtain RegX to make the update
+        regex = component_replace_regexs.get(prefix, None)  # Obtain RegX to make the update
 
-        if regxstr is None:
+        if regex is None:
             print("Component must start with one of these letters:\n", ','.join(REPLACE_REGXES.keys()))
             print("Got '{}'".format(component))
             return
 
-        regex = re.compile(regxstr, re.IGNORECASE)
-        if prefix == 'X':  # Relaces a component inside of a subciruit
-            if SUBCIRCUIT_DIVIDER in component:
-                subcircuit_ref, component = component.split(SUBCIRCUIT_DIVIDER, 2)
-                line_no = self._getline_startingwith(subcircuit_ref)
-                sub_circuit_instance = self.netlist[line_no]
-
-                m = regex.search(sub_circuit_instance)
-                if m:
-                    subcircuit_name = m.group('value')  # last_token of the line before Params:
-
-                    sub_circuit = self._get_subcircuit(subcircuit_name)
-                    if sub_circuit:
-                        # TODO:
-                        #  1. Make a copy of the subcircuit in the netlist.
-                        #  2. Memorize that the copy is relative to that particular instance
-                        #  3. Change the copy of the subcircuit related to that particular instance.
-                        sub_circuit._set_model_and_value(component, value)
-                    return
-                raise ComponentNotFoundError(component)
-        #  prefix not None and prefix != 'X and sub
         if isinstance(value, (int, float)):
             value = format_eng(value)
 
@@ -390,14 +416,83 @@ class SpiceCircuit(object):
         line = self.netlist[line_no]
         m = regex.match(line)
         if m is None:
-            raise NotImplementedError('Unsupported line "{}"\nExpected format is "{}"'.format(line, regxstr))
+            raise UnrecognizedSyntaxError(line, regxstr)
             # print("Unsupported line ""{}""".format(line))
         else:
             start = m.start('value')
             end = m.end('value')
-            line = line[:start] + value + line[end:]
-            self.netlist[line_no] = line
+            self.netlist[line_no] = line[:start] + value + line[end:]
 
+    def clone(self, **kwargs) -> 'SpiceCircuit':
+        """
+        Creates a new copy of the SpiceCircuit. Change done at the new copy are not affecting the original
+        
+        :key new_name: The new name to be given to the circuit
+        :type new_name: str
+        :return: The new replica of the SpiceCircuit object
+        :rtype: SpiceCircuit
+        """
+        clone = SpiceCircuit()
+        clone.netlist = self.netlist.copy()
+        clone.netlist.insert(0, "***** SpiceEditor Manipulated this subcircuit ****" + END_LINE_TERM)
+        clone.netlist.append("***** ENDS SpiceEditor ****" + END_LINE_TERM)
+        new_name = kwargs.get('new_name', None)
+        if new_name:  # If it is different from None
+            clone.setname(new_name)
+        return clone
+
+    def name(self):
+        if len(self.netlist):
+            for line in self.netlist:
+                m = subcircuit_regex.search(line)
+                if m:
+                    return m.group('name')
+            else:
+                raise RuntimeError("Unable to find .SUBCKT clause in subcircuit")
+        else:
+            raise RuntimeError("Empty Subcircuit")
+    
+    def setname(self, new_name: str):
+        """
+        Renames the subcircuit to a new name. No check is done to the new game give. It is up to the user to make sure 
+        that the new name is valid.
+        
+        :param new_name: The new Name.
+        :type new_name: str 
+        :return: Nothing
+        :rtype: None
+        """
+        if len(self.netlist):
+            lines = len(self.netlist)
+            line_no = 0
+            while line_no < lines:
+                line = self.netlist[line_no]
+                m = subcircuit_regex.search(line)
+                if m:
+                    # Replacing the name in the SUBCKT Clause
+                    start = m.start('name')
+                    end = m.end('name')
+                    self.netlist[line_no] = line[:start] + new_name + line[end:]
+                    break
+                line_no += 1
+            else:
+                raise UnrecognizedSyntaxError("Unable to find .SUBCKT clause in subcircuit")
+
+            # This second loop finds the .ENDS clause
+            while line_no < lines:
+                line = self.netlist[line_no]
+                if get_line_command(line) == '.ENDS':
+                    self.netlist[line_no] = '.ENDS ' + new_name + END_LINE_TERM
+                    break
+                line_no += 1
+            else:
+                raise UnrecognizedSyntaxError("Unable to find .SUBCKT clause in subcircuit")
+        else:
+            # Avoiding exception by creating an empty subcircuit
+            self.netlist.app("* SpiceEditor Created this subcircuit")
+            self.netlist.append('.SUBCKT %s%s' % (new_name, END_LINE_TERM))
+            self.netlist.append('.ENDS %s%s' % (new_name, END_LINE_TERM))
+        
     def get_component_info(self, component) -> dict:
         """
         Retrieves the component information as defined in the corresponding REGEX. The line number is also added.
@@ -406,24 +501,24 @@ class SpiceCircuit(object):
         :type component: str
         :return: Dictionary with the component information
         :rtype: dict
-        :raises: NotImplementedError when the line doesn't match the expected REGEX.
+        :raises: UnrecognizedSyntaxError when the line doesn't match the expected REGEX. NotImplementedError of there
+        isn't an associated regular expression for the component prefix.
         """
         prefix = component[0]  # Using the first letter of the component to identify what is it
-        regxstr = REPLACE_REGXES.get(prefix, None)  # Obtain RegX to make the update
+        regex = component_replace_regexs.get(prefix, None)  # Obtain RegX to make the update
 
-        if regxstr is None:
+        if regex is None:
             self.logger.warning("Component must start with one of these letters:\n", ','.join(REPLACE_REGXES.keys()))
             self.logger.warning("Got '{}'".format(component))
-            raise NotImplementedError("Unsuported prefex {}".format(prefix))
+            raise NotImplementedError("Unsuported prefix {}".format(prefix))
 
         line_no = self._getline_startingwith(component)
-        regex = re.compile(regxstr, re.IGNORECASE)
         line = self.netlist[line_no]
         m = regex.match(line)
         if m is None:
             error_msg = 'Unsupported line "{}"\nExpected format is "{}"'.format(line, regxstr)
             self.logger.error(error_msg)
-            raise NotImplementedError(error_msg)
+            raise UnrecognizedSyntaxError(line, regxstr)
 
         info = m.groupdict()
         info['line'] = line_no  # adding the line number to the component information
@@ -439,10 +534,12 @@ class SpiceCircuit(object):
         :rtype: str
         :raises: ParameterNotFoundError - In case the component is not found
         """
-        param_def = self.netlist[self._get_param_line(param)]
-        regx = re.compile(PARAM_REGX % param, re.IGNORECASE)
-        m = regx.search(param_def, re.IGNORECASE)
-        return m.group('value')
+        regx = re.compile(PARAM_REGEX % param, re.IGNORECASE)
+        line_no, match = self._get_line_matching('.PARAM', regx)
+        if match:
+            return match.group('value')
+        else:
+            raise ParameterNotFoundError(param)
 
     def set_parameter(self, param: str, value: Union[str, int, float]) -> None:
         """Adds a parameter to the SPICE netlist.
@@ -466,22 +563,17 @@ class SpiceCircuit(object):
 
         :return: Nothing
         """
-        try:
-            param_line = self._get_param_line(param)
-        except ParameterNotFoundError:
+        regx = re.compile(PARAM_REGEX % param, re.IGNORECASE)
+        param_line, match = self._get_line_matching('.PARAM', regx)
+        if match:
+            start, stop = match.span()
+            line = self.netlist[param_line]
+            self.netlist[param_line] = line[:start] + "{}={}".format(param, value) + line[stop:]
+        else:
             # Was not found
             # the last two lines are typically (.backano and .end)
             insert_line = len(self.netlist) - 2
             self.netlist.insert(insert_line, '.PARAM {}={}  ; Batch instruction'.format(param, value) + END_LINE_TERM)
-        else:
-            regx = re.compile(PARAM_REGX % param, re.IGNORECASE)
-            line = self.netlist[param_line]
-            m = regx.search(line)
-            if m:
-                start, stop = m.span()
-                self.netlist[param_line] = line[:start] + "{}={}".format(param, value) + line[stop:]
-            else:
-                raise ParameterNotFoundError
 
     def set_parameters(self, **kwargs):
         """Adds one or more parameters to the netlist.
@@ -591,13 +683,7 @@ class SpiceCircuit(object):
         :rtype: list
         """
         nodes = self.get_component_info(element)['nodes']
-        nodes = nodes.replace('\t', '')  # Remove any tabs if they exist
-        nodes = nodes.replace('\r', '')  # Remove carriage returns
-        nodes = nodes.replace('\n', '')  # Remove new lines
-        # nodes = nodes.replace('+', '')  # Rem
-        nodes = nodes.split(' ')  # Remove any spaces if they exist
-        while('' in nodes):  # remove empty elements on the list
-            nodes.remove('')
+        nodes = nodes.split( )  # Remove any spaces if they exist. This considers \r \n \t characters as well
         return nodes
 
     def set_component_values(self, **kwargs):
@@ -646,15 +732,12 @@ class SpiceCircuit(object):
             if isinstance(line, SpiceCircuit):  # Only gets components from the main netlist,
                                                 # it currently skips sub-circuits
                 continue
-
-            prefix = get_line_command(line)
-            if prefix in prefixes:
-                # regexvalue = re.compile(REPLACE_REGXES[prefix], re.IGNORECASE)
-                # m = regexvalue.match(line)
-                i = 1
-                while line[i] not in (' ', '\t'):  # detects the first space of tab which means end of designator
-                    i += 1
-                answer.append(line[:i])  # Appends only the designators
+            tokens = line.split()
+            try:
+                if tokens[0][0] in prefixes:
+                    answer.append(tokens[0])  # Appends only the designators
+            except IndexError or TypeError:
+                pass
         return answer
 
     def remove_component(self, designator: str):
@@ -671,10 +754,43 @@ class SpiceCircuit(object):
         line = self._getline_startingwith(designator)
         self.netlist[line] = ''  # Blanks the line
 
-    def get_all_nodes(self):
-        # TODO: Implement a function that retrieves all nodes existing on a Netlist
-        raise NotImplementedError("'get_all_nodes()' function not implemented")
+    @staticmethod
+    def add_library_search_paths(paths):
+        """
+        Adding search paths for libraries. By default the local directory and the
+        ~username/"Documents/LTspiceXVII/lib/sub will be searched forehand. Only when a library is not found in these
+        paths then the paths added by this method will be searched.
+        Alternatively PyLTSpice.SpiceEditor.LibSearchPaths.append(paths) can be used."
 
+        :param paths: Path to add to the Search path
+        :type paths: str
+        :return: Nothing
+        :rtype: None
+        """
+        global LibSearchPaths
+        if isinstance(paths, str):
+            LibSearchPaths.append(paths)
+        elif isinstance(paths, list):
+            LibSearchPaths += paths
+
+    def get_all_nodes(self) -> List[str]:
+        """
+        A function that retrieves all nodes existing on a Netlist
+
+        :returns: Circuit Nodes
+        :rtype: list[str]
+        """
+        circuit_nodes = []
+        for line in self.netlist:
+            prefix = get_line_command(line)
+            if prefix in component_replace_regexs:
+                match = component_replace_regexs[prefix].match(line)
+                if match:
+                    nodes = match.group('nodes').split()  # This separates by all space characters including \t
+                    for node in nodes:
+                        if node not in circuit_nodes:
+                            circuit_nodes.append(node)
+        return circuit_nodes
 
 class SpiceEditor(SpiceCircuit):
     """
@@ -684,12 +800,42 @@ class SpiceEditor(SpiceCircuit):
     :param netlist_file: Name of the .NET file to process
     """
     def __init__(self, netlist_file, encoding='autodetect'):
-        SpiceCircuit.__init__(self)
+        super().__init__()
         self.netlist_file = netlist_file
+        self.modified_subcircuits = {}
         if encoding == 'autodetect':
             self.encoding = detect_encoding(netlist_file)
         else:
             self.encoding = encoding
+        self.reset_netlist()
+
+    def _set_model_and_value(self, component, value):
+        prefix = component[0]  # Using the first letter of the component to identify what is it
+        if prefix == 'X' and SUBCIRCUIT_DIVIDER in component:  # Relaces a component inside of a subciruit
+            # In this case the subcircuit needs to be copied so that is copy is modified. A copy is created for each
+            # instance of a subcircuit.
+            component_split = component.split(SUBCIRCUIT_DIVIDER)
+            modified_path = SUBCIRCUIT_DIVIDER.join(component_split[:-1])  # excludes last component
+            component = component_split[-1] # This is the last component to modify
+
+            if modified_path in self.modified_subcircuits:  # See if this was already a modified subcircuit instance
+                subcircuit = self.modified_subcircuits[circuit_ref]
+            else:
+                sub_circuit_original = self._get_subcircuit(modified_path)  # If not will look of it.
+                if sub_circuit_original:
+                    new_name = sub_circuit_original.name() + '_' + '_'.join(component_split[:-1])  # Creates a new name with the path appended
+                    sub_circuit = sub_circuit_original.clone(new_name=new_name)
+                    # Memorize that the copy is relative to that particular instance
+                    self.modified_subcircuits[modified_path] = sub_circuit
+                    # Change the call to the subcircuit
+                    self._set_model_and_value(modified_path, new_name)
+                else:
+                    raise ComponentNotFoundError(component)
+            #  Change the copy of the subcircuit related to that particular instance.
+            sub_circuit._set_model_and_value(component, value)
+            return
+        # else: This is the generic case where the subcircuit is changed
+        super()._set_model_and_value(component, value)
 
     def add_instruction(self, instruction: str) -> None:
         """Serves to add SPICE instructions to the simulation netlist. For example:
@@ -778,6 +924,11 @@ class SpiceEditor(SpiceCircuit):
             if isinstance(line, SpiceCircuit):
                 line._write_lines(f)
             else:
+                # Writes the modified subcircuits at the end just before the .END clause
+                if line.upper().startswith(".END"):
+                    # write here the modified subcircuits
+                    for sub in self.modified_subcircuits.values():
+                        sub._write_lines(f)
                 f.write(line)
         f.close()
 
@@ -802,16 +953,36 @@ class SpiceEditor(SpiceCircuit):
 
     @staticmethod
     def find_subckt_in_lib(library, subckt_name) -> 'SpiceEditor':
-        """Finds returns a Subckt from a library file"""
-        # TODO: Implement This
-        #  1. Find encoding
+        """
+        Finds returns a Subckt from a library file
+
+        :param library: path to the library to search
+        :type library: str
+        :param subckt_name: Subcircuit to search for
+        """
+        # 0. Setup things
+        reg_subckt = re.compile(SUBCKT_CLAUSE_FIND + subckt_name, re.IGNORECASE)
+        # 1. Find Encoding
+        encoding = detect_encoding(library)
         #  2. scan the file
+        with open(library, encoding=encoding) as lib:
+            for line in lib:
+                search = reg_subckt.match(line)
+                if search:
+                    sub_circuit = SpiceCircuit()
+                    sub_circuit.netlist.append(line)
+                    # Advance to the next non nested .ENDS
+                    finished = sub_circuit._add_lines(lib)
+                    if finished:
+                        return sub_circuit
         #  3. Return an instance of SpiceEditor
         return None
 
 if __name__ == '__main__':
     E = SpiceEditor('..\\tests\\Editor_Test.net')
-    E.reset_netlist()
+    print("Circuit Nodes", E.get_all_nodes())
+    E.add_library_search_paths([r"C:\SVN\Electronic_Libraries\LTSpice\lib"])
+    E.set_component_value("XU1:XDUT:R77", 200)
     print(E.get_component_value('R1'))
     print("Setting R1 to 10k")
     E.set_component_value('R1', 10000)
