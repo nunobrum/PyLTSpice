@@ -21,10 +21,16 @@ from PyLTSpice.LTSpiceBatch import SimCommander
 
 
 class StepInfo(object):
-    def __init__(self, what: str, elem: str, iter: Iterable):
+    def __init__(self, what: str, elem: str, iterable: Iterable):
         self.what = what
         self.elem = elem
-        self.iter = iter
+        self.iter = iterable
+
+    def __len__(self):
+        return len(list(self.iter))
+
+    def __str__(self):
+        return f"Iteration on {self.what} {self.elem} : {self.iter}"
 
 
 class SimStepper(SimCommander):
@@ -88,7 +94,11 @@ class SimStepper(SimCommander):
         """Returns the total number of simulations foreseen."""
         total = 1
         for step in self.iter_list:
-            total *= len(step.iter)
+            l = len(step)
+            if l:
+                total *= l
+            else:
+                print(step, " is empty")
         return total
 
     def run_all(self, callback: Callable[[str, str], Any] = None, use_loadbias='Auto'):
@@ -133,9 +143,10 @@ class SimStepper(SimCommander):
 if __name__ == "__main__":
     from PyLTSpice.sweep_iterators import *
 
-    test = SimStepper("mydesign.asc")
-    test.add_param_sweep("param#1", range(1, 3))
-    test.add_value_sweep("R1", sweep_log(0.1, 10, 10))
+    test = SimStepper("..\\tests\\DC sweep.asc")
+    test.verbose = True
+    test.add_param_sweep("res", [10, 11, 9])
+    test.add_value_sweep("R1", sweep_log(0.1, 10))
     test.add_model_sweep("D1", ("model1", "model2"))
     test.run_all()
 

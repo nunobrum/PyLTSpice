@@ -598,7 +598,7 @@ class SpiceCircuit(object):
         Usage: ::
 
             LTC.set_component_value('R1', '3.3k')
-            LTC.set_component_value('X1.C1', '10u')
+            LTC.set_component_value('X1:C1', '10u')
 
         :param device: Reference of the circuit element to be updated.
         :type device: str

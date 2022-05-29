@@ -5,15 +5,18 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name='PyLTSpice',
-    version='1.9',
+    version='2.0',
     scripts=['PyLTSpice/__init__.py',
+             'PyLTSpice/detect_encoding.py',
              'PyLTSpice/Histogram.py',
              'PyLTSpice/LTSpice_RawRead.py',
              'PyLTSpice/LTSpice_RawWrite.py',
+             'PyLTSpice/LTSpice_SemiDevOpReader.py',
              'PyLTSpice/LTSpiceBatch.py',
              'PyLTSpice/LTSteps.py',
-             'PyLTSpice/LTSpice_SemiDevOpReader.py',
-             # 'PyLTSpice/sketch.py'
+             'PyLTSpice/sim_stepping.py',
+             'PyLTSpice/SpiceEditor.py',
+             'PyLTSpice/sweep_iterators.py',
              ],
     # install_requires = [],
     author="Nuno Brum",
