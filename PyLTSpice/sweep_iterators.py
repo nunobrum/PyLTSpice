@@ -14,11 +14,12 @@
 
                 relaxed parameter sweeps
 """
-
-from typing import Union, Optional
+import math
+from typing import Union, Optional, Iterable
 
 
 class BaseIterator(object):
+    """Common implementation to all Iterator classes"""
 
     def __init__(self, start: Union[int, float], stop: Optional[Union[int, float]] = None, step: Union[int, float] = 1):
         if stop is None:
@@ -31,6 +32,7 @@ class BaseIterator(object):
         self.finished = False
 
     def __iter__(self):
+        self.finished = False
         return self
 
     def __next__(self):
@@ -61,6 +63,7 @@ class sweep(BaseIterator):
         self.niter = 0
 
     def __iter__(self):
+        super().__iter__()
         # Resets the interator
         self.niter = 0
         return self
@@ -73,6 +76,21 @@ class sweep(BaseIterator):
         else:
             self.finished = True
             raise StopIteration
+
+def sweep_n(start: Union[int, float], stop: Union[int, float], N: int) -> Iterable[float]:
+    """Helper function.
+    Generator function that generates a 'N' number of points between a start and a stop interval.
+    Advantages towards the range python built-in functions
+    - Supports floating point arguments
+    - Supports both up and down sweeps-
+    Usage:
+        >>> list(sweep_n(0.3, 1.1, 5))
+        [0.3, 0.5, 0.7, 0.9000000000000001, 1.1]
+        >>> list(sweep_n(15, -15, 13))
+        [15, 12.5, 10.0, 7.5, 5.0, 2.5, 0.0, -2.5, -5.0, -7.5, -10.0, -12.5, -15.0]
+        """
+    return sweep(start, stop, (stop-start)/(N-1))
+
 
 
 class sweep_log(BaseIterator):
@@ -101,6 +119,7 @@ class sweep_log(BaseIterator):
         self.val = self.start
 
     def __iter__(self):
+        super().__iter__()
         self.val = self. start
         return self
 
@@ -115,19 +134,56 @@ class sweep_log(BaseIterator):
             raise StopIteration
 
 
+class sweep_log_n(BaseIterator):
+    """Helper function.
+    Generator function that generates a 'N' number of points between a start and a stop interval.
+    Advantages towards the range python built-in functions
+    - Supports floating point arguments
+    - Supports both up and down sweeps-
+    Usage:
+        >>> list(sweep_log_n(1, 10, 6))
+        [1.0, 1.5848931924611136, 2.5118864315095806, 3.9810717055349736, 6.309573444801934, 10.000000000000004]
+        >>> list(sweep_log_n(10, 1, 5))
+        [1.0, 0.5623413251903491, 0.31622776601683794, 0.17782794100389226, 0.09999999999999999]
+        """
+    def __init__(self, start: Union[int, float], stop: Optional[Union[int, float]], number_of_elements: int):
+        step = math.exp(math.log(stop / start) / (number_of_elements - 1))
+        assert step != 0, "Step cannot be 0"
+        super().__init__(start, number_of_elements, step)
+        self.niter = 0
+
+    def __iter__(self):
+        super().__iter__()
+        self.niter = 0
+        return self
+
+    def __next__(self):
+        if self.niter < self.stop:
+            val = self.start * (self.step ** self.niter)
+            self.niter += 1
+            return val
+        else:
+            self.finished = True
+            raise StopIteration
+
+
 if __name__ == "__main__":
 
-    print(list(sweep(10)))
-    print(list(sweep(1, 8)))
-    print(list(sweep(2, 8, 2)))
-    print(list(sweep(2, 8, -2)))
-    print(list(sweep(8, 2, 2)))
-    print(list(sweep(0.3, 1.1, 0.2)))
-    print(list(sweep(-2, 2, 2)))
-    print(list(sweep(-2, 2, -2)))
-    print(list(sweep(2, -2, 2)))
-    print(list(sweep(2, -2, -2)))
-    print(list(sweep_log(0.1, 11e3, 10)))
-    print(list(sweep_log(1000, 1, 2)))
-
+    print("list(sweep(10))", list(sweep(10)))
+    print("list(sweep(1, 8))", list(sweep(1, 8)))
+    print("list(sweep(2, 8, 2))", list(sweep(2, 8, 2)))
+    print("list(sweep(2, 8, -2))", list(sweep(2, 8, -2)))
+    print("list(sweep(8, 2, 2))", list(sweep(8, 2, 2)))
+    print("list(sweep(0.3, 1.1, 0.2))", list(sweep(0.3, 1.1, 0.2)))
+    print("list(sweep(15, -15, 2.5))", list(sweep(15, -15, 2.5)))
+    print("list(sweep(-2, 2, 2))", list(sweep(-2, 2, 2)))
+    print("list(sweep(-2, 2, -2))", list(sweep(-2, 2, -2)))
+    print("list(sweep(2, -2, 2))", list(sweep(2, -2, 2)))
+    print("list(sweep(2, -2, -2))", list(sweep(2, -2, -2)))
+    print("list(sweep_n(0.3, 1.1, 4)", list(sweep_n(0.3, 1.1, 5)))
+    print("list(sweep_n(15, -15, 13))", list(sweep_n(15, -15, 13)))
+    print("list(sweepLog(0.1, 11e3, 10))", list(sweep_log(0.1, 11e3, 10)))
+    print("list(sweep_log(1000, 1, 2))", list(sweep_log(1000, 1, 2)))
+    print("list(sweep_log_n(1, 10, 6))", list(sweep_log_n(1, 10, 6)))
+    print("list(sweep_log_(10, 1, 5))", list(sweep_log_n(10, 1, 5)))
 
