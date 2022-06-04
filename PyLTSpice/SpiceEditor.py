@@ -95,7 +95,7 @@ REPLACE_REGXES = {
 
 
 
-PARAM_REGEX = r"%s\s*(=\s*)?(?P<value>[\w*/\.+-/{}()]*)"
+PARAM_REGEX = r"%s((\s*=\s*)|\s+)(?P<value>[\w*/\.+-/\*{}()]*)"
 SUBCKT_CLAUSE_FIND = r"^.SUBCKT\s+"
 
 # Code Optimization objects, avoiding repeated compilation of regular expressions
