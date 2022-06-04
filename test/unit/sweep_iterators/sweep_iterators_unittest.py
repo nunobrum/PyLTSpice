@@ -94,8 +94,6 @@ class test_sweep_iterators(unittest.TestCase):
         self.assertDictEqual(dut.next(), {'e1': 10, 'e2': 3e-06, 'e3': 1000.0})
         self.assertDictEqual(dut.next(), {'e1': 10, 'e2': 3e-06, 'e3': 3000.0})
         self.assertDictEqual(dut.next(), {'e1': 10, 'e2': 3e-06, 'e3': 5000.0})
-    #*****************************
-
 
     #*****************************
     def test_done(self):
@@ -137,7 +135,7 @@ class test_sweep_iterators(unittest.TestCase):
         self.assertListEqual(list(sweep_log(1000, 1, 2)),
                              [1000, 500.0, 250.0, 125.0, 62.5, 31.25, 15.625, 7.8125, 3.90625, 1.953125])
         self.assertListEqual(list(sweep_log_n(1, 10, 6)),
-                             [1.0, 1.5848931924611136, 2.5118864315095806, 3.9810717055349736, 6.309573444801934,
+                             [1.0, 1.5848931924611136, 2.5118864315095806, 3.981071705534973, 6.309573444801934,
                               10.000000000000004])
         self.assertListEqual(list(sweep_log_n(10, 1, 5)),
                              [10.0, 5.623413251903491, 3.1622776601683795, 1.7782794100389228, 0.9999999999999999])
