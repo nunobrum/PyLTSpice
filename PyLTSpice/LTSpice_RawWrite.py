@@ -21,31 +21,41 @@ from PyLTSpice.LTSpice_RawRead import DataSet, USE_NNUMPY, LTSpiceRawRead
 from struct import pack
 
 if USE_NNUMPY:
-    from numpy import array, float32 as float32
+    from numpy import array, float32
 
 
 class Trace(DataSet):
-    """Helper class representing a trace. This class is based on DataSet, therefore, it doesn't support STEPPED data."""
+    """Helper class representing a trace. This class is based on DataSet, therefore, it doesn't support STEPPED data.
+    :param name: name of the trace being created
+    :type name: str
+    :param whattype: time, frequency, voltage or current
+    :type whattype: str
+    :param data: data for the data write
+    :type data: list or numpy.array
+    :param numerical_type: real or complex
+    :type numerical_type: str
+    """
 
-    def __init__(self, name, whattype, data, numerical_type=''):
-        if numerical_type == '':
-            if name == 'time':
+    def __init__(self, name, data, whattype='voltage', numerical_type=''):
+        if name == 'time':
+            whattype = 'time'
+            numerical_type = 'real'
+        elif name == 'frequency':
+            whattype = 'frequency'
+            numerical_type = 'complex'
+        elif numerical_type == '':
+            if USE_NNUMPY and isinstance(data[0], float32) or isinstance(data[0], float):
                 numerical_type = 'real'
-            elif name == 'frequency':
+            elif isinstance(data[0], complex):
                 numerical_type = 'complex'
             else:
-                if USE_NNUMPY and isinstance(data[0], float32) or isinstance(data[0], float):
-                    numerical_type = 'real'
-                elif isinstance(data[0], complex):
-                    numerical_type = 'complex'
-                else:
-                    raise NotImplemented
+                raise NotImplemented
 
         DataSet.__init__(self, name, whattype, len(data), numerical_type=numerical_type)
         if USE_NNUMPY and isinstance(data, (list, tuple)):
-            self.data = array(data)
+            self.data = array(data, dtype=self.data.dtype)
         else:
-            self.data = data
+            self.data[:] = data[:]  # This way the dtype is kept
 
 
 class LTSpiceRawWrite(object):
@@ -329,6 +339,16 @@ if __name__ == '__main__':
     import numpy as np
     from LTSpice_RawRead import LTSpiceRawRead
 
+    def test_readme_snippet():
+        LW = LTSpiceRawWrite(fastacces=False)
+        tx = Trace('time', np.arange(0.0, 3e-3, 997E-11))
+        vy = Trace('N001', np.sin(2 * np.pi * tx.data * 10000))
+        vz = Trace('N002', np.cos(2 * np.pi * tx.data * 9970))
+        LW.add_trace(tx)
+        LW.add_trace(vy)
+        LW.add_trace(vz)
+        LW.save("teste_snippet1.raw")
+
     def test_trc2raw():  # Convert Teledyne-Lecroy trace files to raw files
         f = open(r"Current_Lock_Front_Right_8V.trc")
         raw_type = ''  # Initialization of parameters that need to be overridden by the file header
@@ -401,6 +421,8 @@ if __name__ == '__main__':
         LW.flag_fastaccess = True
         LW.save("..\\tests\\TRAN - STEP0_fast.raw")
 
+
+    test_readme_snippet()
     # test_axis_sync()
-    test_write_ac()
-    test_write_tran()
+    # test_write_ac()
+    # test_write_tran()

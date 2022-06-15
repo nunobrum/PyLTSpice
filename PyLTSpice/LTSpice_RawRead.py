@@ -185,7 +185,7 @@ from typing import Union, List, Tuple
 from PyLTSpice.detect_encoding import detect_encoding
 
 try:
-    from numpy import zeros, array, complex128, abs as np_abs, single, double, frombuffer, angle
+    from numpy import zeros, array, complex128, abs as np_abs, float32, float64, frombuffer, angle
 except ImportError:
     USE_NNUMPY = False
 else:
@@ -312,9 +312,9 @@ class DataSet(object):
         self.numerical_type = numerical_type
         if USE_NNUMPY:
             if whattype == 'time':
-                self.data = zeros(datalen, dtype=double)
+                self.data = zeros(datalen, dtype=float64)
             elif numerical_type == 'real':
-                self.data = zeros(datalen, dtype=single)
+                self.data = zeros(datalen, dtype=float32)
             elif numerical_type == 'complex':
                 self.data = zeros(datalen, dtype=complex128)
             else:
@@ -681,17 +681,17 @@ class LTSpiceRawRead(object):
                         if USE_NNUMPY:
                             if self.data_size == 8:
                                 s = raw_file.read(self.nPoints * 8)
-                                var.data = frombuffer(s, dtype=double)
+                                var.data = frombuffer(s, dtype=float64)
                             elif self.data_size == 16:
                                 s = raw_file.read(self.nPoints * 16)
                                 var.data = frombuffer(s, dtype=complex)
                             else:
                                 if i == 0:
                                     s = raw_file.read(self.nPoints * 8)
-                                    var.data = frombuffer(s, dtype=double)
+                                    var.data = frombuffer(s, dtype=float64)
                                 else:
                                     s = raw_file.read(self.nPoints * 4)
-                                    var.data = frombuffer(s, dtype=single)
+                                    var.data = frombuffer(s, dtype=float32)
                         else:
                             for point in range(self.nPoints):
                                 var.data[point] = scan_functions[i](raw_file)
