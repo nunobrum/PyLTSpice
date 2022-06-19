@@ -1,8 +1,8 @@
 Circuit: * C:\sandbox\PyLTSpice_GitHub_nunobrum\tests\AC.asc
 
 
-Date: Sat Dec 14 23:47:20 2019
-Total elapsed time: 0.038 seconds.
+Date: Sun Jun 19 20:58:15 2022
+Total elapsed time: 0.036 seconds.
 
 tnom = 27
 temp = 27

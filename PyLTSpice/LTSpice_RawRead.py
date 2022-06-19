@@ -8,7 +8,7 @@
 #
 # Author:      Nuno Brum (nuno.brum@gmail.com)
 #
-# Created:     23-12-2016
+# Created:     19-06-2022
 # Licence:     refer to the LICENSE file
 # -------------------------------------------------------------------------------
 
@@ -36,14 +36,20 @@ In the preamble, the lines are always started by one of the following identifier
 
    + Date:           => Date when the simulation started
 
-   + Plotname:       => Name of the simulation Ex: "Transient Analysis" or "AC Analysis"
-
-   + Output:         => *significance not understood*
+   + Plotname:       => Name of the simulation. The known Simulation Types are:
+                       * Operation Point
+                       * DC transfer characteristic
+                       * AC Analysis
+                       * Transient Analysis
+                       * Noise Spectral Density - (V/Hz½ or A/Hz½)
+                       * Transfer Function
 
    + Flags:          => Flags that are used in this plot. The simulation can have any combination of these flags.
                       * "real" -> The traces in the raw file contain real values. As for exmple on a TRAN simulation.
                       * "complex" -> Traces in the raw file contain complex values. As for exmple on an AC simulation.
-                      * "forward" -> TBC
+                      * "forward" -> Tells whether the simulation has more than one point. DC transfer
+                        characteristic, AC Analysis, Transient Analysis or Noise Spectral Density have the forward flag.
+                        Operating Point and Transfer Function don't have this flag activated.
                       * "log" -> The preferred plot view of this data is logarithmic.
                       * "stepped" -> The simulation had .STEP primitives.
                       * "FastAccess" -> Order of the data is changed to speed up access. See Binary section for details.
@@ -175,7 +181,7 @@ to plot the results of three traces in two subplots. ::
 """
 
 __author__ = "Nuno Canto Brum <nuno.brum@gmail.com>"
-__copyright__ = "Copyright 2017, Fribourg Switzerland"
+__copyright__ = "Copyright 2022, Fribourg Switzerland"
 
 import os
 from binascii import b2a_hex
@@ -302,6 +308,8 @@ class DataSet(object):
     implementations of the wave population.
     Data can be retrieved directly by using the [] operator.
     If numpy is available, the numpy vector can be retrieved by using the get_wave() method.
+    The parameter whattype defines what is the trace representing in the simulation, Voltage, Current a Time or
+    Frequency.
     """
 
     def __init__(self, name, whattype, datalen, numerical_type='real'):
@@ -384,8 +392,8 @@ class Axis(DataSet):
 
         # Now going to calculate the point offset for each step
         self.step_offsets[0] = 0
-        i = 0
-        k = 0
+        i = 1
+        k = 1
         while i < len(self.data):
             if self.data[i] == self.data[0]:
                 # print(k, i, self.data[i], self.data[i+1])
@@ -516,7 +524,9 @@ class Trace(DataSet):
 
 class Op(Trace):
     """Class used for storing operation points."""
-    pass
+
+    def __init__(self, name, whattype):
+        super().__init__(name, whattype, 1, None, 'real')
 
 
 class DummyTrace(object):
@@ -527,7 +537,6 @@ class DummyTrace(object):
         Defines the common operations between both."""
         self.name = name
         self.whattype = whattype
-        self.data = None
 
 
 class LTSPiceReadException(Exception):
@@ -615,21 +624,21 @@ class LTSpiceRawRead(object):
             numerical_type = 'real'
         i = header.index('Variables:')
         ivar = 0
-        for line in header[i + 1:-1]:
+        for line in header[i + 1:-1]:  # Parse the variable names
             _, name, var_type = line.lstrip().split('\t')
-            if ivar == 0 and self.nVariables > 1 and self.nPoints != 1:
+            if 'forward' in self.flags and ivar == 0:  # If it has an axis, it should be always read
                 self.axis = Axis(name, var_type, self.nPoints, numerical_type)
-                self._traces.append(self.axis)
-            elif self.nPoints == 1:
-                self._traces.append(Op(name, var_type, self.nPoints, self.axis))
-            elif ((traces_to_read == "*") or
-                  (name in traces_to_read) or
-                  (ivar == 0)):
+                trace = self.axis
+            elif (traces_to_read == "*") or (name in traces_to_read):
                 # TODO: Add wildcards to the waveform matching
-                trace = Trace(name, var_type, self.nPoints, self.axis, numerical_type)
-                self._traces.append(trace)
+                if 'forward' in self.flags:  # Reads data
+                    trace = Trace(name, var_type, self.nPoints, self.axis, numerical_type)
+                else:
+                    # If an Operation Point or Transfer Function, only one point per trace
+                    trace = Op(name, var_type)
             else:
-                self._traces.append(DummyTrace(name, var_type))
+                trace = DummyTrace(name, var_type)
+            self._traces.append(trace)
             ivar += 1
 
         if traces_to_read is None or len(self._traces) == 0:
@@ -641,6 +650,9 @@ class LTSpiceRawRead(object):
             raw_file.close()
             return
 
+        if self.verbose:
+            print("File contains {} traces, reading {}".format(ivar, len(self._traces)))
+
         if self.raw_type == "Binary:":
             # Will start the reading of binary values
             # But first check whether how data is stored.
@@ -650,12 +662,12 @@ class LTSpiceRawRead(object):
             scan_functions = []
             for trace in self._traces:
                 if self.data_size == 8:
-                    if trace.data is None:
+                    if isinstance(trace, DummyTrace):
                         fun = consume8bytes
                     else:
                         fun = read_float64
                 elif self.data_size == 16:
-                    if trace.data is None:
+                    if isinstance(trace, DummyTrace):
                         fun = consume16bytes
                     else:
                         fun = read_complex
@@ -663,7 +675,7 @@ class LTSpiceRawRead(object):
                     if len(scan_functions) == 0:  # This is the axis
                         fun = read_float64
                     else:
-                        if trace.data is None:
+                        if isinstance(trace, DummyTrace):
                             fun = consume4bytes
                         else:
                             fun = read_float32
@@ -671,7 +683,7 @@ class LTSpiceRawRead(object):
 
             if "fastaccess" in self.raw_params["Flags"]:
                 if self.verbose:
-                    print("Fast access")
+                    print("Binary RAW file with Fast access")
                 # A fast access means that the traces are grouped together.
                 for i, var in enumerate(self._traces):
                     if isinstance(var, DummyTrace):
@@ -698,7 +710,7 @@ class LTSpiceRawRead(object):
 
             else:
                 if self.verbose:
-                    print("Normal access")
+                    print("Binary RAW file with Normal access")
                 # This is the default save after a simulation where the traces are scattered
                 for point in range(self.nPoints):
                     for i, var in enumerate(self._traces):
@@ -707,6 +719,8 @@ class LTSpiceRawRead(object):
                             var.data[point] = value
 
         elif self.raw_type == "Values:":
+            if self.verbose:
+                print("ASCII RAW File")
             # Will start the reading of ASCII Values
             for point in range(self.nPoints):
                 first_var = True
@@ -722,7 +736,8 @@ class LTSpiceRawRead(object):
                         value = line[len(spoint):-1]
                     else:
                         value = line[:-1]
-                    var.data[point] = float(value)
+                    if not isinstance(trace, DummyTrace):
+                        var.data[point] = float(value)
         else:
             raw_file.close()
             raise LTSPiceReadException("Unsupported RAW File. ""%s""" % self.raw_type)
@@ -753,7 +768,7 @@ class LTSpiceRawRead(object):
                         number_of_steps += 1
                 self.steps = [{'run': i+1} for i in range(number_of_steps)]
 
-            if not (self.steps is None):
+            if self.steps is not None:
                 # Individual access to the Trace Classes, this information is stored in the Axis
                 # which is always in position 0
                 self._traces[0]._set_steps(self.steps)
@@ -933,8 +948,8 @@ if __name__ == "__main__":
         if len(trace_names) == 0:
             trace_names = '*'
     else:
-        test_directory = pathjoin(pathsplit(directory)[0], 'test_files')
-        filename = 'testfile_5.raw'
+        test_directory = pathjoin(pathsplit(directory)[0], 'tests')
+        filename = 'DC sweep.raw'
         trace_names = ('V(in)', 'V(out)')
         raw_filename = pathjoin(test_directory, filename)
 
@@ -980,7 +995,7 @@ if __name__ == "__main__":
                     else:
                         y = angle(y, deg=True)
                 if write_labels:
-                    ax.plot(x, y, label=str(LTR.steps[step]))
+                    ax.plot(x, y, label=str(steps[step]))
                 else:
                     ax.plot(x, y)
             write_labels = False
