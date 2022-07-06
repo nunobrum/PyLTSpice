@@ -334,17 +334,17 @@ class LTSpiceLogReader(object):
 
         message("Processing LOG file", log_filename)
         with open(log_filename, 'r', encoding=self.encoding) as fin:
-        	line = fin.readline()
+            line = fin.readline()
 
             while line:
                 if line.startswith("N-Period"):
                     # Read number of periods
                     n_periods = int(line.strip('\r\n').split("=")[-1])
                     # Read waveform name
-                    line = enc_norm(fin.readline()).strip('\r\n')
+                    line = fin.readline().strip('\r\n')
                     waveform = line.split(" of ")[-1]
                     # Read DC component
-                    line = enc_norm(fin.readline()).strip('\r\n')
+                    line = fin.readline().strip('\r\n')
                     dc_component = float(line.split(':')[-1])
                     # Skip blank line
                     fin.readline()
@@ -354,7 +354,7 @@ class LTSpiceLogReader(object):
 
                     harmonic_lines = []
                     while True:
-                        line = enc_norm(fin.readline()).strip('\r\n')
+                        line = fin.readline().strip('\r\n')
                         if line.startswith("Total Harmonic"):
                             # Find THD
                             thd = float(re.search(r"\d+.\d+", line).group())
