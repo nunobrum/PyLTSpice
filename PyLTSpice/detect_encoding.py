@@ -30,16 +30,21 @@ def detect_encoding(file_path, expected_str: str = '') -> str:
     :return: detected encoding
     :rtype: str
     """
-    if expected_str:  # if expected string is not empty
-        f = open(file_path, 'rb')  # Open the file as a binary file
-        tmp = f.read(2 * len(expected_str))  # Read the beginning of the contents of the file
-        f.close()
-        for encoding in ('utf-8', 'utf_16_le'):  # Add other possible encodings
-            if tmp.decode(encoding).startswith(expected_str):
-                return encoding
-        raise UnicodeError("Unable to detect log file encoding")
+    for encoding in ('cp1252', 'cp1250', 'utf-8', 'utf_16_le'):
+        try:
+            with open(file_path, 'r', encoding=encoding) as f:
+                lines = f.readlines()
+                f.seek(0)
+        except UnicodeDecodeError:
+            # This encoding didn't work, let's try again
+            continue
+        else:
+            if expected_str:
+                if not lines[0].startswith(expected_str):
+                    # File did not start with expected string
+                    # Try again with a different encoding (This is unlikely to resolve the issue)
+                    continue
+
+            return encoding
     else:
-        f = open(file_path, 'rb')  # Open the file as a binary file
-        tmp = f.read(2)  # Read the beginning of the contents of the file
-        f.close()
-        return 'utf-8' if tmp[1] != 0 else 'utf_16_le'
+        raise UnicodeError("Unable to detect log file encoding")

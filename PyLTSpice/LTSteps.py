@@ -458,7 +458,7 @@ class LTSpiceLogReader(object):
                         for k, title in enumerate(headers):
                             self.dataset[title] = [
                                 try_convert_value(measurements[k])]  # need to be a list for compatibility
-            line = fin.readline()
+                line = fin.readline()
 
             # message("Reading Measurements")
             dataname = None
@@ -496,7 +496,7 @@ class LTSpiceLogReader(object):
                     else:
                         message("->", line)
 
-            line = fin.readline()  # advance to the next line
+                line = fin.readline()  # advance to the next line
 
             # storing the last data into the dataset
             message("Storing Measurement %s" % dataname)
