@@ -158,6 +158,7 @@ def scan_eng(value: str) -> float:
     :raises: ValueError when the value cannot be converted.
     """
     # Search for the last digit on the string. Assuming that all after the last number are SI qualifiers and units.
+    value = value.strip()
     x = len (value)
     while x > 0:
         if value[x-1] in "0123456789":
@@ -165,21 +166,20 @@ def scan_eng(value: str) -> float:
         x -= 1
     suffix = value[x:]  # this is the non numeric part at the end
     f = float(value[:x])  # this is the numeric part. Can raise ValueError.
-
-    if suffix[0] in "fpnuµmk":
-        return f * {
-            'f': 1.0e-15,
-            'p': 1.0e-12,
-            'n': 1.0e-09,
-            'u': 1.0e-06,
-            'µ': 1.0e-06,
-            'm': 1.0e-03,
-            'k': 1.0e+03,
-        }[suffix[0]]
-    elif suffix.startswith("Meg"):
-        return f * 1E+6
-    else:
-        return f
+    if suffix:
+        if suffix[0] in "fpnuµmk":
+            return f * {
+                'f': 1.0e-15,
+                'p': 1.0e-12,
+                'n': 1.0e-09,
+                'u': 1.0e-06,
+                'µ': 1.0e-06,
+                'm': 1.0e-03,
+                'k': 1.0e+03,
+            }[suffix[0]]
+        elif suffix.startswith("Meg"):
+            return f * 1E+6
+    return f
 
 
 def get_line_command(line) -> str:
@@ -977,9 +977,14 @@ class SpiceEditor(SpiceCircuit):
         return None
 
 if __name__ == '__main__':
+    E = SpiceEditor('..\\tests\\PI_Filter_resampled.net')
+    E.add_instruction(".nodeset V(N001)=0")
+    E.write_netlist('..\\tests\\PI_Filter_resampled_mod.net')
+    exit()
     E = SpiceEditor('..\\tests\\Editor_Test.net')
     print("Circuit Nodes", E.get_all_nodes())
     E.add_library_search_paths([r"C:\SVN\Electronic_Libraries\LTSpice\lib"])
+    E.set_element_model("XU2", 324)
     E.set_component_value("XU1:XDUT:R77", 200)
     print(E.get_component_value('R1'))
     print("Setting R1 to 10k")
