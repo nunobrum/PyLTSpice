@@ -101,7 +101,7 @@ class LTComplex(object):
     """
     Class to represent complex numbers as exported by LTSpice
     """
-    complex_match = re.compile(r"\((?P<mag>.*)dB,(?P<ph>.*)°\)")
+    complex_match = re.compile(r"\((?P<mag>[^dB]*)(dB)?,(?P<ph>.*)°\)")
 
     def __init__(self, strvalue):
         a = self.complex_match.match(strvalue)
