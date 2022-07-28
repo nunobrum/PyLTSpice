@@ -1,7 +1,6 @@
 pip
 Sphinx
 numpy>=1.14.0
-pandas
 matplotlib
 insipid-sphinx-theme
 autodocsumm

@@ -30,7 +30,7 @@ def detect_encoding(file_path, expected_str: str = '') -> str:
     :return: detected encoding
     :rtype: str
     """
-    for encoding in ('cp1252', 'cp1250', 'utf-8', 'utf_16_le'):
+    for encoding in ('utf_16_le', 'ansi', 'cp1252', 'cp1250', 'utf-8'):
         try:
             with open(file_path, 'r', encoding=encoding) as f:
                 lines = f.readlines()

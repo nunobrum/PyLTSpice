@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name='PyLTSpice',
-    version='2.0',
+    version='2.0.1',
     scripts=['PyLTSpice/__init__.py',
              'PyLTSpice/detect_encoding.py',
              'PyLTSpice/Histogram.py',

@@ -83,7 +83,6 @@ import math
 import re
 import os
 import sys
-import pandas as pd
 from collections import OrderedDict
 from typing import Union, Iterable, List
 from PyLTSpice.detect_encoding import detect_encoding
@@ -338,6 +337,7 @@ class LTSpiceLogReader(object):
 
             while line:
                 if line.startswith("N-Period"):
+                    import pandas as pd
                     # Read number of periods
                     n_periods = int(line.strip('\r\n').split("=")[-1])
                     # Read waveform name

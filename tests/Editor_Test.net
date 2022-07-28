@@ -1,17 +1,23 @@
 * C:\sandbox\PyLTSpice_GitHub_nunobrum\tests\SalenKey.asc
 V1 VCC 0 3.3
 V2 0 VEE 0
-R11 N002 N001 100k 
-R1 N002 N001 100k
-R2 N001 VI 100k
+R1 N004 N003 100k
+R2 N003 VI 100k
 R3 salen VO 47k
 V3 freq 0 PWL(0 1k 2m 1k 30m 10k)
-C1 N002 0 22n
-C3 VO N001 100n
+C1 N004 0 22n
+C3 VO N003 100n
 C4 salen 0 10n
 V4 VI 0 1.5 AC 1 0
-XU1 N002 VO VCC VEE VO OPA2333P_MC
-
+XU1 N004 VO VCC VEE VO OPA2333P_MC
+R4 N002 N001 100k
+R5 N001 VI2 100k
+R6 salen2 VO2 47k
+C2 N002 0 22n
+C5 VO2 N001 100n
+C6 salen2 0 10n
+V5 VI2 0 1.5 AC 1 0
+XU2 N002 VO2 VCC VEE VO2 OPA2333P_MC
 
 ************************************
 * Operational Amplifier Subcircuit *
