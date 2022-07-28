@@ -83,6 +83,7 @@ import math
 import re
 import os
 import sys
+import pandas as pd
 from collections import OrderedDict
 from typing import Union, Iterable, List
 from PyLTSpice.detect_encoding import detect_encoding
@@ -100,7 +101,7 @@ class LTComplex(object):
     """
     Class to represent complex numbers as exported by LTSpice
     """
-    complex_match = re.compile(r"\((?P<mag>.*)dB,(?P<ph>.*)°\)")
+    complex_match = re.compile(r"\((?P<mag>[^dB]*)(dB)?,(?P<ph>.*)°\)")
 
     def __init__(self, strvalue):
         a = self.complex_match.match(strvalue)
@@ -320,7 +321,6 @@ class LTSpiceLogReader(object):
     def __init__(self, log_filename: str, read_measures=True, step_set={}):
         self.logname = log_filename
         self.encoding = detect_encoding(log_filename, "Circuit:")
-        fin = open(log_filename, 'r', encoding=self.encoding)
         self.step_count = len(step_set)
         self.stepset = step_set.copy()  # A copy is done since the dictionary is a mutable object.
         # Changes in step_set would be propagated to object on the call
@@ -333,105 +333,179 @@ class LTSpiceLogReader(object):
                 re.IGNORECASE)
 
         message("Processing LOG file", log_filename)
-        line = fin.readline()
-
-        while line:
-            if line.startswith(".step"):
-                # message(line)
-                self.step_count += 1
-                tokens = line.strip('\r\n').split(' ')
-                for tok in tokens[1:]:
-                    lhs, rhs = tok.split("=")
-                    # Try to convert to int or float
-                    rhs = try_convert_value(rhs)
-
-                    ll = self.stepset.get(lhs, None)
-                    if ll:
-                        ll.append(rhs)
-                    else:
-                        self.stepset[lhs] = [rhs]
-
-            elif line.startswith("Measurement:"):
-                if not read_measures:
-                    fin.close()
-                    return
-                else:
-                    break  # Jumps to the section that reads measurements
-
-            if self.step_count == 0:  # then there are no steps,
-                # there are only measures taken in the format parameter: measurement
-                # A few examples of readings
-                # vout_rms: RMS(v(out))=1.41109 FROM 0 TO 0.001  => Interval
-                # vin_rms: RMS(v(in))=0.70622 FROM 0 TO 0.001  => Interval
-                # gain: vout_rms/vin_rms=1.99809 => Parameter
-                # vout1m: v(out)=-0.0186257 at 0.001 => Point
-                match = regx.match(line)
-                if match:
-                    # Get the data
-                    dataname = match.group('name')
-                    if match.group('from'):
-                        headers = [dataname, dataname + "_FROM", dataname + "_TO"]
-                        measurements = [match.group('value'), match.group('from'), match.group('to')]
-                    elif match.group('at'):
-                        headers = [dataname, dataname + "_at"]
-                        measurements = [match.group('value'), match.group('at')]
-                    else:
-                        headers = [dataname]
-                        measurements = [match.group('value')]
-
-                    for k, title in enumerate(headers):
-                        self.dataset[title] = [
-                            try_convert_value(measurements[k])]  # need to be a list for compatibility
+        with open(log_filename, 'r', encoding=self.encoding) as fin:
             line = fin.readline()
 
-        # message("Reading Measurements")
-        dataname = None
+            while line:
+                if line.startswith("N-Period"):
+                    # Read number of periods
+                    n_periods = int(line.strip('\r\n').split("=")[-1])
+                    # Read waveform name
+                    line = fin.readline().strip('\r\n')
+                    waveform = line.split(" of ")[-1]
+                    # Read DC component
+                    line = fin.readline().strip('\r\n')
+                    dc_component = float(line.split(':')[-1])
+                    # Skip blank line
+                    fin.readline()
+                    # Skip two header lines
+                    fin.readline()
+                    fin.readline()
 
-        headers = []  # Initializing an empty parameters
-        measurements = []
-        while line:
-            line = line.strip('\r\n')
-            if line.startswith("Measurement: "):
-                if dataname:  # If previous measurement was saved
-                    # store the info
-                    if len(measurements):
-                        message("Storing Measurement %s (count %d)" % (dataname, len(measurements)))
+                    harmonic_lines = []
+                    while True:
+                        line = fin.readline().strip('\r\n')
+                        if line.startswith("Total Harmonic"):
+                            # Find THD
+                            thd = float(re.search(r"\d+.\d+", line).group())
+                            break
+                        else:
+                            harmonic_lines.append(line.replace("°",""))
+
+                    # Create Table
+                    columns = [
+                        'Harmonic Number',
+                        'Frequency [Hz]',
+                        'Fourier Component',
+                        'Normalized Component',
+                        'Phase [degree]',
+                        'Normalized Phase [degree]'
+                    ]
+                    harmonics_df = pd.DataFrame([r.split('\t') for r in harmonic_lines], columns=columns)
+                    # Convert to numeric
+                    harmonics_df = harmonics_df.apply(pd.to_numeric, errors='ignore')
+
+                    # Find Fundamental Frequency
+                    frequency = harmonics_df['Frequency [Hz]'][0]
+
+                    # Save data related to this fourier analysis in a dictionary
+                    data_dict = {
+                        'dc': dc_component,
+                        'thd': thd,
+                        'harmonics': harmonics_df
+                    }
+
+                    # Find the dictionary that stores fourier data or create it if it does not exist
+                    fourier_dict: dict = self.dataset.get('fourier', None)
+                    if fourier_dict is None:
+                        self.dataset['fourier'] = {}
+                        fourier_dict = self.dataset['fourier']
+
+                    # Find the dict that stores data for this frequency or create it if it does not exist
+                    frequency_dict: dict = fourier_dict.get(frequency, None)
+                    if frequency_dict is None:
+                        fourier_dict[frequency] = {}
+                        frequency_dict = fourier_dict[frequency]
+
+                    # Find the dict that stores data for this number of periods or create it if it does not exist
+                    period_dict: dict = frequency_dict.get(n_periods, None)
+                    if period_dict is None:
+                        frequency_dict[n_periods] = {}
+                        period_dict = frequency_dict[n_periods]
+
+                    # Find the list that stores data for this waveform or create it if it does not exist
+                    waveform_list: list = period_dict.get(waveform, None)
+                    if waveform_list is None:
+                        period_dict[waveform] = []
+                        waveform_list = period_dict[waveform]
+
+                    # Add the data to the list
+                    waveform_list.append(data_dict)
+
+                if line.startswith(".step"):
+                    # message(line)
+                    self.step_count += 1
+                    tokens = line.strip('\r\n').split(' ')
+                    for tok in tokens[1:]:
+                        lhs, rhs = tok.split("=")
+                        # Try to convert to int or float
+                        rhs = try_convert_value(rhs)
+
+                        ll = self.stepset.get(lhs, None)
+                        if ll:
+                            ll.append(rhs)
+                        else:
+                            self.stepset[lhs] = [rhs]
+
+                elif line.startswith("Measurement:"):
+                    if not read_measures:
+                        fin.close()
+                        return
+                    else:
+                        break  # Jumps to the section that reads measurements
+
+                if self.step_count == 0:  # then there are no steps,
+                    # there are only measures taken in the format parameter: measurement
+                    # A few examples of readings
+                    # vout_rms: RMS(v(out))=1.41109 FROM 0 TO 0.001  => Interval
+                    # vin_rms: RMS(v(in))=0.70622 FROM 0 TO 0.001  => Interval
+                    # gain: vout_rms/vin_rms=1.99809 => Parameter
+                    # vout1m: v(out)=-0.0186257 at 0.001 => Point
+                    match = regx.match(line)
+                    if match:
+                        # Get the data
+                        dataname = match.group('name')
+                        if match.group('from'):
+                            headers = [dataname, dataname + "_FROM", dataname + "_TO"]
+                            measurements = [match.group('value'), match.group('from'), match.group('to')]
+                        elif match.group('at'):
+                            headers = [dataname, dataname + "_at"]
+                            measurements = [match.group('value'), match.group('at')]
+                        else:
+                            headers = [dataname]
+                            measurements = [match.group('value')]
+
                         for k, title in enumerate(headers):
-                            self.dataset[title] = [line[k] for line in measurements]
-                    headers = []
-                    measurements = []
-                dataname = line[13:]  # text which is after "Measurement: ". len("Measurement: ") -> 13
-                message("Reading Measurement %s" % line[13:])
-            else:
-                tokens = line.split("\t")
-                if len(tokens) >= 2:
-                    try:
-                        int(tokens[0])  # This instruction only serves to trigger the exception
-                        meas = tokens[1:]  # [float(x) for x in tokens[1:]]
-                        measurements.append(try_convert_values(meas))
-                        self.measure_count += 1
-                    except ValueError:
-                        if len(tokens) >= 3 and (tokens[2] == "FROM" or tokens[2] == 'at'):
-                            tokens[2] = dataname + '_' + tokens[2]
-                        if len(tokens) >= 4 and tokens[3] == "TO":
-                            tokens[3] = dataname + "_TO"
-                        headers = [dataname] + tokens[2:]
+                            self.dataset[title] = [
+                                try_convert_value(measurements[k])]  # need to be a list for compatibility
+                line = fin.readline()
+
+            # message("Reading Measurements")
+            dataname = None
+
+            headers = []  # Initializing an empty parameters
+            measurements = []
+            while line:
+                line = line.strip('\r\n')
+                if line.startswith("Measurement: "):
+                    if dataname:  # If previous measurement was saved
+                        # store the info
+                        if len(measurements):
+                            message("Storing Measurement %s (count %d)" % (dataname, len(measurements)))
+                            for k, title in enumerate(headers):
+                                self.dataset[title] = [line[k] for line in measurements]
+                        headers = []
                         measurements = []
+                    dataname = line[13:]  # text which is after "Measurement: ". len("Measurement: ") -> 13
+                    message("Reading Measurement %s" % line[13:])
                 else:
-                    message("->", line)
+                    tokens = line.split("\t")
+                    if len(tokens) >= 2:
+                        try:
+                            int(tokens[0])  # This instruction only serves to trigger the exception
+                            meas = tokens[1:]  # [float(x) for x in tokens[1:]]
+                            measurements.append(try_convert_values(meas))
+                            self.measure_count += 1
+                        except ValueError:
+                            if len(tokens) >= 3 and (tokens[2] == "FROM" or tokens[2] == 'at'):
+                                tokens[2] = dataname + '_' + tokens[2]
+                            if len(tokens) >= 4 and tokens[3] == "TO":
+                                tokens[3] = dataname + "_TO"
+                            headers = [dataname] + tokens[2:]
+                            measurements = []
+                    else:
+                        message("->", line)
 
-            line = fin.readline()  # advance to the next line
+                line = fin.readline()  # advance to the next line
 
-        # storing the last data into the dataset
-        message("Storing Measurement %s" % dataname)
-        if len(measurements):
-            for k, title in enumerate(headers):
-                self.dataset[title] = [line[k] for line in measurements]
+            # storing the last data into the dataset
+            message("Storing Measurement %s" % dataname)
+            if len(measurements):
+                for k, title in enumerate(headers):
+                    self.dataset[title] = [line[k] for line in measurements]
 
-        message("%d measurements" % len(self.dataset))
-        message("Identified %d steps, read %d measurements" % (self.step_count, self.measure_count))
-
-        fin.close()
+            message("%d measurements" % len(self.dataset))
+            message("Identified %d steps, read %d measurements" % (self.step_count, self.measure_count))
 
     def __getitem__(self, key):
         """
