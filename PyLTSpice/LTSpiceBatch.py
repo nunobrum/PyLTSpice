@@ -231,7 +231,7 @@ class SimCommander(SpiceEditor):
                           number should be aligned to the number of CPUs (processor cores) available on the machine.
     :type parallel_sims: int, optional
     :param timeout: Timeout parameter as specified on the os subprocess.run() function
-    :param timeout: float, optional
+    :type timeout: float, optional
     :param verbose: If True, it enables a richer printout of the program execution.
     :type verbose: bool, optional
     :param encoding: Forcing the encoding to be used on the circuit netlile read. Defaults to 'autodetect' which will
