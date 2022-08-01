@@ -228,6 +228,9 @@ A more detailed documentation is directly included in the source file docstrings
 * Alternative contact : nuno.brum@gmail.com
 
 ## History ##
+* Version 2.0.2\
+Improvements on Encoding detection
+
 * Version 2.0\
 International Support using the correct encoding when loading log files.\
 Code Optimizations on the LTSpice_RawReader that allow faster data loading.\

@@ -500,7 +500,7 @@ class SpiceCircuit(object):
         :return: Dictionary with the component information
         :rtype: dict
         :raises: UnrecognizedSyntaxError when the line doesn't match the expected REGEX. NotImplementedError of there
-        isn't an associated regular expression for the component prefix.
+                 isn't an associated regular expression for the component prefix.
         """
         prefix = component[0]  # Using the first letter of the component to identify what is it
         regex = component_replace_regexs.get(prefix, None)  # Obtain RegX to make the update
@@ -795,14 +795,18 @@ class SpiceEditor(SpiceCircuit):
     This class implements interfaces to manipulate SPICE netlist files. The class doesn't update the netlist file
     itself. After implementing the modifications the user should call the "write_netlist" method to write a new
     netlist file.
-    :param netlist_file: Name of the .NET file to process
+    :param netlist_file: Name of the .NET file to parse
+    :type netlist_file: str
+    :param encoding: Forcing the encoding to be used on the circuit netlile read. Defaults to 'autodetect' which will
+    call a function that tries to detect the encoding automatically. This however is not 100% fool proof.
+    :type encoding: str, optional
     """
     def __init__(self, netlist_file, encoding='autodetect'):
         super().__init__()
         self.netlist_file = netlist_file
         self.modified_subcircuits = {}
         if encoding == 'autodetect':
-            self.encoding = detect_encoding(netlist_file)
+            self.encoding = detect_encoding(netlist_file, '*')  # Normally the file will start with a '*'
         else:
             self.encoding = encoding
         self.reset_netlist()
@@ -977,10 +981,9 @@ class SpiceEditor(SpiceCircuit):
         return None
 
 if __name__ == '__main__':
-    E = SpiceEditor('..\\tests\\PI_Filter_resampled.net')
+    E = SpiceEditor(os.path.abspath('..\\tests\\PI_Filter_resampled.net'))
     E.add_instruction(".nodeset V(N001)=0")
     E.write_netlist('..\\tests\\PI_Filter_resampled_mod.net')
-    exit()
     E = SpiceEditor('..\\tests\\Editor_Test.net')
     print("Circuit Nodes", E.get_all_nodes())
     E.add_library_search_paths([r"C:\SVN\Electronic_Libraries\LTSpice\lib"])

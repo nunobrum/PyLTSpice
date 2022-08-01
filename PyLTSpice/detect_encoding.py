@@ -30,7 +30,7 @@ def detect_encoding(file_path, expected_str: str = '') -> str:
     :return: detected encoding
     :rtype: str
     """
-    for encoding in ('utf_16_le', 'ansi', 'cp1252', 'cp1250', 'utf-8'):
+    for encoding in ('utf-8', 'utf_16_le', 'ansi', 'cp1252', 'cp1250', 'shift-jis'):
         try:
             with open(file_path, 'r', encoding=encoding) as f:
                 lines = f.readlines()
@@ -44,7 +44,8 @@ def detect_encoding(file_path, expected_str: str = '') -> str:
                     # File did not start with expected string
                     # Try again with a different encoding (This is unlikely to resolve the issue)
                     continue
-
+            if encoding == 'utf-8' and lines[0][1] == '\x00':
+                continue
             return encoding
     else:
         raise UnicodeError("Unable to detect log file encoding")

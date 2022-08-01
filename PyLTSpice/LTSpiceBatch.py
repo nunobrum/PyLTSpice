@@ -140,7 +140,7 @@ class RunTask(threading.Thread):
 
     def __init__(self, run_no, netlist_file: str, callback: Callable[[str, str], Any], timeout=None, verbose=True):
         self.verbose = verbose
-        self.timeout = timeout  # Thanks to Daniel Phili for implemnting this
+        self.timeout = timeout  # Thanks to Daniel Phili for implementing this
 
         threading.Thread.__init__(self)
         self.setName("sim%d" % run_no)
@@ -205,7 +205,11 @@ class RunTask(threading.Thread):
                 os.rename(old_log_file, self.log_file)
 
     def wait_results(self) -> Tuple[str, str]:
-        """Waits for the completion of the task and returns the raw and log files."""
+        """
+        Waits for the completion of the task and returns a tuple with the raw and log files.
+        :returns: Tupple with the path to the raw file and the path to the log file
+        :rtype: tuple(str, str)
+        """
         while self.is_alive() or self.retcode == -1:
             sleep(0.1)
         if self.retcode == 0:  # All finished OK
@@ -217,9 +221,26 @@ class RunTask(threading.Thread):
 class SimCommander(SpiceEditor):
     """
     The SimCommander class implements all the methods required for launching batches of LTSpice simulations.
+    It takes a parameter the path to the LTSpice .asc file to be simulated, or directly the .net file.
+    If an .asc file is given, the class will try to generate the respective .net file by calling LTspice with
+    the --netlist option
+
+    :param circuit_file: Path to the circuit to simulate. It can be either a .asc or a .net file
+    :type circuit_file: str
+    :param parallel_sims: Defines the number of parallel simulations that can be executed at the same time. Ideally this
+                          number should be aligned to the number of CPUs (processor cores) available on the machine.
+    :type parallel_sims: int, optional
+    :param timeout: Timeout parameter as specified on the os subprocess.run() function
+    :param timeout: float, optional
+    :param verbose: If True, it enables a richer printout of the program execution.
+    :type verbose: bool, optional
+    :param encoding: Forcing the encoding to be used on the circuit netlile read. Defaults to 'autodetect' which will
+                     call a function that tries to detect the encoding automatically. This however is not 100% fool
+                     proof.
+    :type encoding: str, optional
     """
 
-    def __init__(self, circuit_file: str, parallel_sims: int = 4, timeout=None, verbose=True, file_id=''):
+    def __init__(self, circuit_file: str, parallel_sims: int = 4, timeout=None, verbose=True, encoding='autodetect'):
         """
         Class Constructor. It serves to start batches of simulations.
         See Class documentation for more information.
@@ -271,7 +292,7 @@ class SimCommander(SpiceEditor):
             if self.verbose:
                 print("Unable to find the Netlist: %s" % circuit_file)
 
-        super(SimCommander, self).__init__(netlist_file)
+        super(SimCommander, self).__init__(netlist_file, encoding=encoding)
         self.reset_netlist()
         if len(self.netlist) == 0:
             self.logger.error("Unable to create Netlist")
@@ -324,7 +345,7 @@ class SimCommander(SpiceEditor):
         :param run_filename:
             The name of the netlist can be optionally overridden if the user wants to have a better control of how the
             simulations files are generated.
-        :type run_filename: str
+        :type run_filename: str, optional
         :param wait_resource:
             Setting this parameter to False will force the simulation to start immediately, irrespective of the number
             of simulations already active.
@@ -332,13 +353,13 @@ class SimCommander(SpiceEditor):
             the parameter ´parallel_sims´ to a different number.
             If there are more than ´parallel_sims´ simulations being done, the new one will be placed on hold till one
             of the other simulations are finished.
-        :type wait_resource: bool
+        :type wait_resource: bool, optional
         :param callback:
             The user can optionally give a callback function for when the simulation finishes so that processing can
             be done immediately.
-        :type: callback: function(raw_file, log_file)
+        :type: callback: function(raw_file, log_file), optional
         :param timeout: Timeout to be used in waiting for resources. Default time is 600 seconds, i.e. 10 minutes.
-        :type timeout: float
+        :type timeout: float, optional
 
         :returns: The task object of type RunTask
         """
