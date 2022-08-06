@@ -107,7 +107,10 @@ END_LINE_TERM = '\n'
 logging.basicConfig(filename='LTSpiceBatch.log', level=logging.INFO)
 
 if sys.platform == "linux":
-    LTspice_exe = ["wine", os.path.expanduser("~") + "/.wine/drive_c/Program Files/LTC/LTspiceXVII/XVIIx64.exe"]
+    if not os.environ.get('LTSPICEFOLDER') == None:
+        LTspice_exe = ["wine", os.environ['LTSPICEFOLDER'] + "/XVIIx64.exe"]
+    else:
+        LTspice_exe = ["wine", os.path.expanduser("~") + "/.wine/drive_c/Program Files/LTC/LTspiceXVII/XVIIx64.exe"]
     LTspice_arg = {'netlist': ['-netlist'], 'run': ['-b', '-Run']}
 elif sys.platform == "darwin":
     LTspice_exe = ['/Applications/LTspice.app/Contents/MacOS/LTspice']
