@@ -671,12 +671,12 @@ class SpiceCircuit(object):
         """
         return scan_eng(self.get_component_info(element)['value'])
 
-    def get_component_nodes(self, elemment: str) -> List[str]:
+    def get_component_nodes(self, element: str) -> List[str]:
         """
         Returns the nodes to which the component is attached to.
 
-        :param elemment: Reference of the circuit element to get the nodes.
-        :type elemment: str
+        :param element: Reference of the circuit element to get the nodes.
+        :type element: str
         :return: List of nodes
         :rtype: list
         """
