@@ -16,6 +16,7 @@ Implements a parser for extracting Semiconductor Devices Operating Points from a
 """
 
 import re
+from .detect_encoding import detect_encoding
 
 
 def opLogReader(filename: str) -> dict:
@@ -84,7 +85,8 @@ def opLogReader(filename: str) -> dict:
     """
     dataset = {}
     is_title = re.compile(r"^\s*--- (.*) ---\s*$")
-    log = open(filename)
+    encoding = detect_encoding(filename)
+    log = open(filename, 'r', encoding=encoding)
     where = None
     n_devices = 0
     line = None
