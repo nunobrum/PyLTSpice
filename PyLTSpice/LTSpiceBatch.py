@@ -44,7 +44,8 @@ Multiprocessing
 
 For making better use of today's computer capabilities, the SimCommander spawns several LTSpice instances
 each executing in parallel a simulation.
-By default the number of parallel simulations is 4, however the user can override this in two ways. Either
+
+By default, the number of parallel simulations is 4, however the user can override this in two ways. Either
 using the class constructor argument ``parallel_sims`` or by forcing the allocation of more processes in the
 run() call by setting ``wait_resource=False``. ::
 
@@ -87,17 +88,17 @@ simulation is finished.
 __author__ = "Nuno Canto Brum <nuno.brum@gmail.com>"
 __copyright__ = "Copyright 2020, Fribourg Switzerland"
 
-from abc import ABC
-from warnings import warn
-import subprocess
-import threading
 import logging
 import os
-import time
-from time import sleep
+import subprocess
 import sys
+import threading
+import time
 import traceback
-from typing import Optional, Callable, Union, Any, Tuple
+from time import sleep
+from typing import Callable, Union, Any, Tuple
+from warnings import warn
+
 from PyLTSpice.SpiceEditor import SpiceEditor
 
 __all__ = ('SimCommander', 'cmdline_switches', 'LTspice_exe')
@@ -107,32 +108,36 @@ END_LINE_TERM = '\n'
 logging.basicConfig(filename='LTSpiceBatch.log', level=logging.INFO)
 
 if sys.platform == "linux":
-    if not os.environ.get('LTSPICEFOLDER') == None:
+    if os.environ.get('LTSPICEFOLDER') is not None:
         LTspice_exe = ["wine", os.environ['LTSPICEFOLDER'] + "/XVIIx64.exe"]
     else:
         LTspice_exe = ["wine", os.path.expanduser("~") + "/.wine/drive_c/Program Files/LTC/LTspiceXVII/XVIIx64.exe"]
     LTspice_arg = {'netlist': ['-netlist'], 'run': ['-b', '-Run']}
+    PROCNAME = "XVIIx64.exe"
 elif sys.platform == "darwin":
     LTspice_exe = ['/Applications/LTspice.app/Contents/MacOS/LTspice']
     LTspice_arg = {'run': ['-b']}
+    PROCNAME = "XVIIx64"
 else:  # Windows
     LTspice_exe = [r"C:\Program Files\LTC\LTspiceXVII\XVIIx64.exe"]
     LTspice_arg = {'netlist': ['-netlist'], 'run': ['-b', '-Run']}
+    PROCNAME = "XVIIx64.exe"
 
 # Legacy
 LTspiceIV_exe = [r"C:\Program Files (x86)\LTC\LTspiceIV\scad3.exe"]
 
 cmdline_switches = []
 
-
 if sys.version_info.major >= 3 and sys.version_info.minor >= 6:
     clock_function = time.process_time
+
 
     def run_function(command, timeout=None):
         result = subprocess.run(command, timeout=timeout)
         return result.returncode
 else:
     clock_function = time.clock
+
 
     def run_function(command, timeout=None):
         return subprocess.call(command, timeout=timeout)
@@ -204,7 +209,7 @@ class RunTask(threading.Thread):
             logger.warning(time.asctime() + ": Simulation Failed. Time elapsed %s:%s" % (sim_time, END_LINE_TERM))
             if os.path.exists(self.log_file):
                 old_log_file = self.log_file
-                self.log_file =  netlist_radic + '.fail'
+                self.log_file = netlist_radic + '.fail'
                 os.rename(old_log_file, self.log_file)
 
     def wait_results(self) -> Tuple[str, str]:
@@ -323,7 +328,6 @@ class SimCommander(SpiceEditor):
         else:
             raise TypeError("Expecting str or list objects")
 
-
     def add_LTspiceRunCmdLineSwitches(self, *args) -> None:
         """
         Used to add an extra command line argument such as -I<path> to add symbol search path or -FastAccess
@@ -417,16 +421,51 @@ class SimCommander(SpiceEditor):
                     self.failSim += 1
                 del self.threads[i]
 
-    def wait_completion(self):
+    @staticmethod
+    def kill_all_ltspice():
+        """Function to terminate LTSpice in windows"""
+        import psutil
+        for proc in psutil.process_iter():
+            # check whether the process name matches
+
+            if proc.name() == PROCNAME:
+                print("killing ltspice", proc.pid)
+                proc.kill()
+
+    def wait_completion(self, timeout=None, abort_all_on_timeout=False) -> bool:
         """
         This function will wait for the execution of all scheduled simulations to complete.
 
-        :returns: Nothing
+        :param timeout: Cancels the wait after the number of seconds specified by the timeout.
+            This timeout is reset everytime that a simulation is completed. The difference between this timeout and the
+            one defined in the SimCommander instance, is that the later is implemented by the subprocess class, and the
+            this timeout just cancels the wait.
+        :type timeout: int
+        :param abort_all_on_timeout: attempts to stop all LTSpice processes if timeout is expired.
+        :type abort_all_on_timeout: bool
+        :returns: True if all simulations were executed successfully
+        :rtype: bool
         """
         self.updated_stats()
+        timeout_counter = 0
+        sim_counters = (self.okSim, self.failSim)
+
         while len(self.threads) > 0:
             sleep(1)
             self.updated_stats()
+            if timeout is not None:
+                if sim_counters == (self.okSim, self.failSim):
+                    timeout_counter += 1
+                    print(timeout_counter, "timeout counter")
+                else:
+                    timeout_counter = 0
+
+                if timeout_counter > timeout:
+                    if abort_all_on_timeout:
+                        self.kill_all_ltspice()
+                    return False
+
+        return self.failSim == 0
 
 
 class LTCommander(SimCommander):
@@ -441,7 +480,6 @@ class LTCommander(SimCommander):
         warn("Deprecated Class. Please use the new SimCommander class instead of LTCommander\n"
              "For more information consult. https://www.nunobrum.com/pyspicer.html", DeprecationWarning)
         SimCommander.__init__(self, circuit_file, 1)
-
 
     def write_log(self, text: str):
         mlog = open(self.circuit_radic + '.masterlog', 'a')
@@ -517,10 +555,10 @@ if __name__ == "__main__":
     LTC.set_parameters(res=0.001, cap=100e-6)
     # define simulation
     LTC.add_instructions(
-        "; Simulation settings",
-        # [".STEP PARAM Rmotor LIST 21 28"],
-        ".TRAN 3m",
-        # ".step param run 1 2 1"
+            "; Simulation settings",
+            # [".STEP PARAM Rmotor LIST 21 28"],
+            ".TRAN 3m",
+            # ".step param run 1 2 1"
     )
     # do parameter sweep
     for res in range(5):
@@ -535,11 +573,12 @@ if __name__ == "__main__":
     def callback_function(raw_file, log_file):
         print("Handling the simulation data of %s, log file %s" % (raw_file, log_file))
 
+
     LTC = SimCommander(meAbsPath + "\\test_files\\testfile.asc", parallel_sims=1)
     tstart = 0
     for tstop in (2, 5, 8, 10):
         tduration = tstop - tstart
-        LTC.add_instruction(".tran {}".format(tduration),)
+        LTC.add_instruction(".tran {}".format(tduration), )
         if tstart != 0:
             LTC.add_instruction(".loadbias {}".format(bias_file))
             # Put here your parameter modifications
@@ -548,7 +587,7 @@ if __name__ == "__main__":
         LTC.add_instruction(".savebias {} internal time={}".format(bias_file, tduration))
         tstart = tstop
         LTC.run(callback=callback_function)
-        
+
     LTC.reset_netlist()
     LTC.add_instruction('.ac dec 40 1m 1G')
     LTC.set_component_value('V1', 'AC 1 0')
