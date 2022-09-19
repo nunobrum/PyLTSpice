@@ -319,7 +319,7 @@ class DataSet(object):
         self.whattype = whattype
         self.numerical_type = numerical_type
         if USE_NNUMPY:
-            if whattype == 'time':
+            if numerical_type == 'double':
                 self.data = zeros(datalen, dtype=float64)
             elif numerical_type == 'real':
                 self.data = zeros(datalen, dtype=float32)
@@ -379,9 +379,11 @@ class Axis(DataSet):
 
     To access data inside this class, the get_wave() should be used, which implements the support for the STEPed data.
     IF Numpy is available, get_wave() will return a numpy array.
+
+    In Transient Analysis and in DC transfer characteristic, LTSpice uses doubles to store the axis values.
     """
 
-    def __init__(self, name: str, whattype: str, datalen: int, numerical_type: str ='real'):
+    def __init__(self, name: str, whattype: str, datalen: int, numerical_type: str = 'double'):
         super().__init__(name, whattype, datalen, numerical_type)
         self.step_info = None
 
@@ -397,8 +399,6 @@ class Axis(DataSet):
         while i < len(self.data):
             if self.data[i] == self.data[0]:
                 # print(k, i, self.data[i], self.data[i+1])
-                if self.data[i] == self.data[i + 1]:
-                    i += 1  # Needs to add one here because the data will be repeated
                 self.step_offsets[k] = i
                 k += 1
             i += 1
@@ -428,7 +428,7 @@ class Axis(DataSet):
             else:
                 return self.step_offsets[step]
 
-    def get_wave(self, step: int =0):
+    def get_wave(self, step: int = 0):
         """
         Returns an the vector containing the wave values. If numpy is installed, data is returned as a numpy array.
         If not, the wave is returned as a list of floats.
@@ -556,7 +556,7 @@ class LTSpiceRawRead(object):
     :key headeronly:
         Used to only load the header information and skip the trace data entirely. Use `headeronly=True`.
     """
-    header_lines = [
+    header_lines = (
         "Title",
         "Date",
         "Plotname",
@@ -568,7 +568,15 @@ class LTSpiceRawRead(object):
         "Command",
         "Variables",
         "Backannotation"
-    ]
+    )
+
+    ACCEPTED_PLOTNAMES = (
+        'AC Analysis',
+        'DC transfer characteristic',
+        'Operating Point',
+        'Transient Analysis',
+        'Transfer Function'
+    )
 
     def __init__(self, raw_filename: str, traces_to_read: Union[str, List[str], Tuple[str], None] = '*', **kwargs):
         self.verbose = kwargs.get('verbose', True)
@@ -594,14 +602,15 @@ class LTSpiceRawRead(object):
         self.raw_params = OrderedDict(Filename=raw_filename)  # Initializing the dictionary that contains all raw file info
         self.backannotations = []  # Storing backannotations
         header = []
+        binary_start = 6
         while True:
             ch = raw_file.read(sz_enc).decode(encoding=self.encoding)
+            binary_start += sz_enc
             if ch == '\n':
                 if self.encoding == 'utf_8':  # must remove the \r
                     line = line.rstrip('\r')
                 header.append(line)
                 if line in ('Binary:', 'Values:'):
-                    self.binary_start = raw_file.tell()
                     self.raw_type = line
                     break
                 line = ""
@@ -611,14 +620,17 @@ class LTSpiceRawRead(object):
             k, _, v = line.partition(':')
             if k == 'Variables':
                 break
-            self.raw_params[k] = v
+            self.raw_params[k] = v.strip()
         self.nPoints = int(self.raw_params['No. Points'], 10)
         self.nVariables = int(self.raw_params['No. Variables'], 10)
+        assert self.raw_params['Plotname'] in self.ACCEPTED_PLOTNAMES
+        has_axis = self.raw_params['Plotname'] in ('AC Analysis', 'DC transfer characteristic', 'Transient Analysis')
+
         self._traces = []
         self.steps = None
         self.axis = None  # Creating the axis
         self.flags = self.raw_params['Flags'].split()
-        if 'complex' in self.raw_params['Flags']:
+        if 'complex' in self.raw_params['Flags'] or self.raw_params['Plotname'] == 'AC Analysis':
             numerical_type = 'complex'
         else:
             numerical_type = 'real'
@@ -626,18 +638,22 @@ class LTSpiceRawRead(object):
         ivar = 0
         for line in header[i + 1:-1]:  # Parse the variable names
             _, name, var_type = line.lstrip().split('\t')
-            if 'forward' in self.flags and ivar == 0:  # If it has an axis, it should be always read
-                self.axis = Axis(name, var_type, self.nPoints, numerical_type)
+            if has_axis and ivar == 0:  # If it has an axis, it should be always read
+                if numerical_type == 'real':
+                    axis_numerical_type = 'double'
+                else:
+                    axis_numerical_type = numerical_type
+                self.axis = Axis(name, var_type, self.nPoints, axis_numerical_type)
                 trace = self.axis
             elif (traces_to_read == "*") or (name in traces_to_read):
-                # TODO: Add wildcards to the waveform matching
-                if 'forward' in self.flags:  # Reads data
+                if has_axis:  # Reads data
                     trace = Trace(name, var_type, self.nPoints, self.axis, numerical_type)
                 else:
                     # If an Operation Point or Transfer Function, only one point per trace
                     trace = Op(name, var_type)
             else:
                 trace = DummyTrace(name, var_type)
+
             self._traces.append(trace)
             ivar += 1
 
@@ -656,7 +672,7 @@ class LTSpiceRawRead(object):
         if self.raw_type == "Binary:":
             # Will start the reading of binary values
             # But first check whether how data is stored.
-            self.block_size = (raw_file_size - self.binary_start) // self.nPoints
+            self.block_size = (raw_file_size - binary_start) // self.nPoints
             self.data_size = self.block_size // self.nVariables
 
             scan_functions = []
@@ -684,7 +700,7 @@ class LTSpiceRawRead(object):
             if "fastaccess" in self.raw_params["Flags"]:
                 if self.verbose:
                     print("Binary RAW file with Fast access")
-                # A fast access means that the traces are grouped together.
+                # Fast access means that the traces are grouped together.
                 for i, var in enumerate(self._traces):
                     if isinstance(var, DummyTrace):
                         # TODO: replace this by a seek
@@ -934,7 +950,7 @@ if __name__ == "__main__":
     from numpy import abs as mag
 
     def what_to_units(whattype):
-        "Determines the unit to display on the plot Y axis"
+        """Determines the unit to display on the plot Y axis"""
         if 'voltage' in whattype:
             return 'V'
         if 'current' in whattype:
@@ -950,7 +966,12 @@ if __name__ == "__main__":
     else:
         test_directory = pathjoin(pathsplit(directory)[0], 'tests')
         filename = 'DC sweep.raw'
-        trace_names = ('V(in)', 'V(out)')
+        # filename = 'tran.raw'
+        # filename = 'tran - step.raw'
+        # filename = 'ac.raw'
+        # filename = 'AC - STEP.raw'
+        # filename = 'PI_Filter_tf.raw'
+        trace_names = '*' # 'V(out)',
         raw_filename = pathjoin(test_directory, filename)
 
     LTR = RawRead(raw_filename, trace_names, verbose=True)
@@ -958,11 +979,13 @@ if __name__ == "__main__":
         print("{}: {}{}".format(param, " "*(20-len(param)), str(value).strip()))
 
     if trace_names == '*':
-        print("Add the traces to plot after the raw file")
-        exit(0)
+        print("Reading all the traces in the raw file")
+        trace_names = LTR.get_trace_names()
+
     traces = [LTR.get_trace(trace) for trace in trace_names]
     steps = LTR.get_steps()
     print("Steps read are :", list(steps))
+
     if 'complex' in LTR.flags:
         n_axis = len(traces) * 2
     else:
