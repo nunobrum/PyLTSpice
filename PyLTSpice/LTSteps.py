@@ -317,9 +317,12 @@ class LTSpiceLogReader(object):
     :type step_set: dict
     """
 
-    def __init__(self, log_filename: str, read_measures=True, step_set={}):
+    def __init__(self, log_filename: str, read_measures=True, step_set={}, encoding=None):
         self.logname = log_filename
-        self.encoding = detect_encoding(log_filename, "Circuit:")
+        if encoding is None:
+            self.encoding = detect_encoding(log_filename, "Circuit:")
+        else:
+            self.encoding = encoding
         self.step_count = len(step_set)
         self.stepset = step_set.copy()  # A copy is done since the dictionary is a mutable object.
         # Changes in step_set would be propagated to object on the call
@@ -327,8 +330,15 @@ class LTSpiceLogReader(object):
         self.measure_count = 0
 
         # Preparing a stepless measurement read regular expression
+        # there are only measures taken in the format parameter: measurement
+        # A few examples of readings
+        # vout_rms: RMS(v(out))=1.41109 FROM 0 TO 0.001  => Interval
+        # vin_rms: RMS(v(in))=0.70622 FROM 0 TO 0.001  => Interval
+        # gain: vout_rms/vin_rms=1.99809 => Parameter
+        # vout1m: v(out)=-0.0186257 at 0.001 => Point
+        # fcutac=8.18166e+006 FROM 1.81834e+006 TO 1e+007 => AC Find Computation
         regx = re.compile(
-                r"^(?P<name>\w+):\s+.*=(?P<value>[\d\.E+\-\(\)dB,°]+)(( FROM (?P<from>[\d\.E+-]*) TO (?P<to>[\d\.E+-]*))|( at (?P<at>[\d\.E+-]*)))?",
+                r"^(?P<name>\w+)(:\s+.*)?=(?P<value>[\d\.E+\-\(\)dB,°]+)(( FROM (?P<from>[\d\.E+-]*) TO (?P<to>[\d\.E+-]*))|( at (?P<at>[\d\.E+-]*)))?",
                 re.IGNORECASE)
 
         message("Processing LOG file", log_filename)
@@ -435,12 +445,6 @@ class LTSpiceLogReader(object):
                         break  # Jumps to the section that reads measurements
 
                 if self.step_count == 0:  # then there are no steps,
-                    # there are only measures taken in the format parameter: measurement
-                    # A few examples of readings
-                    # vout_rms: RMS(v(out))=1.41109 FROM 0 TO 0.001  => Interval
-                    # vin_rms: RMS(v(in))=0.70622 FROM 0 TO 0.001  => Interval
-                    # gain: vout_rms/vin_rms=1.99809 => Parameter
-                    # vout1m: v(out)=-0.0186257 at 0.001 => Point
                     match = regx.match(line)
                     if match:
                         # Get the data
