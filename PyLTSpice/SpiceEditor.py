@@ -872,7 +872,7 @@ class SpiceEditor(SpiceCircuit):
         if instruction not in self.netlist:
             # Insert before backanno instruction
             try:
-                line = self.netlist.index('.backanno')
+                line = self.netlist.index('.backanno\n')  # TODO: Improve this. END of line termination could be differnt and case as well
             except ValueError:
                 line = len(self.netlist) - 2  # This is where typically the .backanno instruction is
             self.netlist.insert(line, instruction)
@@ -940,7 +940,8 @@ class SpiceEditor(SpiceCircuit):
 
         :returns: Nothing
         """
-        self.netlist = []
+        self.netlist.clear()
+        self.modified_subcircuits.clear()
         if os.path.exists(self.netlist_file):
             with open(self.netlist_file, 'r', encoding=self.encoding, errors='replace') as f:
                 lines = iter(f)  # Creates an iterator object to consume the file
