@@ -48,4 +48,4 @@ def detect_encoding(file_path, expected_str: str = '') -> str:
                 continue
             return encoding
     else:
-        raise UnicodeError("Unable to detect log file encoding")
+        raise UnicodeError(f"Unable to detect log file encoding, or expected string ""{expected_str}"" not found")

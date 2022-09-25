@@ -223,7 +223,7 @@ class RunTask(threading.Thread):
         if self.retcode == 0:  # All finished OK
             return self.raw_file, self.log_file
         else:
-            return '', self.log_file
+            return '', ''
 
 
 class SimCommander(SpiceEditor):

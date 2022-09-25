@@ -228,6 +228,15 @@ A more detailed documentation is directly included in the source file docstrings
 * Alternative contact : nuno.brum@gmail.com
 
 ## History ##
+* Version 2.22.38\
+Changing versioning scheme to major.year.week\
+Adopting minimum python version 3.7\
+Starting to use unit tests to validate all modules and improving testbenches\
+Compatibility with NGSpice\
+Avoiding the use of setup.py as per PEP517 and PEP518\
+Bug Fixes (See GitHub log for more information)\
+Improvements on the management of stepped data in the LTSpice_RawRead.py
+
 * Version 2.0.2\
 Improvements on Encoding detection
 

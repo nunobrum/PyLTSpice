@@ -34,4 +34,5 @@ jobs:
 #          pip install -r ./.github/workflows/requirements.txt
       - name: Test sweep_iterators.py
         run: |
-          python ./test/unit/sweep_iterators/sweep_iterators_unittest.py
+          python ./tests/unittest/sweep_iterators/sweep_iterators_unittest.py
+          python ./tests/unittest/test_pyltsipce.py
