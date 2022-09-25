@@ -228,8 +228,7 @@ A more detailed documentation is directly included in the source file docstrings
 * Alternative contact : nuno.brum@gmail.com
 
 ## History ##
-* Version 2.22.38\
-Changing versioning scheme to major.year.week\
+* Version 2.1\
 Adopting minimum python version 3.7\
 Starting to use unit tests to validate all modules and improving testbenches\
 Compatibility with NGSpice\
