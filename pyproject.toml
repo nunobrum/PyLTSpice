@@ -6,7 +6,7 @@ requires = [
 build-backend = "setuptools.build_meta"
 [project]
 name = "PyLTSpice"
-version = "2.22.38"
+version = "2.1"
 authors = [
   { name="Nuno Brum", email="me@nunobrum.com" },
 ]
@@ -14,6 +14,9 @@ description = "A set of tools to Automate LTSpice simulations"
 readme = "README.md"
 license = { file="LICENSE" }
 requires-python = ">=3.7"
+requires = [
+    "numpy",
+]
 classifiers=[
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",

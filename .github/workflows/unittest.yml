@@ -35,4 +35,6 @@ jobs:
       - name: Test sweep_iterators.py
         run: |
           python ./tests/unittest/sweep_iterators/sweep_iterators_unittest.py
-          python ./tests/unittest/test_pyltsipce.py
+      - name: Test LTSpice_RawRead
+        run: |
+          python ./tests/unittest/test_pyltspice.py
