@@ -32,13 +32,15 @@ from PyLTSpice.LTSpice_RawRead import LTSpiceRawRead
 
 
 # ------------------------------------------------------------------------------
-
 debugging = False
+has_ltspice = False
 # ------------------------------------------------------------------------------
-class test_pyltspice(unittest.TestCase):
 
+
+class test_pyltspice(unittest.TestCase):
+    """Unnittesting PyLTSpice"""
     # *****************************
-    @unittest.skipIf(debugging is True, "While Debugging")
+    @unittest.skipIf(debugging is True or has_ltspice is False, "Skip if not in windows environment")
     def test_batch_test(self):
         """
         @note   inits class
@@ -242,9 +244,12 @@ class test_pyltspice(unittest.TestCase):
                 1.20858e-006,
             ]
         }
-        LTC = SimCommander("..\\Batch_Test.asc")
-
-        raw_file, log_file = LTC.run().wait_results()
+        if has_ltspice:
+            LTC = SimCommander("..\\Batch_Test.asc")
+            raw_file, log_file = LTC.run().wait_results()
+            print(raw_file, log_file)
+        else:
+            log_file = "..\\Batch_Test_1.log"
         log = LTSpiceLogReader(log_file)
         # raw = LTSpiceRawRead(raw_file)
         for measure in assert_data:
@@ -257,8 +262,12 @@ class test_pyltspice(unittest.TestCase):
     @unittest.skipIf(debugging is True, "While Debugging")
     def test_operating_point(self):
         """Operating Point Simulation Test"""
-        LTC = SimCommander("..\\DC op point.asc")
-        raw_file, log_file = LTC.run().wait_results()
+        if has_ltspice:
+            LTC = SimCommander("..\\DC op point.asc")
+            raw_file, log_file = LTC.run().wait_results()
+        else:
+            raw_file = "..\\DC op point_1.raw"
+            # log_file = "..\\DC op point_1.log"
         raw = LTSpiceRawRead(raw_file)
         traces = [raw.get_trace(trace)[0] for trace in raw.get_trace_names()]
 
@@ -267,8 +276,11 @@ class test_pyltspice(unittest.TestCase):
     @unittest.skipIf(debugging is True, "While Debugging")
     def test_operating_point_step(self):
         """Operating Point Simulation with Steps """
-        LTC = SimCommander("..\\DC op point - STEP.asc")
-        raw_file, log_file = LTC.run().wait_results()
+        if has_ltspice:
+            LTC = SimCommander("..\\DC op point - STEP.asc")
+            raw_file, log_file = LTC.run().wait_results()
+        else:
+            raw_file = "..\\DC op point - STEP_1.raw"
         raw = LTSpiceRawRead(raw_file)
         vin = raw.get_trace('V(in)')
 
@@ -280,8 +292,12 @@ class test_pyltspice(unittest.TestCase):
     @unittest.skipIf(debugging is True, "While Debugging")
     def test_transient(self):
         """Transient Simulation test """
-        LTC = SimCommander("..\\TRAN.asc")
-        raw_file, log_file = LTC.run().wait_results()
+        if has_ltspice:
+            LTC = SimCommander("..\\TRAN.asc")
+            raw_file, log_file = LTC.run().wait_results()
+        else:
+            raw_file = "..\\TRAN_1.raw"
+            log_file = "..\\TRAN_1.log"
         raw = LTSpiceRawRead(raw_file)
         log = LTSpiceLogReader(log_file)
         vout = raw.get_trace('V(out)')
@@ -296,8 +312,13 @@ class test_pyltspice(unittest.TestCase):
     @unittest.skipIf(debugging is True, "While Debugging")
     def test_transient_steps(self):
         """Transient simulation with stepped data."""
-        LTC = SimCommander("..\\TRAN - STEP.asc")
-        raw_file, log_file = LTC.run().wait_results()
+        if has_ltspice:
+            LTC = SimCommander("..\\TRAN - STEP.asc")
+            raw_file, log_file = LTC.run().wait_results()
+        else:
+            raw_file = "..\\TRAN - STEP_1.raw"
+            log_file = "..\\TRAN - STEP_1.log"
+
         raw = LTSpiceRawRead(raw_file)
         log = LTSpiceLogReader(log_file)
         vout = raw.get_trace('V(out)')
@@ -315,11 +336,17 @@ class test_pyltspice(unittest.TestCase):
     def test_ac_analysis(self):
         """AC Analysis Test"""
         from numpy import pi, angle
-        LTC = SimCommander("..\\AC.asc")
-        raw_file, log_file = LTC.run().wait_results()
+        if has_ltspice:
+            LTC = SimCommander("..\\AC.asc")
+            raw_file, log_file = LTC.run().wait_results()
+            R1 = LTC.get_component_floatvalue('R1')
+            C1 = LTC.get_component_floatvalue('C1')
+        else:
+            raw_file = "..\\AC_1.raw"
+            log_file = "..\\AC_1.log"
+            R1 = 100
+            C1 = 10E-6
         # Compute the RC AC response with the resistor and capacitor values from the netlist.
-        R1 = LTC.get_component_floatvalue('R1')
-        C1 = LTC.get_component_floatvalue('C1')
         raw = LTSpiceRawRead(raw_file)
         vout_trace = raw.get_trace('V(out)')
         vin_trace = raw.get_trace('V(in)')
@@ -338,11 +365,15 @@ class test_pyltspice(unittest.TestCase):
     def test_ac_analysis_steps(self):
         """AC Analysis Test with steps"""
         from numpy import pi, angle
-        LTC = SimCommander("..\\AC - STEP.asc")
-        raw_file, log_file = LTC.run().wait_results()
+        if has_ltspice:
+            LTC = SimCommander("..\\AC - STEP.asc")
+            raw_file, log_file = LTC.run().wait_results()
+            C1 = LTC.get_component_floatvalue('C1')
+        else:
+            raw_file = "..\\AC - STEP_1.raw"
+            log_file = "..\\AC - STEP_1.log"
+            C1 = 159.1549e-6  # 159.1549uF
         # Compute the RC AC response with the resistor and capacitor values from the netlist.
-
-        C1 = LTC.get_component_floatvalue('C1')
         raw = LTSpiceRawRead(raw_file)
         vin_trace = raw.get_trace('V(in)')
         vout_trace = raw.get_trace('V(out)')
