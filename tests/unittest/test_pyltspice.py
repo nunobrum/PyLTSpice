@@ -249,7 +249,7 @@ class test_pyltspice(unittest.TestCase):
             raw_file, log_file = LTC.run().wait_results()
             print(raw_file, log_file)
         else:
-            log_file = "../Batch_Test_1.log"
+            log_file = "./tests/Batch_Test_1.log"
         log = LTSpiceLogReader(log_file)
         # raw = LTSpiceRawRead(raw_file)
         for measure in assert_data:
@@ -266,8 +266,8 @@ class test_pyltspice(unittest.TestCase):
             LTC = SimCommander("../DC op point.asc")
             raw_file, log_file = LTC.run().wait_results()
         else:
-            raw_file = "../DC op point_1.raw"
-            # log_file = "../DC op point_1.log"
+            raw_file = "./tests/DC op point_1.raw"
+            # log_file = "./tests/DC op point_1.log"
         raw = LTSpiceRawRead(raw_file)
         traces = [raw.get_trace(trace)[0] for trace in raw.get_trace_names()]
 
@@ -280,7 +280,7 @@ class test_pyltspice(unittest.TestCase):
             LTC = SimCommander("../DC op point - STEP.asc")
             raw_file, log_file = LTC.run().wait_results()
         else:
-            raw_file = "../DC op point - STEP_1.raw"
+            raw_file = "./tests/DC op point - STEP_1.raw"
         raw = LTSpiceRawRead(raw_file)
         vin = raw.get_trace('V(in)')
 
@@ -296,8 +296,8 @@ class test_pyltspice(unittest.TestCase):
             LTC = SimCommander("../TRAN.asc")
             raw_file, log_file = LTC.run().wait_results()
         else:
-            raw_file = "../TRAN_1.raw"
-            log_file = "../TRAN_1.log"
+            raw_file = "./tests/TRAN_1.raw"
+            log_file = "./tests/TRAN_1.log"
         raw = LTSpiceRawRead(raw_file)
         log = LTSpiceLogReader(log_file)
         vout = raw.get_trace('V(out)')
@@ -316,8 +316,8 @@ class test_pyltspice(unittest.TestCase):
             LTC = SimCommander("../TRAN - STEP.asc")
             raw_file, log_file = LTC.run().wait_results()
         else:
-            raw_file = "../TRAN - STEP_1.raw"
-            log_file = "../TRAN - STEP_1.log"
+            raw_file = "./tests/TRAN - STEP_1.raw"
+            log_file = "./tests/TRAN - STEP_1.log"
 
         raw = LTSpiceRawRead(raw_file)
         log = LTSpiceLogReader(log_file)
@@ -342,8 +342,8 @@ class test_pyltspice(unittest.TestCase):
             R1 = LTC.get_component_floatvalue('R1')
             C1 = LTC.get_component_floatvalue('C1')
         else:
-            raw_file = "../AC_1.raw"
-            log_file = "../AC_1.log"
+            raw_file = "./tests/AC_1.raw"
+            log_file = "./tests/AC_1.log"
             R1 = 100
             C1 = 10E-6
         # Compute the RC AC response with the resistor and capacitor values from the netlist.
@@ -370,8 +370,8 @@ class test_pyltspice(unittest.TestCase):
             raw_file, log_file = LTC.run().wait_results()
             C1 = LTC.get_component_floatvalue('C1')
         else:
-            raw_file = "../AC - STEP_1.raw"
-            log_file = "../AC - STEP_1.log"
+            raw_file = "tests/AC - STEP_1.raw"
+            log_file = "tests/AC - STEP_1.log"
             C1 = 159.1549e-6  # 159.1549uF
         # Compute the RC AC response with the resistor and capacitor values from the netlist.
         raw = LTSpiceRawRead(raw_file)
