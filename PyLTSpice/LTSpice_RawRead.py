@@ -856,7 +856,7 @@ class LTSpiceRawRead(object):
         if "stepped" in self.raw_params["Flags"]:
             try:
                 self._load_step_information(raw_filename)
-            except Exception:
+            except LTSPiceReadException:
                 print("LOG file not found or problems happened while reading it. Auto-detecting steps")
                 number_of_steps = 0
                 for v in self.axis:
