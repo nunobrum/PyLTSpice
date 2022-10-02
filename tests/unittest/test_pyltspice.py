@@ -370,8 +370,8 @@ class test_pyltspice(unittest.TestCase):
             raw_file, log_file = LTC.run().wait_results()
             C1 = LTC.get_component_floatvalue('C1')
         else:
-            raw_file = "tests/AC - STEP_1.raw"
-            log_file = "tests/AC - STEP_1.log"
+            raw_file = "./tests/AC - STEP_1.raw"
+            log_file = "./tests/AC - STEP_1.log"
             C1 = 159.1549e-6  # 159.1549uF
         # Compute the RC AC response with the resistor and capacitor values from the netlist.
         raw = LTSpiceRawRead(raw_file)
@@ -392,6 +392,8 @@ class test_pyltspice(unittest.TestCase):
                                        f"Difference between theoretical value ans simulation at point {point}:")
                 self.assertAlmostEqual(angle(vout), angle(h), 5,
                                        f"Difference between theoretical value ans simulation at point {point}")
+
+
 # ------------------------------------------------------------------------------
 if __name__ == '__main__':
     unittest.main()
