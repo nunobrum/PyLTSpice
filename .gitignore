@@ -1,3 +1,7 @@
 .vscode/
 __pycache__/
 PyLTSpice.egg-info
+venv
+.venv
+.python-version
+*.log

@@ -14,7 +14,7 @@ description = "A set of tools to Automate LTSpice simulations"
 readme = "README.md"
 license = { file="LICENSE" }
 requires-python = ">=3.7"
-requires = [
+dependencies = [
     "numpy",
 ]
 classifiers=[
