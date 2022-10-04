@@ -661,7 +661,6 @@ class LTSpiceRawRead(object):
     def __init__(self, raw_filename: str, traces_to_read: Union[str, List[str], Tuple[str], None] = '*', **kwargs):
         self.verbose = kwargs.get('verbose', True)
         raw_filename = pathlib.Path(raw_filename)
-        # assert isinstance(raw_filename, str), "RAW filename is expected to be a string"
         if traces_to_read is not None:
             assert isinstance(traces_to_read, (str, list, tuple)), "traces_to_read must be a string, a list or None"
 
