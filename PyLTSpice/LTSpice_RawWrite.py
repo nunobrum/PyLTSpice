@@ -121,7 +121,7 @@ class LTSpiceRawWrite(object):
         :param filename: filename to where the RAW file is going to be written. Make sure that the extension of the file
         is .RAW.
 
-        :type filename: str
+        :type filename: str or pathlib.Path
         :return: Nothing
         :rtype: None
         """

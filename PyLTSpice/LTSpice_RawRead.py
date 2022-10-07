@@ -188,6 +188,7 @@ from binascii import b2a_hex
 from collections import OrderedDict
 from struct import unpack
 from typing import Union, List, Tuple
+import pathlib
 from PyLTSpice.detect_encoding import detect_encoding
 
 try:
@@ -627,7 +628,7 @@ class LTSpiceRawRead(object):
     it will also try to read the corresponding LOG file so to retrieve the stepped data.
 
     :param raw_filename: The file containing the RAW data to be read
-    :type raw_filename: str
+    :type raw_filename: str | pahtlib.Path
     :param traces_to_read:
         A string or a list containing the list of traces to be read. If None is provided, only the header is read and
         all trace data is discarded. If a '*' wildcard is given or no parameter at all then all traces are read.
@@ -659,7 +660,7 @@ class LTSpiceRawRead(object):
 
     def __init__(self, raw_filename: str, traces_to_read: Union[str, List[str], Tuple[str], None] = '*', **kwargs):
         self.verbose = kwargs.get('verbose', True)
-        assert isinstance(raw_filename, str), "RAW filename is expected to be a string"
+        raw_filename = pathlib.Path(raw_filename)
         if traces_to_read is not None:
             assert isinstance(traces_to_read, (str, list, tuple)), "traces_to_read must be a string, a list or None"
 
@@ -950,11 +951,11 @@ class LTSpiceRawRead(object):
         """
         return self.axis.get_len(step) 
 
-    def _load_step_information(self, filename):
+    def _load_step_information(self, filename:pathlib.Path):
         # Find the extension of the file
-        if not filename.endswith(".raw"):
+        if not filename.suffix == ".raw":
             raise LTSPiceReadException("Invalid Filename. The file should end with '.raw'")
-        logfile = filename[:-3] + 'log'
+        logfile = filename.with_suffix(".log")
         try:
             encoding = detect_encoding(logfile, "Circuit:")
             log = open(logfile, 'r', errors='replace', encoding=encoding)
