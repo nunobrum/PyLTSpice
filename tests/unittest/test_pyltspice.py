@@ -33,7 +33,7 @@ from PyLTSpice.LTSpice_RawRead import LTSpiceRawRead
 
 # ------------------------------------------------------------------------------
 debugging = False
-has_ltspice = True
+has_ltspice = False
 # ------------------------------------------------------------------------------
 
 
