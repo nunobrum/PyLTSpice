@@ -228,6 +228,11 @@ A more detailed documentation is directly included in the source file docstrings
 * Alternative contact : nuno.brum@gmail.com
 
 ## History ##
+* Version 2.2\
+Making numpy as an requirement and eliminating all code that avoided the use of numpy\
+Using new packaging tool\
+Fixes on the LTSpice_RawWrite
+
 * Version 2.1\
 Adopting minimum python version 3.7\
 Starting to use unit tests to validate all modules and improving testbenches\

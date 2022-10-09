@@ -188,17 +188,11 @@ from binascii import b2a_hex
 from collections import OrderedDict
 from struct import unpack
 from typing import Union, List, Tuple
-import pathlib
+from pathlib import Path
 from PyLTSpice.detect_encoding import detect_encoding
 
-try:
-    import numpy as np
-    from numpy import zeros, array, complex128, float32, float64, frombuffer, angle
-except ImportError:
-    USE_NNUMPY = False
-else:
-    USE_NNUMPY = True
-    print("Found Numpy. Will be used for storing data")
+import numpy as np
+from numpy import zeros, complex128, float32, float64, frombuffer, angle
 
 
 def read_float64(f):
@@ -320,17 +314,14 @@ class DataSet(object):
         self.name = name
         self.whattype = whattype
         self.numerical_type = numerical_type
-        if USE_NNUMPY:
-            if numerical_type == 'double':
-                self.data = zeros(datalen, dtype=float64)
-            elif numerical_type == 'real':
-                self.data = zeros(datalen, dtype=float32)
-            elif numerical_type == 'complex':
-                self.data = zeros(datalen, dtype=complex128)
-            else:
-                raise NotImplementedError
+        if numerical_type == 'double':
+            self.data = zeros(datalen, dtype=float64)
+        elif numerical_type == 'real':
+            self.data = zeros(datalen, dtype=float32)
+        elif numerical_type == 'complex':
+            self.data = zeros(datalen, dtype=complex128)
         else:
-            self.data = [None for _ in range(datalen)]
+            raise NotImplementedError
 
     def __str__(self):
         if isinstance(self.data[0], float):
@@ -341,6 +332,9 @@ class DataSet(object):
         else:
             data = [b2a_hex(value) for value in self.data]
             return "name:'%s'\ntype:'%s'\nlen:%d\n%s" % (self.name, self.whattype, len(self.data), str(data))
+
+    def __len__(self):
+        return len(self.data)
 
     def get_wave(self):
         """
@@ -441,14 +435,7 @@ class Axis(DataSet):
         """
         assert self.name == 'time', \
             "This function is only applicable to transient analysis, where a bug exists on the time signal"
-        if USE_NNUMPY:
-            return np.abs(self.get_wave(step))
-        else:
-            shallow_copy = self.get_wave(step).copy()
-            for i in range(len(shallow_copy)):
-                if shallow_copy[i] < 0:
-                    shallow_copy[i] = -shallow_copy[i]
-            return shallow_copy
+        return np.abs(self.get_wave(step))
 
     def get_point(self, n, step: int = 0):
         """
@@ -660,7 +647,7 @@ class LTSpiceRawRead(object):
 
     def __init__(self, raw_filename: str, traces_to_read: Union[str, List[str], Tuple[str], None] = '*', **kwargs):
         self.verbose = kwargs.get('verbose', True)
-        raw_filename = pathlib.Path(raw_filename)
+        raw_filename = Path(raw_filename)
         if traces_to_read is not None:
             assert isinstance(traces_to_read, (str, list, tuple)), "traces_to_read must be a string, a list or None"
 
@@ -676,6 +663,8 @@ class LTSpiceRawRead(object):
             self.encoding = 'utf_16_le'
             sz_enc = 2
             line = 'Tit'
+        else:
+            raise RuntimeError("Unrecognized encoding")
         if self.verbose:
             print("Reading file with encoding ", self.encoding)
         # Storing the filename as part of the dictionary
@@ -787,23 +776,19 @@ class LTSpiceRawRead(object):
                         # TODO: replace this by a seek
                         raw_file.read(self.nPoints * self.data_size)
                     else:
-                        if USE_NNUMPY:
-                            if self.data_size == 8:
+                        if self.data_size == 8:
+                            s = raw_file.read(self.nPoints * 8)
+                            var.data = frombuffer(s, dtype=float64)
+                        elif self.data_size == 16:
+                            s = raw_file.read(self.nPoints * 16)
+                            var.data = frombuffer(s, dtype=complex)
+                        else:
+                            if i == 0:
                                 s = raw_file.read(self.nPoints * 8)
                                 var.data = frombuffer(s, dtype=float64)
-                            elif self.data_size == 16:
-                                s = raw_file.read(self.nPoints * 16)
-                                var.data = frombuffer(s, dtype=complex)
                             else:
-                                if i == 0:
-                                    s = raw_file.read(self.nPoints * 8)
-                                    var.data = frombuffer(s, dtype=float64)
-                                else:
-                                    s = raw_file.read(self.nPoints * 4)
-                                    var.data = frombuffer(s, dtype=float32)
-                        else:
-                            for point in range(self.nPoints):
-                                var.data[point] = scan_functions[i](raw_file)
+                                s = raw_file.read(self.nPoints * 4)
+                                var.data = frombuffer(s, dtype=float32)
 
             else:
                 if self.verbose:
@@ -951,7 +936,7 @@ class LTSpiceRawRead(object):
         """
         return self.axis.get_len(step) 
 
-    def _load_step_information(self, filename:pathlib.Path):
+    def _load_step_information(self, filename: Path):
         # Find the extension of the file
         if not filename.suffix == ".raw":
             raise LTSPiceReadException("Invalid Filename. The file should end with '.raw'")

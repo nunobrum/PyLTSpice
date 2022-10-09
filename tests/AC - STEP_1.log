@@ -3,7 +3,7 @@ Circuit: * C:\sandbox\PyLTSpice_GitHub_nunobrum\tests\AC - STEP.asc
 .step r1=1000
 .step r1=10000
 
-Date: Mon Sep 26 18:55:47 2022
+Date: Sun Oct 09 21:56:18 2022
 Total elapsed time: 0.003 seconds.
 
 tnom = 27

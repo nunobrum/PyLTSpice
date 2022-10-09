@@ -15,9 +15,11 @@ International Support functions
 Not using other known unicode detection libraries because we don't need something so complicated. LTSpice only supports
 for the time being a reduced set of encodings.
 """
+from pathlib import Path
+from typing import Union
 
 
-def detect_encoding(file_path, expected_str: str = '') -> str:
+def detect_encoding(file_path, expected_str: Union[str, Path] = '') -> str:
     """
     Simple strategy to detect file encoding.  If an expected_str is given the function will scan through the possible
     encodings and return a match.

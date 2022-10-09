@@ -117,16 +117,6 @@ else:
         opts.error("Wrong number of parameters. Need to give the filename and the trace.")
         opts.print_help()
         exit(-1)
-    # if (len(args)==1): # This will search for the most recent file
-    #     newer_date = 0
-    #     filename = None
-    #     for f in os.listdir():
-    #         date = os.path.getmtime(f)
-    #         if date > newer_date and f.endswith(".tlog"):
-    #             newer_date = date
-    #             filename = f
-    #     if filename == None:
-    #         opts.error("A LOG_FILE should be given")
     TRACE = args[1]
     logfile = args[0]
 
@@ -145,7 +135,6 @@ else:
         print("File '%s' doesn't have trace '%s'" % (logfile, TRACE))
         print("LOG FILE contains %s" % vars)
         exit(-1)
-
 
     if (options.filters is None) or (len(options.filters) == 0):
         for line in log:

@@ -9,8 +9,8 @@ vout1m: v(out)=-0.0186257 at 0.001
 period: time=0.000100148 at 0.000100148
 
 
-Date: Mon Sep 26 18:55:54 2022
-Total elapsed time: 0.048 seconds.
+Date: Sun Oct 09 21:56:25 2022
+Total elapsed time: 0.084 seconds.
 
 tnom = 27
 temp = 27
@@ -23,6 +23,6 @@ rejected = 1
 matrix size = 14
 fillins = 7
 solver = Normal
-Matrix Compiler1: 934 bytes object code size  0.3/0.2/[0.1]
-Matrix Compiler2: 1.60 KB object code size  0.1/0.3/[0.1]
+Matrix Compiler1: 934 bytes object code size  0.9/0.2/[0.1]
+Matrix Compiler2: 1.60 KB object code size  0.3/0.4/[0.2]
 
