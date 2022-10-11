@@ -126,9 +126,8 @@ class LTSpiceRawWrite(object):
         """
         Saves the RAW file into a file. The file format is always binary. Text based RAW output format is not supported
         in this version.
-
-        :param filename: filename to where the RAW file is going to be written. Make sure that the extension of the file
-        is .RAW.
+        :param filename: filename to where the RAW file is going to be written. Make sure that the extension of the
+        file is .RAW.
 
         :type filename: str or pathlib.Path
         :return: Nothing
@@ -181,26 +180,30 @@ class LTSpiceRawWrite(object):
         return False
 
     def add_traces_from_raw(self, other: LTSpiceRawRead, trace_filter: Union[list, tuple, str], **kwargs):
-        """
-        *(Not fully implemented)*
+        """ *(Not fully implemented)*
 
         Merge two LTSpiceRawWrite classes together resulting in a new instance
         :param other: an instance of the LTSpiceRawRead class where the traces are going to be copied from.
         :type other: LTSpiceRawRead
         :param trace_filter: A list of signals that should be imported into the new file
         :type trace_filter: list, Tuple, or just a string for one trace
+
         :keyword force_axis_alignment: If two raw files don't have the same axis, an attempt is made to sync the two
+
         :keyword admissible_error: maximum error allowed in the sync between the two axis
+
         :keyword rename_format: when adding traces with the same name, it is possible to define a rename format.
-            For example, if there are two traces named N001 in order to avoid duplicate names the
-            rename format can be defined as "{}_{kwarg_name} where kwarg_name is passed as a keyword
-            argument of this function. If just one trace is being added, this can be used to simply give the new name.
+            For example, if there are two traces named N001 in order to avoid duplicate names the rename format can be
+            defined as "{}_{kwarg_name} where kwarg_name is passed as a keyword argument of this function. If just one
+            trace is being added, this can be used to simply give the new name.
 
         :keyword step: by default only step 0 is added from the second raw. It is possible to add other steps, by
             using this keyword parameter. This is useful when we want to "flatten" the multiple step runs into the same
             view.
+
         :keyword: minimum_timestep: This parameter forces the two axis to sync using a minimum time step. That is, all
             time increments that are less than this parameter will be suppressed.
+
         :returns: Nothing
         """
         force_axis_alignment = kwargs.get('force_axis_alignment', False)
@@ -432,7 +435,7 @@ if __name__ == '__main__':
             ("AD712_15", "../tests/Batch_Test_AD712_15.raw"),
             # ("AD712_10", "../tests/Batch_Test_AD712_10.raw"),
             # ("AD820_5", "../tests/Batch_Test_AD820_5.raw"),
-            # ("AD712_5.", "../tests/Batch_Test_AD712_5.raw"),
+            # ("AD712_5", "../tests/Batch_Test_AD712_5.raw"),
         ):
             LR = LTSpiceRawRead(raw)
             LW.add_traces_from_raw(LR, ("V(out)", "I(R1)"), rename_format="{}_{tag}", tag=tag, force_axis_alignment=True)

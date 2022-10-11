@@ -119,6 +119,7 @@
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span>
+<span class="kn">from</span> <span class="nn">PyLTSpice.detect_encoding</span> <span class="kn">import</span> <span class="n">detect_encoding</span>
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
     <span class="k">def</span> <span class="nf">message</span><span class="p">(</span><span class="o">*</span><span class="n">strs</span><span class="p">):</span>
@@ -129,18 +130,11 @@
         <span class="k">pass</span></div>
 
 
-<div class="viewcode-block" id="enc_norm"><a class="viewcode-back" href="../../LTSteps.html#PyLTSpice.LTSteps.enc_norm">[docs]</a><span class="k">def</span> <span class="nf">enc_norm</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">line</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;</span><span class="se">\0</span><span class="s1">&#39;</span><span class="p">:</span>  <span class="c1"># This is to decode the LTSpice XVII encoding (unable to find the exact code)</span>
-        <span class="k">return</span> <span class="n">line</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>  <span class="c1"># Removes zeros from the encoding</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">line</span>  <span class="c1"># Return as is</span></div>
-
-
 <div class="viewcode-block" id="LTComplex"><a class="viewcode-back" href="../../LTSteps.html#PyLTSpice.LTSteps.LTComplex">[docs]</a><span class="k">class</span> <span class="nc">LTComplex</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Class to represent complex numbers as exported by LTSpice</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">complex_match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\((?P&lt;mag&gt;.*)dB,(?P&lt;ph&gt;.*)°\)&quot;</span><span class="p">)</span>
+    <span class="n">complex_match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\((?P&lt;mag&gt;[^dB]*)(dB)?,(?P&lt;ph&gt;.*)°\)&quot;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">strvalue</span><span class="p">):</span>
         <span class="n">a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">complex_match</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">strvalue</span><span class="p">)</span>
@@ -158,16 +152,18 @@
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mag</span><span class="si">}</span><span class="s2">,</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">ph</span><span class="si">}</span><span class="s2">&quot;</span></div>
 
 
-<div class="viewcode-block" id="try_convert_value"><a class="viewcode-back" href="../../LTSteps.html#PyLTSpice.LTSteps.try_convert_value">[docs]</a><span class="k">def</span> <span class="nf">try_convert_value</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<div class="viewcode-block" id="try_convert_value"><a class="viewcode-back" href="../../LTSteps.html#PyLTSpice.LTSteps.try_convert_value">[docs]</a><span class="k">def</span> <span class="nf">try_convert_value</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Tries to convert the string into an integer and if it fails, tries to convert to a float, if it fails, then returns the</span>
 <span class="sd">    value as string.</span>
 
 <span class="sd">    :param value: value to convert</span>
-<span class="sd">    :type value: str</span>
+<span class="sd">    :type value: str, int or float</span>
 <span class="sd">    :return: converted value, if applicable</span>
 <span class="sd">    :rtype: int, float, str</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="n">value</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">ans</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
@@ -181,7 +177,7 @@
     <span class="k">return</span> <span class="n">ans</span></div>
 
 
-<div class="viewcode-block" id="try_convert_values"><a class="viewcode-back" href="../../LTSteps.html#PyLTSpice.LTSteps.try_convert_values">[docs]</a><span class="k">def</span> <span class="nf">try_convert_values</span><span class="p">(</span><span class="n">values</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<div class="viewcode-block" id="try_convert_values"><a class="viewcode-back" href="../../LTSteps.html#PyLTSpice.LTSteps.try_convert_values">[docs]</a><span class="k">def</span> <span class="nf">try_convert_values</span><span class="p">(</span><span class="n">values</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Same as try_convert_values but applicable to an iterable</span>
 
@@ -221,17 +217,17 @@
 <span class="sd">    :rtype: None</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">fin</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">export_file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
-    <span class="n">fout</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">tabular_file</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+    <span class="n">encoding</span> <span class="o">=</span> <span class="n">detect_encoding</span><span class="p">(</span><span class="n">export_file</span><span class="p">)</span>
+    <span class="n">fin</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">export_file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="n">encoding</span><span class="p">)</span>
+    <span class="n">fout</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">tabular_file</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="n">encoding</span><span class="p">)</span>
 
-    <span class="n">headers</span> <span class="o">=</span> <span class="n">enc_norm</span><span class="p">(</span><span class="n">fin</span><span class="o">.</span><span class="n">readline</span><span class="p">())</span>
+    <span class="n">headers</span> <span class="o">=</span> <span class="n">fin</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
     <span class="c1"># writing header</span>
     <span class="n">go_header</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">run_no</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># Just to avoid warning, this is later overridden by the step information</span>
     <span class="n">param_values</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>  <span class="c1"># Just to avoid warning, this is later overridden by the step information</span>
     <span class="n">regx</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;Step Information: ([\w=\d\. -]+) +\(Run: (\d*)/\d*\)\n&quot;</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">fin</span><span class="p">:</span>
-        <span class="n">line</span> <span class="o">=</span> <span class="n">enc_norm</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;Step Information:&quot;</span><span class="p">):</span>
             <span class="n">match</span> <span class="o">=</span> <span class="n">regx</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
             <span class="c1"># message(line, end=&quot;&quot;)</span>
@@ -283,8 +279,9 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">export_filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="n">fin</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">export_filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
-        <span class="n">file_header</span> <span class="o">=</span> <span class="n">enc_norm</span><span class="p">(</span><span class="n">fin</span><span class="o">.</span><span class="n">readline</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">encoding</span> <span class="o">=</span> <span class="n">detect_encoding</span><span class="p">(</span><span class="n">export_filename</span><span class="p">)</span>
+        <span class="n">fin</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">export_filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">encoding</span><span class="p">)</span>
+        <span class="n">file_header</span> <span class="o">=</span> <span class="n">fin</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">headers</span> <span class="o">=</span> <span class="n">file_header</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="c1"># Set to read header</span>
@@ -295,7 +292,6 @@
 
         <span class="n">regx</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;Step Information: ([\w=\d\. -]+) +\(Run: (\d*)/\d*\)\n&quot;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">fin</span><span class="p">:</span>
-            <span class="n">line</span> <span class="o">=</span> <span class="n">enc_norm</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;Step Information:&quot;</span><span class="p">):</span>
                 <span class="n">match</span> <span class="o">=</span> <span class="n">regx</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
                 <span class="c1"># message(line, end=&quot;&quot;)</span>
@@ -355,120 +351,199 @@
 <span class="sd">    :type step_set: dict</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log_filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">read_measures</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">step_set</span><span class="o">=</span><span class="p">{}):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log_filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">read_measures</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">step_set</span><span class="o">=</span><span class="p">{},</span> <span class="n">encoding</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">logname</span> <span class="o">=</span> <span class="n">log_filename</span>
-        <span class="n">fin</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">log_filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">encoding</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">encoding</span> <span class="o">=</span> <span class="n">detect_encoding</span><span class="p">(</span><span class="n">log_filename</span><span class="p">,</span> <span class="s2">&quot;Circuit:&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">encoding</span> <span class="o">=</span> <span class="n">encoding</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">step_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">step_set</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">stepset</span> <span class="o">=</span> <span class="n">step_set</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stepset</span> <span class="o">=</span> <span class="n">step_set</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>  <span class="c1"># A copy is done since the dictionary is a mutable object.</span>
+        <span class="c1"># Changes in step_set would be propagated to object on the call</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>  <span class="c1"># Dictionary in which the order of the keys is kept</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">measure_count</span> <span class="o">=</span> <span class="mi">0</span>
 
         <span class="c1"># Preparing a stepless measurement read regular expression</span>
+        <span class="c1"># there are only measures taken in the format parameter: measurement</span>
+        <span class="c1"># A few examples of readings</span>
+        <span class="c1"># vout_rms: RMS(v(out))=1.41109 FROM 0 TO 0.001  =&gt; Interval</span>
+        <span class="c1"># vin_rms: RMS(v(in))=0.70622 FROM 0 TO 0.001  =&gt; Interval</span>
+        <span class="c1"># gain: vout_rms/vin_rms=1.99809 =&gt; Parameter</span>
+        <span class="c1"># vout1m: v(out)=-0.0186257 at 0.001 =&gt; Point</span>
+        <span class="c1"># fcutac=8.18166e+006 FROM 1.81834e+006 TO 1e+007 =&gt; AC Find Computation</span>
         <span class="n">regx</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
-                <span class="sa">r</span><span class="s2">&quot;^(?P&lt;name&gt;\w+):\s+.*=(?P&lt;value&gt;[\d\.E+\-\(\)dB,°]+)(( FROM (?P&lt;from&gt;[\d\.E+-]*) TO (?P&lt;to&gt;[\d\.E+-]*))|( at (?P&lt;at&gt;[\d\.E+-]*)))?&quot;</span><span class="p">,</span>
+                <span class="sa">r</span><span class="s2">&quot;^(?P&lt;name&gt;\w+)(:\s+.*)?=(?P&lt;value&gt;[\d\.E+\-\(\)dB,°]+)(( FROM (?P&lt;from&gt;[\d\.E+-]*) TO (?P&lt;to&gt;[\d\.E+-]*))|( at (?P&lt;at&gt;[\d\.E+-]*)))?&quot;</span><span class="p">,</span>
                 <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
 
         <span class="n">message</span><span class="p">(</span><span class="s2">&quot;Processing LOG file&quot;</span><span class="p">,</span> <span class="n">log_filename</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">log_filename</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">encoding</span><span class="p">)</span> <span class="k">as</span> <span class="n">fin</span><span class="p">:</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">fin</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
 
-        <span class="n">line</span> <span class="o">=</span> <span class="n">enc_norm</span><span class="p">(</span><span class="n">fin</span><span class="o">.</span><span class="n">readline</span><span class="p">())</span>
+            <span class="k">while</span> <span class="n">line</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;N-Period&quot;</span><span class="p">):</span>
+                    <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+                    <span class="c1"># Read number of periods</span>
+                    <span class="n">n_periods</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r\n</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                    <span class="c1"># Read waveform name</span>
+                    <span class="n">line</span> <span class="o">=</span> <span class="n">fin</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r\n</span><span class="s1">&#39;</span><span class="p">)</span>
+                    <span class="n">waveform</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; of &quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="c1"># Read DC component</span>
+                    <span class="n">line</span> <span class="o">=</span> <span class="n">fin</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r\n</span><span class="s1">&#39;</span><span class="p">)</span>
+                    <span class="n">dc_component</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                    <span class="c1"># Skip blank line</span>
+                    <span class="n">fin</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+                    <span class="c1"># Skip two header lines</span>
+                    <span class="n">fin</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+                    <span class="n">fin</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
 
-        <span class="k">while</span> <span class="n">line</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;.step&quot;</span><span class="p">):</span>
-                <span class="c1"># message(line)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">step_count</span> <span class="o">+=</span> <span class="mi">1</span>
-                <span class="n">tokens</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">tok</span> <span class="ow">in</span> <span class="n">tokens</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
-                    <span class="n">lhs</span><span class="p">,</span> <span class="n">rhs</span> <span class="o">=</span> <span class="n">tok</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">)</span>
-                    <span class="c1"># Try to convert to int or float</span>
-                    <span class="n">rhs</span> <span class="o">=</span> <span class="n">try_convert_value</span><span class="p">(</span><span class="n">rhs</span><span class="p">)</span>
+                    <span class="n">harmonic_lines</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                        <span class="n">line</span> <span class="o">=</span> <span class="n">fin</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r\n</span><span class="s1">&#39;</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;Total Harmonic&quot;</span><span class="p">):</span>
+                            <span class="c1"># Find THD</span>
+                            <span class="n">thd</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\d+.\d+&quot;</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span><span class="o">.</span><span class="n">group</span><span class="p">())</span>
+                            <span class="k">break</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">harmonic_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;°&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">))</span>
 
-                    <span class="n">ll</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stepset</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="n">ll</span><span class="p">:</span>
-                        <span class="n">ll</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rhs</span><span class="p">)</span>
+                    <span class="c1"># Create Table</span>
+                    <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span>
+                        <span class="s1">&#39;Harmonic Number&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;Frequency [Hz]&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;Fourier Component&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;Normalized Component&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;Phase [degree]&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;Normalized Phase [degree]&#39;</span>
+                    <span class="p">]</span>
+                    <span class="n">harmonics_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">r</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">harmonic_lines</span><span class="p">],</span> <span class="n">columns</span><span class="o">=</span><span class="n">columns</span><span class="p">)</span>
+                    <span class="c1"># Convert to numeric</span>
+                    <span class="n">harmonics_df</span> <span class="o">=</span> <span class="n">harmonics_df</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">to_numeric</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span>
+
+                    <span class="c1"># Find Fundamental Frequency</span>
+                    <span class="n">frequency</span> <span class="o">=</span> <span class="n">harmonics_df</span><span class="p">[</span><span class="s1">&#39;Frequency [Hz]&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+
+                    <span class="c1"># Save data related to this fourier analysis in a dictionary</span>
+                    <span class="n">data_dict</span> <span class="o">=</span> <span class="p">{</span>
+                        <span class="s1">&#39;dc&#39;</span><span class="p">:</span> <span class="n">dc_component</span><span class="p">,</span>
+                        <span class="s1">&#39;thd&#39;</span><span class="p">:</span> <span class="n">thd</span><span class="p">,</span>
+                        <span class="s1">&#39;harmonics&#39;</span><span class="p">:</span> <span class="n">harmonics_df</span>
+                    <span class="p">}</span>
+
+                    <span class="c1"># Find the dictionary that stores fourier data or create it if it does not exist</span>
+                    <span class="n">fourier_dict</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;fourier&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">fourier_dict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;fourier&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+                        <span class="n">fourier_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;fourier&#39;</span><span class="p">]</span>
+
+                    <span class="c1"># Find the dict that stores data for this frequency or create it if it does not exist</span>
+                    <span class="n">frequency_dict</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="n">fourier_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">frequency</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">frequency_dict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">fourier_dict</span><span class="p">[</span><span class="n">frequency</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+                        <span class="n">frequency_dict</span> <span class="o">=</span> <span class="n">fourier_dict</span><span class="p">[</span><span class="n">frequency</span><span class="p">]</span>
+
+                    <span class="c1"># Find the dict that stores data for this number of periods or create it if it does not exist</span>
+                    <span class="n">period_dict</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="n">frequency_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">n_periods</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">period_dict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">frequency_dict</span><span class="p">[</span><span class="n">n_periods</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+                        <span class="n">period_dict</span> <span class="o">=</span> <span class="n">frequency_dict</span><span class="p">[</span><span class="n">n_periods</span><span class="p">]</span>
+
+                    <span class="c1"># Find the list that stores data for this waveform or create it if it does not exist</span>
+                    <span class="n">waveform_list</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="n">period_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">waveform</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">waveform_list</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">period_dict</span><span class="p">[</span><span class="n">waveform</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+                        <span class="n">waveform_list</span> <span class="o">=</span> <span class="n">period_dict</span><span class="p">[</span><span class="n">waveform</span><span class="p">]</span>
+
+                    <span class="c1"># Add the data to the list</span>
+                    <span class="n">waveform_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">data_dict</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;.step&quot;</span><span class="p">):</span>
+                    <span class="c1"># message(line)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">step_count</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="n">tokens</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r\n</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">tok</span> <span class="ow">in</span> <span class="n">tokens</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+                        <span class="n">lhs</span><span class="p">,</span> <span class="n">rhs</span> <span class="o">=</span> <span class="n">tok</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">)</span>
+                        <span class="c1"># Try to convert to int or float</span>
+                        <span class="n">rhs</span> <span class="o">=</span> <span class="n">try_convert_value</span><span class="p">(</span><span class="n">rhs</span><span class="p">)</span>
+
+                        <span class="n">ll</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stepset</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">ll</span><span class="p">:</span>
+                            <span class="n">ll</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rhs</span><span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">stepset</span><span class="p">[</span><span class="n">lhs</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">rhs</span><span class="p">]</span>
+
+                <span class="k">elif</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;Measurement:&quot;</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">read_measures</span><span class="p">:</span>
+                        <span class="n">fin</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                        <span class="k">return</span>
                     <span class="k">else</span><span class="p">:</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">stepset</span><span class="p">[</span><span class="n">lhs</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">rhs</span><span class="p">]</span>
+                        <span class="k">break</span>  <span class="c1"># Jumps to the section that reads measurements</span>
 
-            <span class="k">elif</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;Measurement:&quot;</span><span class="p">):</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">read_measures</span><span class="p">:</span>
-                    <span class="n">fin</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-                    <span class="k">return</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="k">break</span>  <span class="c1"># Jumps to the section that reads measurements</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># then there are no steps,</span>
+                    <span class="n">match</span> <span class="o">=</span> <span class="n">regx</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+                        <span class="c1"># Get the data</span>
+                        <span class="n">dataname</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;from&#39;</span><span class="p">):</span>
+                            <span class="n">headers</span> <span class="o">=</span> <span class="p">[</span><span class="n">dataname</span><span class="p">,</span> <span class="n">dataname</span> <span class="o">+</span> <span class="s2">&quot;_FROM&quot;</span><span class="p">,</span> <span class="n">dataname</span> <span class="o">+</span> <span class="s2">&quot;_TO&quot;</span><span class="p">]</span>
+                            <span class="n">measurements</span> <span class="o">=</span> <span class="p">[</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">),</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;from&#39;</span><span class="p">),</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;to&#39;</span><span class="p">)]</span>
+                        <span class="k">elif</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;at&#39;</span><span class="p">):</span>
+                            <span class="n">headers</span> <span class="o">=</span> <span class="p">[</span><span class="n">dataname</span><span class="p">,</span> <span class="n">dataname</span> <span class="o">+</span> <span class="s2">&quot;_at&quot;</span><span class="p">]</span>
+                            <span class="n">measurements</span> <span class="o">=</span> <span class="p">[</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">),</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;at&#39;</span><span class="p">)]</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">headers</span> <span class="o">=</span> <span class="p">[</span><span class="n">dataname</span><span class="p">]</span>
+                            <span class="n">measurements</span> <span class="o">=</span> <span class="p">[</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">)]</span>
 
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">step_count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># then there are no steps,</span>
-                <span class="c1"># there are only measures taken in the format parameter: measurement</span>
-                <span class="c1"># A few examples of readings</span>
-                <span class="c1"># vout_rms: RMS(v(out))=1.41109 FROM 0 TO 0.001  =&gt; Interval</span>
-                <span class="c1"># vin_rms: RMS(v(in))=0.70622 FROM 0 TO 0.001  =&gt; Interval</span>
-                <span class="c1"># gain: vout_rms/vin_rms=1.99809 =&gt; Parameter</span>
-                <span class="c1"># vout1m: v(out)=-0.0186257 at 0.001 =&gt; Point</span>
-                <span class="n">match</span> <span class="o">=</span> <span class="n">regx</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
-                    <span class="c1"># Get the data</span>
-                    <span class="n">dataname</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;from&#39;</span><span class="p">):</span>
-                        <span class="n">headers</span> <span class="o">=</span> <span class="p">[</span><span class="n">dataname</span><span class="p">,</span> <span class="n">dataname</span> <span class="o">+</span> <span class="s2">&quot;_FROM&quot;</span><span class="p">,</span> <span class="n">dataname</span> <span class="o">+</span> <span class="s2">&quot;_TO&quot;</span><span class="p">]</span>
-                        <span class="n">measurements</span> <span class="o">=</span> <span class="p">[</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">),</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;from&#39;</span><span class="p">),</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;to&#39;</span><span class="p">)]</span>
-                    <span class="k">elif</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;at&#39;</span><span class="p">):</span>
-                        <span class="n">headers</span> <span class="o">=</span> <span class="p">[</span><span class="n">dataname</span><span class="p">,</span> <span class="n">dataname</span> <span class="o">+</span> <span class="s2">&quot;_at&quot;</span><span class="p">]</span>
-                        <span class="n">measurements</span> <span class="o">=</span> <span class="p">[</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">),</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;at&#39;</span><span class="p">)]</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="n">headers</span> <span class="o">=</span> <span class="p">[</span><span class="n">dataname</span><span class="p">]</span>
-                        <span class="n">measurements</span> <span class="o">=</span> <span class="p">[</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">)]</span>
-
-                    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">title</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">headers</span><span class="p">):</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="n">title</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
-                            <span class="n">try_convert_value</span><span class="p">(</span><span class="n">measurements</span><span class="p">[</span><span class="n">k</span><span class="p">])]</span>  <span class="c1"># need to be a list for compatibility</span>
-            <span class="n">line</span> <span class="o">=</span> <span class="n">enc_norm</span><span class="p">(</span><span class="n">fin</span><span class="o">.</span><span class="n">readline</span><span class="p">())</span>
-
-        <span class="c1"># message(&quot;Reading Measurements&quot;)</span>
-        <span class="n">dataname</span> <span class="o">=</span> <span class="kc">None</span>
-
-        <span class="n">headers</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Initializing an empty parameters</span>
-        <span class="n">measurements</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">while</span> <span class="n">line</span><span class="p">:</span>
-            <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;Measurement: &quot;</span><span class="p">):</span>
-                <span class="k">if</span> <span class="n">dataname</span><span class="p">:</span>  <span class="c1"># If previous measurement was saved</span>
-                    <span class="c1"># store the info</span>
-                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">measurements</span><span class="p">):</span>
-                        <span class="n">message</span><span class="p">(</span><span class="s2">&quot;Storing Measurement </span><span class="si">%s</span><span class="s2"> (count </span><span class="si">%d</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">dataname</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">measurements</span><span class="p">)))</span>
                         <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">title</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">headers</span><span class="p">):</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="n">title</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">measurements</span><span class="p">]</span>
-                    <span class="n">headers</span> <span class="o">=</span> <span class="p">[]</span>
-                    <span class="n">measurements</span> <span class="o">=</span> <span class="p">[]</span>
-                <span class="n">dataname</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="mi">13</span><span class="p">:]</span>  <span class="c1"># text which is after &quot;Measurement: &quot;. len(&quot;Measurement: &quot;) -&gt; 13</span>
-                <span class="n">message</span><span class="p">(</span><span class="s2">&quot;Reading Measurement </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">line</span><span class="p">[</span><span class="mi">13</span><span class="p">:])</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">tokens</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">)</span>
-                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">:</span>
-                    <span class="k">try</span><span class="p">:</span>
-                        <span class="nb">int</span><span class="p">(</span><span class="n">tokens</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>  <span class="c1"># This instruction only serves to trigger the exception</span>
-                        <span class="n">meas</span> <span class="o">=</span> <span class="n">tokens</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>  <span class="c1"># [float(x) for x in tokens[1:]]</span>
-                        <span class="n">measurements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">try_convert_values</span><span class="p">(</span><span class="n">meas</span><span class="p">))</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">measure_count</span> <span class="o">+=</span> <span class="mi">1</span>
-                    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-                        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">3</span> <span class="ow">and</span> <span class="p">(</span><span class="n">tokens</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;FROM&quot;</span> <span class="ow">or</span> <span class="n">tokens</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;at&#39;</span><span class="p">):</span>
-                            <span class="n">tokens</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataname</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">tokens</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
-                        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">4</span> <span class="ow">and</span> <span class="n">tokens</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;TO&quot;</span><span class="p">:</span>
-                            <span class="n">tokens</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataname</span> <span class="o">+</span> <span class="s2">&quot;_TO&quot;</span>
-                        <span class="n">headers</span> <span class="o">=</span> <span class="p">[</span><span class="n">dataname</span><span class="p">]</span> <span class="o">+</span> <span class="n">tokens</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="n">title</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+                                <span class="n">try_convert_value</span><span class="p">(</span><span class="n">measurements</span><span class="p">[</span><span class="n">k</span><span class="p">])]</span>  <span class="c1"># need to be a list for compatibility</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="n">fin</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+
+            <span class="c1"># message(&quot;Reading Measurements&quot;)</span>
+            <span class="n">dataname</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="n">headers</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Initializing an empty parameters</span>
+            <span class="n">measurements</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">while</span> <span class="n">line</span><span class="p">:</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r\n</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;Measurement: &quot;</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">dataname</span><span class="p">:</span>  <span class="c1"># If previous measurement was saved</span>
+                        <span class="c1"># store the info</span>
+                        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">measurements</span><span class="p">):</span>
+                            <span class="n">message</span><span class="p">(</span><span class="s2">&quot;Storing Measurement </span><span class="si">%s</span><span class="s2"> (count </span><span class="si">%d</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">dataname</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">measurements</span><span class="p">)))</span>
+                            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">title</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">headers</span><span class="p">):</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="n">title</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">measurements</span><span class="p">]</span>
+                        <span class="n">headers</span> <span class="o">=</span> <span class="p">[]</span>
                         <span class="n">measurements</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="n">dataname</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="mi">13</span><span class="p">:]</span>  <span class="c1"># text which is after &quot;Measurement: &quot;. len(&quot;Measurement: &quot;) -&gt; 13</span>
+                    <span class="n">message</span><span class="p">(</span><span class="s2">&quot;Reading Measurement </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">line</span><span class="p">[</span><span class="mi">13</span><span class="p">:])</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="n">message</span><span class="p">(</span><span class="s2">&quot;-&gt;&quot;</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
+                    <span class="n">tokens</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">:</span>
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="nb">int</span><span class="p">(</span><span class="n">tokens</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>  <span class="c1"># This instruction only serves to trigger the exception</span>
+                            <span class="n">meas</span> <span class="o">=</span> <span class="n">tokens</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>  <span class="c1"># [float(x) for x in tokens[1:]]</span>
+                            <span class="n">measurements</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">try_convert_values</span><span class="p">(</span><span class="n">meas</span><span class="p">))</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">measure_count</span> <span class="o">+=</span> <span class="mi">1</span>
+                        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">3</span> <span class="ow">and</span> <span class="p">(</span><span class="n">tokens</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;FROM&quot;</span> <span class="ow">or</span> <span class="n">tokens</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;at&#39;</span><span class="p">):</span>
+                                <span class="n">tokens</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataname</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">tokens</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+                            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">4</span> <span class="ow">and</span> <span class="n">tokens</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;TO&quot;</span><span class="p">:</span>
+                                <span class="n">tokens</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataname</span> <span class="o">+</span> <span class="s2">&quot;_TO&quot;</span>
+                            <span class="n">headers</span> <span class="o">=</span> <span class="p">[</span><span class="n">dataname</span><span class="p">]</span> <span class="o">+</span> <span class="n">tokens</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span>
+                            <span class="n">measurements</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">message</span><span class="p">(</span><span class="s2">&quot;-&gt;&quot;</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
 
-            <span class="n">line</span> <span class="o">=</span> <span class="n">enc_norm</span><span class="p">(</span><span class="n">fin</span><span class="o">.</span><span class="n">readline</span><span class="p">())</span>  <span class="c1"># advance to the next line</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="n">fin</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>  <span class="c1"># advance to the next line</span>
 
-        <span class="c1"># storing the last data into the dataset</span>
-        <span class="n">message</span><span class="p">(</span><span class="s2">&quot;Storing Measurement </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">dataname</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">measurements</span><span class="p">):</span>
-            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">title</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">headers</span><span class="p">):</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="n">title</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">measurements</span><span class="p">]</span>
+            <span class="c1"># storing the last data into the dataset</span>
+            <span class="n">message</span><span class="p">(</span><span class="s2">&quot;Storing Measurement </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">dataname</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">measurements</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">title</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">headers</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="n">title</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">line</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">measurements</span><span class="p">]</span>
 
-        <span class="n">message</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%d</span><span class="s2"> measurements&quot;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">))</span>
-        <span class="n">message</span><span class="p">(</span><span class="s2">&quot;Identified </span><span class="si">%d</span><span class="s2"> steps, read </span><span class="si">%d</span><span class="s2"> measurements&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">step_count</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">measure_count</span><span class="p">))</span>
-
-        <span class="n">fin</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="n">message</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%d</span><span class="s2"> measurements&quot;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">))</span>
+            <span class="n">message</span><span class="p">(</span><span class="s2">&quot;Identified </span><span class="si">%d</span><span class="s2"> steps, read </span><span class="si">%d</span><span class="s2"> measurements&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">step_count</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">measure_count</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -579,8 +654,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="n">param</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="n">param</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">LTComplex</span><span class="p">):</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="n">param</span><span class="o">+</span><span class="s1">&#39;_mag&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span><span class="o">.</span><span class="n">mag</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="n">param</span><span class="p">]]</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="n">param</span><span class="o">+</span><span class="s1">&#39;_ph&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span><span class="o">.</span><span class="n">ph</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="n">param</span><span class="p">]]</span></div>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="n">param</span> <span class="o">+</span> <span class="s1">&#39;_mag&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span><span class="o">.</span><span class="n">mag</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="n">param</span><span class="p">]]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="n">param</span> <span class="o">+</span> <span class="s1">&#39;_ph&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span><span class="o">.</span><span class="n">ph</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="n">param</span><span class="p">]]</span></div>
 
 <div class="viewcode-block" id="LTSpiceLogReader.export_data"><a class="viewcode-back" href="../../LTSteps.html#PyLTSpice.LTSteps.LTSpiceLogReader.export_data">[docs]</a>    <span class="k">def</span> <span class="nf">export_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">export_file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">append_with_line_prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -607,7 +682,7 @@
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Empty data set. Exiting without writing file.&quot;</span><span class="p">)</span>
             <span class="k">return</span>
 
-        <span class="n">fout</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">export_file</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span>
+        <span class="n">fout</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">export_file</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">encoding</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">append_with_line_prefix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># if an append it will write the filename first</span>
             <span class="n">fout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;user info</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span>
@@ -665,11 +740,11 @@
 
     <span class="n">fname_out</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">if</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.txt&#39;</span><span class="p">):</span>
-        <span class="n">fname_out</span> <span class="o">=</span> <span class="n">filename</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;txt&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;tsv&#39;</span>
+        <span class="n">fname_out</span> <span class="o">=</span> <span class="n">filename</span><span class="p">[:</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="s1">&#39;txt&#39;</span><span class="p">)]</span> <span class="o">+</span> <span class="s1">&#39;tsv&#39;</span>
     <span class="k">elif</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.log&#39;</span><span class="p">):</span>
-        <span class="n">fname_out</span> <span class="o">=</span> <span class="n">filename</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;tlog&#39;</span>
+        <span class="n">fname_out</span> <span class="o">=</span> <span class="n">filename</span><span class="p">[:</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)]</span> <span class="o">+</span> <span class="s1">&#39;tlog&#39;</span>
     <span class="k">elif</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.mout&#39;</span><span class="p">):</span>
-        <span class="n">fname_out</span> <span class="o">=</span> <span class="n">filename</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;mout&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;tmout&#39;</span>
+        <span class="n">fname_out</span> <span class="o">=</span> <span class="n">filename</span><span class="p">[:</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="s1">&#39;mout&#39;</span><span class="p">)]</span> <span class="o">+</span> <span class="s1">&#39;tmout&#39;</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error in file type&quot;</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;This tool only supports the following extensions :&#39;.txt&#39;,&#39;.log&#39;,&#39;.mout&#39;&quot;</span><span class="p">)</span>
@@ -686,10 +761,16 @@
             <span class="n">data</span><span class="o">.</span><span class="n">split_complex_values_on_datasets</span><span class="p">()</span>
             <span class="n">data</span><span class="o">.</span><span class="n">export_data</span><span class="p">(</span><span class="n">fname_out</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.mout&quot;</span><span class="p">):</span>
-            <span class="n">steps</span> <span class="o">=</span> <span class="n">LTSpiceLogReader</span><span class="p">(</span><span class="n">filename</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;mout&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;log&#39;</span><span class="p">,</span> <span class="n">read_measures</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-            <span class="n">data</span> <span class="o">=</span> <span class="n">LTSpiceLogReader</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">step_set</span><span class="o">=</span><span class="n">steps</span><span class="o">.</span><span class="n">stepset</span><span class="p">)</span>
-            <span class="n">data</span><span class="o">.</span><span class="n">stepset</span> <span class="o">=</span> <span class="n">steps</span><span class="o">.</span><span class="n">stepset</span>
+            <span class="n">log_file</span> <span class="o">=</span> <span class="n">filename</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="s1">&#39;mout&#39;</span><span class="p">)]</span> <span class="o">+</span> <span class="s1">&#39;log&#39;</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">log_file</span><span class="p">):</span>
+                <span class="n">steps</span> <span class="o">=</span> <span class="n">LTSpiceLogReader</span><span class="p">(</span><span class="n">log_file</span><span class="p">,</span> <span class="n">read_measures</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">LTSpiceLogReader</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">step_set</span><span class="o">=</span><span class="n">steps</span><span class="o">.</span><span class="n">stepset</span><span class="p">)</span>
+                <span class="n">data</span><span class="o">.</span><span class="n">stepset</span> <span class="o">=</span> <span class="n">steps</span><span class="o">.</span><span class="n">stepset</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># just reformats</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">LTSpiceLogReader</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
             <span class="n">data</span><span class="o">.</span><span class="n">split_complex_values_on_datasets</span><span class="p">()</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">export_data</span><span class="p">(</span><span class="n">fname_out</span><span class="p">)</span>
             <span class="n">data</span><span class="o">.</span><span class="n">export_data</span><span class="p">(</span><span class="n">fname_out</span><span class="p">)</span>
 
     <span class="c1"># input(&quot;Press Enter to Continue&quot;)</span>

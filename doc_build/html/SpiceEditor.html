@@ -42,11 +42,23 @@
 <p>Component Not Found Error</p>
 </dd></dl>
 
+<dl class="py data">
+<dt id="PyLTSpice.SpiceEditor.END_LINE_TERM">
+<code class="sig-prename descclassname">PyLTSpice.SpiceEditor.</code><code class="sig-name descname">END_LINE_TERM</code><em class="property"> = '\n'</em><a class="headerlink" href="#PyLTSpice.SpiceEditor.END_LINE_TERM" title="Permalink to this definition">¶</a></dt>
+<dd><p>This controls the end of line terminator used</p>
+</dd></dl>
+
 <dl class="py exception">
 <dt id="PyLTSpice.SpiceEditor.ParameterNotFoundError">
-<em class="property">exception </em><code class="sig-prename descclassname">PyLTSpice.SpiceEditor.</code><code class="sig-name descname">ParameterNotFoundError</code><a class="reference internal" href="_modules/PyLTSpice/SpiceEditor.html#ParameterNotFoundError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.SpiceEditor.ParameterNotFoundError" title="Permalink to this definition">¶</a></dt>
+<em class="property">exception </em><code class="sig-prename descclassname">PyLTSpice.SpiceEditor.</code><code class="sig-name descname">ParameterNotFoundError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parameter</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/SpiceEditor.html#ParameterNotFoundError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.SpiceEditor.ParameterNotFoundError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
 <p>ParameterNotFound Error</p>
+</dd></dl>
+
+<dl class="py data">
+<dt id="PyLTSpice.SpiceEditor.SUBCIRCUIT_DIVIDER">
+<code class="sig-prename descclassname">PyLTSpice.SpiceEditor.</code><code class="sig-name descname">SUBCIRCUIT_DIVIDER</code><em class="property"> = ':'</em><a class="headerlink" href="#PyLTSpice.SpiceEditor.SUBCIRCUIT_DIVIDER" title="Permalink to this definition">¶</a></dt>
+<dd><p>This controls the Subcircuit divider when setting component values inside subcircuits.</p>
 </dd></dl>
 
 <dl class="py class">
@@ -60,9 +72,55 @@ level.
 The information is stored in a python list, each line of the SPICE netlist is an item of the list. A Subcircuit
 is represented as a SpiceCircuit object.</p>
 <dl class="py method">
+<dt id="PyLTSpice.SpiceEditor.SpiceCircuit.add_library_search_paths">
+<em class="property">static </em><code class="sig-name descname">add_library_search_paths</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">paths</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/SpiceEditor.html#SpiceCircuit.add_library_search_paths"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.SpiceEditor.SpiceCircuit.add_library_search_paths" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adding search paths for libraries. By default the local directory and the
+~username/”Documents/LTspiceXVII/lib/sub will be searched forehand. Only when a library is not found in these
+paths then the paths added by this method will be searched.
+Alternatively PyLTSpice.SpiceEditor.LibSearchPaths.append(paths) can be used.”</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>paths</strong> (<em>str</em>) – Path to add to the Search path</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Nothing</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="PyLTSpice.SpiceEditor.SpiceCircuit.clone">
+<code class="sig-name descname">clone</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#PyLTSpice.SpiceEditor.SpiceCircuit" title="PyLTSpice.SpiceEditor.SpiceCircuit">PyLTSpice.SpiceEditor.SpiceCircuit</a><a class="reference internal" href="_modules/PyLTSpice/SpiceEditor.html#SpiceCircuit.clone"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.SpiceEditor.SpiceCircuit.clone" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new copy of the SpiceCircuit. Change done at the new copy are not affecting the original</p>
+<dl class="field-list simple">
+<dt class="field-odd">Key new_name</dt>
+<dd class="field-odd"><p>The new name to be given to the circuit</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The new replica of the SpiceCircuit object</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#PyLTSpice.SpiceEditor.SpiceCircuit" title="PyLTSpice.SpiceEditor.SpiceCircuit">SpiceCircuit</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt id="PyLTSpice.SpiceEditor.SpiceCircuit.get_all_nodes">
-<code class="sig-name descname">get_all_nodes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/SpiceEditor.html#SpiceCircuit.get_all_nodes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.SpiceEditor.SpiceCircuit.get_all_nodes" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="sig-name descname">get_all_nodes</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>str<span class="p">]</span><a class="reference internal" href="_modules/PyLTSpice/SpiceEditor.html#SpiceCircuit.get_all_nodes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.SpiceEditor.SpiceCircuit.get_all_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>A function that retrieves all nodes existing on a Netlist</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Circuit Nodes</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>list[str]</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt id="PyLTSpice.SpiceEditor.SpiceCircuit.get_component_floatvalue">
@@ -70,7 +128,7 @@ is represented as a SpiceCircuit object.</p>
 <dd><p>Returns the value of a component retrieved from the netlist.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>element</strong> (<em>str</em>) – Reference of the circuit element to search for.</p>
+<dd class="field-odd"><p><strong>element</strong> (<em>str</em>) – Reference of the circuit element to get the value in float format.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>value of the circuit element in float type</p>
@@ -86,12 +144,50 @@ is represented as a SpiceCircuit object.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt id="PyLTSpice.SpiceEditor.SpiceCircuit.get_component_info">
+<code class="sig-name descname">get_component_info</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">component</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="reference internal" href="_modules/PyLTSpice/SpiceEditor.html#SpiceCircuit.get_component_info"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.SpiceEditor.SpiceCircuit.get_component_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves the component information as defined in the corresponding REGEX. The line number is also added.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>component</strong> (<em>str</em>) – Reference of the component</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Dictionary with the component information</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p>UnrecognizedSyntaxError when the line doesn’t match the expected REGEX. NotImplementedError of there
+isn’t an associated regular expression for the component prefix.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="PyLTSpice.SpiceEditor.SpiceCircuit.get_component_nodes">
+<code class="sig-name descname">get_component_nodes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">element</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>str<span class="p">]</span><a class="reference internal" href="_modules/PyLTSpice/SpiceEditor.html#SpiceCircuit.get_component_nodes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.SpiceEditor.SpiceCircuit.get_component_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the nodes to which the component is attached to.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>element</strong> (<em>str</em>) – Reference of the circuit element to get the nodes.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>List of nodes</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt id="PyLTSpice.SpiceEditor.SpiceCircuit.get_component_value">
 <code class="sig-name descname">get_component_value</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">element</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/PyLTSpice/SpiceEditor.html#SpiceCircuit.get_component_value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.SpiceEditor.SpiceCircuit.get_component_value" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the value of a component retrieved from the netlist.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>element</strong> (<em>str</em>) – Reference of the circuit element to search for.</p>
+<dd class="field-odd"><p><strong>element</strong> (<em>str</em>) – Reference of the circuit element to get the value.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>value of the circuit element .</p>
@@ -145,6 +241,11 @@ The default prefix is ‘*’ which is a special case that returns all component
 </dd></dl>
 
 <dl class="py method">
+<dt id="PyLTSpice.SpiceEditor.SpiceCircuit.name">
+<code class="sig-name descname">name</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/SpiceEditor.html#SpiceCircuit.name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.SpiceEditor.SpiceCircuit.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt id="PyLTSpice.SpiceEditor.SpiceCircuit.remove_component">
 <code class="sig-name descname">remove_component</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">designator</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/SpiceEditor.html#SpiceCircuit.remove_component"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.SpiceEditor.SpiceCircuit.remove_component" title="Permalink to this definition">¶</a></dt>
 <dd><p>Removes a component from  the design.
@@ -165,9 +266,11 @@ Note: Current implemetation only alows removal of a component from the main netl
 <dl class="py method">
 <dt id="PyLTSpice.SpiceEditor.SpiceCircuit.set_component_value">
 <code class="sig-name descname">set_component_value</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">device</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">value</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>int<span class="p">, </span>float<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/PyLTSpice/SpiceEditor.html#SpiceCircuit.set_component_value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.SpiceEditor.SpiceCircuit.set_component_value" title="Permalink to this definition">¶</a></dt>
-<dd><p>Changes the value of a component, such as a Resistor, Capacitor or Inductor.
+<dd><p>Changes the value of a component, such as a Resistor, Capacitor or Inductor. For components inside
+subcircuits, use the subcirciut designator prefix with ‘:’ as separator (Example X1:R1)
 Usage:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">LTC</span><span class="o">.</span><span class="n">set_component_value</span><span class="p">(</span><span class="s1">&#39;R1&#39;</span><span class="p">,</span> <span class="s1">&#39;3.3k&#39;</span><span class="p">)</span>
+<span class="n">LTC</span><span class="o">.</span><span class="n">set_component_value</span><span class="p">(</span><span class="s1">&#39;X1:C1&#39;</span><span class="p">,</span> <span class="s1">&#39;10u&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <dl class="field-list">
@@ -175,7 +278,7 @@ Usage:</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>device</strong> (<em>str</em>) – Reference of the circuit element to be updated.</p></li>
 <li><p><strong>value</strong> (<em>str</em><em>, </em><em>int</em><em> or </em><em>float</em>) – value to be be set on the given circuit element. Float and integer values will automatically
-formatted as per the engineering notations ‘k’ for kile, ‘m’, for mili and so on.</p></li>
+formatted as per the engineering notations ‘k’ for kilo, ‘m’, for mili and so on.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Raises</dt>
@@ -274,8 +377,8 @@ and allows setting more than one parameter at once.</p>
 <dd><p>Adds one or more parameters to the netlist.
 Usage:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">temp</span> <span class="ow">in</span> <span class="p">(</span><span class="o">-</span><span class="mi">40</span><span class="p">,</span> <span class="mi">25</span><span class="p">,</span> <span class="mi">125</span><span class="p">):</span>
-    <span class="k">for</span> <span class="n">freq</span> <span class="ow">in</span> <span class="n">sweep_log</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">100E3</span><span class="p">,)</span>
-<span class="n">LTC</span><span class="o">.</span><span class="n">set_parameters</span><span class="p">(</span><span class="n">TEMP</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="n">freq</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">freq</span> <span class="ow">in</span> <span class="n">sweep_log</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">100E3</span><span class="p">,):</span>
+        <span class="n">LTC</span><span class="o">.</span><span class="n">set_parameters</span><span class="p">(</span><span class="n">TEMP</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="n">freq</span><span class="p">)</span>
 </pre></div>
 </div>
 <dl class="field-list simple">
@@ -289,15 +392,38 @@ a float.</p>
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt id="PyLTSpice.SpiceEditor.SpiceCircuit.setname">
+<code class="sig-name descname">setname</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">new_name</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/SpiceEditor.html#SpiceCircuit.setname"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.SpiceEditor.SpiceCircuit.setname" title="Permalink to this definition">¶</a></dt>
+<dd><p>Renames the subcircuit to a new name. No check is done to the new game give. It is up to the user to make sure 
+that the new name is valid.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>new_name</strong> (<em>str</em>) – The new Name.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Nothing</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
 <dt id="PyLTSpice.SpiceEditor.SpiceEditor">
-<em class="property">class </em><code class="sig-prename descclassname">PyLTSpice.SpiceEditor.</code><code class="sig-name descname">SpiceEditor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">netlist_file</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/SpiceEditor.html#SpiceEditor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.SpiceEditor.SpiceEditor" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">PyLTSpice.SpiceEditor.</code><code class="sig-name descname">SpiceEditor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">netlist_file</span></em>, <em class="sig-param"><span class="n">encoding</span><span class="o">=</span><span class="default_value">'autodetect'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/SpiceEditor.html#SpiceEditor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.SpiceEditor.SpiceEditor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#PyLTSpice.SpiceEditor.SpiceCircuit" title="PyLTSpice.SpiceEditor.SpiceCircuit"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyLTSpice.SpiceEditor.SpiceCircuit</span></code></a></p>
 <p>This class implements interfaces to manipulate SPICE netlist files. The class doesn’t update the netlist file
 itself. After implementing the modifications the user should call the “write_netlist” method to write a new
-netlist file.</p>
+netlist file.
+:param netlist_file: Name of the .NET file to parse
+:type netlist_file: str
+:param encoding: Forcing the encoding to be used on the circuit netlile read. Defaults to ‘autodetect’ which will
+call a function that tries to detect the encoding automatically. This however is not 100% fool proof.
+:type encoding: str, optional</p>
 <dl class="py method">
 <dt id="PyLTSpice.SpiceEditor.SpiceEditor.add_instruction">
 <code class="sig-name descname">add_instruction</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">instruction</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/PyLTSpice/SpiceEditor.html#SpiceEditor.add_instruction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.SpiceEditor.SpiceEditor.add_instruction" title="Permalink to this definition">¶</a></dt>
@@ -340,6 +466,20 @@ Example:</p>
 </dd></dl>
 
 <dl class="py method">
+<dt id="PyLTSpice.SpiceEditor.SpiceEditor.find_subckt_in_lib">
+<em class="property">static </em><code class="sig-name descname">find_subckt_in_lib</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">library</span></em>, <em class="sig-param"><span class="n">subckt_name</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#PyLTSpice.SpiceEditor.SpiceEditor" title="PyLTSpice.SpiceEditor.SpiceEditor">PyLTSpice.SpiceEditor.SpiceEditor</a><a class="reference internal" href="_modules/PyLTSpice/SpiceEditor.html#SpiceEditor.find_subckt_in_lib"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.SpiceEditor.SpiceEditor.find_subckt_in_lib" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds returns a Subckt from a library file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>library</strong> (<em>str</em>) – path to the library to search</p></li>
+<li><p><strong>subckt_name</strong> – Subcircuit to search for</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt id="PyLTSpice.SpiceEditor.SpiceEditor.remove_instruction">
 <code class="sig-name descname">remove_instruction</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">instruction</span></em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/PyLTSpice/SpiceEditor.html#SpiceEditor.remove_instruction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.SpiceEditor.SpiceEditor.remove_instruction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Usage a previously added instructions.
@@ -374,6 +514,13 @@ and .subckt</p>
 :return Nothing</p>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="py exception">
+<dt id="PyLTSpice.SpiceEditor.UnrecognizedSyntaxError">
+<em class="property">exception </em><code class="sig-prename descclassname">PyLTSpice.SpiceEditor.</code><code class="sig-name descname">UnrecognizedSyntaxError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">line</span></em>, <em class="sig-param"><span class="n">regex</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/SpiceEditor.html#UnrecognizedSyntaxError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.SpiceEditor.UnrecognizedSyntaxError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Line doesn’t match expected Spice syntax</p>
 </dd></dl>
 
 <dl class="py function">

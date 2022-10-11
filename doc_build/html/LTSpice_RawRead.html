@@ -54,13 +54,25 @@ In the preamble, the lines are always started by one of the following identifier
 <div><ul class="simple">
 <li><p>Title:          =&gt; Contains the path of the source .asc file used to make the simulation preceded by *</p></li>
 <li><p>Date:           =&gt; Date when the simulation started</p></li>
-<li><p>Plotname:       =&gt; Name of the simulation Ex: “Transient Analysis” or “AC Analysis”</p></li>
-<li><p>Output:         =&gt; <em>significance not understood</em></p></li>
+<li><dl class="simple">
+<dt>Plotname:       =&gt; Name of the simulation. The known Simulation Types are:</dt><dd><ul>
+<li><p>Operation Point</p></li>
+<li><p>DC transfer characteristic</p></li>
+<li><p>AC Analysis</p></li>
+<li><p>Transient Analysis</p></li>
+<li><p>Noise Spectral Density - (V/Hz½ or A/Hz½)</p></li>
+<li><p>Transfer Function</p></li>
+</ul>
+</dd>
+</dl>
+</li>
 <li><dl class="simple">
 <dt>Flags:          =&gt; Flags that are used in this plot. The simulation can have any combination of these flags.</dt><dd><ul>
 <li><p>“real” -&gt; The traces in the raw file contain real values. As for exmple on a TRAN simulation.</p></li>
 <li><p>“complex” -&gt; Traces in the raw file contain complex values. As for exmple on an AC simulation.</p></li>
-<li><p>“forward” -&gt; TBC</p></li>
+<li><p>“forward” -&gt; Tells whether the simulation has more than one point. DC transfer
+characteristic, AC Analysis, Transient Analysis or Noise Spectral Density have the forward flag.
+Operating Point and Transfer Function don’t have this flag activated.</p></li>
 <li><p>“log” -&gt; The preferred plot view of this data is logarithmic.</p></li>
 <li><p>“stepped” -&gt; The simulation had .STEP primitives.</p></li>
 <li><p>“FastAccess” -&gt; Order of the data is changed to speed up access. See Binary section for details.</p></li>
@@ -83,27 +95,27 @@ In the preamble, the lines are always started by one of the following identifier
 stored in the binary section. The format is one variable per line, using the following format:</p>
 <p>&lt;tab&gt;&lt;ordinal number&gt;&lt;tab&gt;&lt;measurement&gt;&lt;tab&gt;&lt;type of measurement&gt;</p>
 <p>Here is an example:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0       time    time
-1       V(n001) voltage
-2       V(n004) voltage
-3       V(n003) voltage
-4       V(n006) voltage
-5       V(display_current_adc)  voltage
-6       V(n002) voltage
-7       V(3v3_m)        voltage
-8       V(n005) voltage
-9       V(n007) voltage
-10      V(24v_dsp)      voltage
-11      I(C3)   device_current
-12      I(C2)   device_current
-13      I(C1)   device_current
-14      I(I1)   device_current
-15      I(R4)   device_current
-16      I(R3)   device_current
-17      I(V2)   device_current
-18      I(V1)   device_current
-19      Ix(u1:+)        subckt_current
-20      Ix(u1:-)        subckt_current
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0   time    time
+1   V(n001)    voltage
+2   V(n004)    voltage
+3   V(n003)    voltage
+4   V(n006)    voltage
+5   V(adcc)    voltage
+6   V(n002)    voltage
+7   V(3v3_m)   voltage
+8   V(n005)    voltage
+9   V(n007)    voltage
+10  V(24v_dsp) voltage
+11  I(C3)      device_current
+12  I(C2)      device_current
+13  I(C1)      device_current
+14  I(I1)      device_current
+15  I(R4)      device_current
+16  I(R3)      device_current
+17  I(V2)      device_current
+18  I(V1)      device_current
+19  Ix(u1:+)   subckt_current
+20  Ix(u1:-)   subckt_current
 </pre></div>
 </div>
 </div>
@@ -146,8 +158,8 @@ directory as the raw file in order to obtain the STEP information.</p>
 </div>
 <div class="section" id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
-<p>The example below demonstrates the usage of the LTSpiceRawRead class. It reads a .RAW file and uses the matplotlib library
-to plot the results of three traces in two subplots.</p>
+<p>The example below demonstrates the usage of the LTSpiceRawRead class. It reads a .RAW file and uses the matplotlib
+library to plot the results of three traces in two subplots.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>  <span class="c1"># Imports the matplotlib library for plotting the results</span>
 
 <span class="n">LTR</span> <span class="o">=</span> <span class="n">RawRead</span><span class="p">(</span><span class="s2">&quot;some_random_file.raw&quot;</span><span class="p">)</span>  <span class="c1"># Reads the RAW file contents from file</span>
@@ -182,7 +194,7 @@ to plot the results of three traces in two subplots.</p>
 </div>
 <dl class="py class">
 <dt id="PyLTSpice.LTSpice_RawRead.Axis">
-<em class="property">class </em><code class="sig-prename descclassname">PyLTSpice.LTSpice_RawRead.</code><code class="sig-name descname">Axis</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">datatype</span></em>, <em class="sig-param"><span class="n">datalen</span></em>, <em class="sig-param"><span class="n">numerical_type</span><span class="o">=</span><span class="default_value">'real'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#Axis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.Axis" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">PyLTSpice.LTSpice_RawRead.</code><code class="sig-name descname">Axis</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">whattype</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">datalen</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">numerical_type</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">'double'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#Axis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.Axis" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#PyLTSpice.LTSpice_RawRead.DataSet" title="PyLTSpice.LTSpice_RawRead.DataSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyLTSpice.LTSpice_RawRead.DataSet</span></code></a></p>
 <p>This class is used to represent the horizontal axis like on a Transient or DC Sweep Simulation. It derives from
 the DataSet and defines additional methods that are specific for X axis.
@@ -190,9 +202,55 @@ This class is constructed by the get_time_axis() method or by a get_trace(0) com
 always the X Axis. Ex: time for .TRAN simulations and frequency for the .AC simulations.</p>
 <p>To access data inside this class, the get_wave() should be used, which implements the support for the STEPed data.
 IF Numpy is available, get_wave() will return a numpy array.</p>
+<p>In Transient Analysis and in DC transfer characteristic, LTSpice uses doubles to store the axis values.</p>
+<dl class="py method">
+<dt id="PyLTSpice.LTSpice_RawRead.Axis.get_len">
+<code class="sig-name descname">get_len</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">step</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">0</span></em><span class="sig-paren">)</span> &#x2192; int<a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#Axis.get_len"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.Axis.get_len" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the length of the axis.
+:param step: Optional parameter the step index.
+:type step: int
+:return: The number of data points
+:rtype: int</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="PyLTSpice.LTSpice_RawRead.Axis.get_point">
+<code class="sig-name descname">get_point</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">step</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#Axis.get_point"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.Axis.get_point" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a point from the dataset
+:param n: position on the vector
+:type n:int
+:param step: step index
+:type step: int
+:returns: Value of the data point
+:rtype: float or complex</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="PyLTSpice.LTSpice_RawRead.Axis.get_position">
+<code class="sig-name descname">get_position</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">step</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">0</span></em><span class="sig-paren">)</span> &#x2192; Union<span class="p">[</span>int<span class="p">, </span>float<span class="p">]</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#Axis.get_position"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.Axis.get_position" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the position of a point in the axis. If the point doesn’t exist, an interpolation is done between the
+two closest points.
+For example, if the point requested is 1.0001ms and the closest points that exist in the axis are t[100]=1ms and
+t[101]=1.001ms, then the return value will be 100 + (1.0001ms-1ms)/(1.001ms-1ms) = 100.1</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<em>float</em>) – point in axis to search for</p></li>
+<li><p><strong>step</strong> (<em>int</em>) – step number</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The position of parameter /t/ in the axis</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>int, float</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt id="PyLTSpice.LTSpice_RawRead.Axis.get_time_axis">
-<code class="sig-name descname">get_time_axis</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">step</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#Axis.get_time_axis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.Axis.get_time_axis" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_time_axis</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">step</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#Axis.get_time_axis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.Axis.get_time_axis" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the time axis raw data. Please note that the time axis may not have a constant time step. LTSpice will
 increase the time-step in simulation phases where there aren’t value changes, and decrease time step in
 the parts where more time accuracy is needed.</p>
@@ -211,7 +269,7 @@ the parts where more time accuracy is needed.</p>
 
 <dl class="py method">
 <dt id="PyLTSpice.LTSpice_RawRead.Axis.get_wave">
-<code class="sig-name descname">get_wave</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">step</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#Axis.get_wave"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.Axis.get_wave" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get_wave</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">step</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#Axis.get_wave"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.Axis.get_wave" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns an the vector containing the wave values. If numpy is installed, data is returned as a numpy array.
 If not, the wave is returned as a list of floats.</p>
 <p>If stepped data is present in the array, the user should specify which step is to be returned. Failing to do so,
@@ -231,7 +289,7 @@ will return all available steps concatenated together.</p>
 
 <dl class="py method">
 <dt id="PyLTSpice.LTSpice_RawRead.Axis.step_offset">
-<code class="sig-name descname">step_offset</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">step</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#Axis.step_offset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.Axis.step_offset" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">step_offset</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">step</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#Axis.step_offset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.Axis.step_offset" title="Permalink to this definition">¶</a></dt>
 <dd><p>In Stepped RAW files, several simulations runs are stored in the same RAW file. This function returns the
 offset within the binary stream where each step starts.</p>
 <dl class="field-list simple">
@@ -251,69 +309,306 @@ offset within the binary stream where each step starts.</p>
 
 <dl class="py class">
 <dt id="PyLTSpice.LTSpice_RawRead.DataSet">
-<em class="property">class </em><code class="sig-prename descclassname">PyLTSpice.LTSpice_RawRead.</code><code class="sig-name descname">DataSet</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">datatype</span></em>, <em class="sig-param"><span class="n">datalen</span></em>, <em class="sig-param"><span class="n">numerical_type</span><span class="o">=</span><span class="default_value">'real'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#DataSet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.DataSet" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">PyLTSpice.LTSpice_RawRead.</code><code class="sig-name descname">DataSet</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">whattype</span></em>, <em class="sig-param"><span class="n">datalen</span></em>, <em class="sig-param"><span class="n">numerical_type</span><span class="o">=</span><span class="default_value">'real'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#DataSet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.DataSet" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>This is the base class for storing all traces inside of a RAW file. Returned by the get_trace() or by the get_axis()
 methods.
 Normally the user doesn’t have to be aware of this class. It is only used internally to encapsulate the different
 implementations of the wave population.
 Data can be retrieved directly by using the [] operator.
-If numpy is available, the numpy vector can be retrieved by using the get_wave() method.</p>
-<dl class="py method">
-<dt id="PyLTSpice.LTSpice_RawRead.DataSet.get_len">
-<code class="sig-name descname">get_len</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#DataSet.get_len"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.DataSet.get_len" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="PyLTSpice.LTSpice_RawRead.DataSet.get_point">
-<code class="sig-name descname">get_point</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#DataSet.get_point"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.DataSet.get_point" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get a point from the dataset
-:param n: position on the vector
-:type n:int
-:returns: Value of the data point
-:rtype: float or complex</p>
-</dd></dl>
-
+If numpy is available, the numpy vector can be retrieved by using the get_wave() method.
+The parameter whattype defines what is the trace representing in the simulation, Voltage, Current a Time or
+Frequency.</p>
 <dl class="py method">
 <dt id="PyLTSpice.LTSpice_RawRead.DataSet.get_wave">
 <code class="sig-name descname">get_wave</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#DataSet.get_wave"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.DataSet.get_wave" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="PyLTSpice.LTSpice_RawRead.DataSet.set_pointA">
-<code class="sig-name descname">set_pointA</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#DataSet.set_pointA"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.DataSet.set_pointA" title="Permalink to this definition">¶</a></dt>
-<dd><p>Conversion function to be used on ASCII RAW Files.
-:param n: number of the point to set
-:type n:int
-:param value: the Value of the point being set.
-:type value: float
-:returns: Nothing</p>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Internal data array</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>list or numpy.array</p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="py method">
-<dt id="PyLTSpice.LTSpice_RawRead.DataSet.set_pointB16">
-<code class="sig-name descname">set_pointB16</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#DataSet.set_pointB16"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.DataSet.set_pointB16" title="Permalink to this definition">¶</a></dt>
-<dd><p>Used to convert a 16 byte stream into a complex data point. Usually used for the .AC simulations.
-The encoding is the same as for the set_pointB8() but two values are encoded. First one is the real part and
-the second is the complex part.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="PyLTSpice.LTSpice_RawRead.DummyTrace">
+<em class="property">class </em><code class="sig-prename descclassname">PyLTSpice.LTSpice_RawRead.</code><code class="sig-name descname">DummyTrace</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">whattype</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#DummyTrace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.DummyTrace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Dummy Trace for bypassing traces while reading</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt id="PyLTSpice.LTSpice_RawRead.LTSPiceReadException">
+<em class="property">exception </em><code class="sig-prename descclassname">PyLTSpice.LTSpice_RawRead.</code><code class="sig-name descname">LTSPiceReadException</code><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#LTSPiceReadException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.LTSPiceReadException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Custom class for exception handling</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="PyLTSpice.LTSpice_RawRead.LTSpiceRawRead">
+<em class="property">class </em><code class="sig-prename descclassname">PyLTSpice.LTSpice_RawRead.</code><code class="sig-name descname">LTSpiceRawRead</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">raw_filename</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">traces_to_read</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>Union<span class="p">[</span>str<span class="p">, </span>List<span class="p">[</span>str<span class="p">]</span><span class="p">, </span>Tuple<span class="p">[</span>str<span class="p">]</span><span class="p">]</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">'*'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#LTSpiceRawRead"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.LTSpiceRawRead" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class for reading LTSpice wave Files. It can read all types of Files. If stepped data is detected,
+it will also try to read the corresponding LOG file so to retrieve the stepped data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>n</strong> (<em>int</em>) – number of the point to set</p></li>
-<li><p><strong>value</strong> (<em>bytes</em>) – data stream to convert to complex value</p></li>
+<li><p><strong>raw_filename</strong> (<em>str | pahtlib.Path</em>) – The file containing the RAW data to be read</p></li>
+<li><p><strong>traces_to_read</strong> (<em>str</em><em>, </em><em>list</em><em> or </em><em>tuple</em>) – A string or a list containing the list of traces to be read. If None is provided, only the header is read and
+all trace data is discarded. If a ‘*’ wildcard is given or no parameter at all then all traces are read.</p></li>
 </ul>
 </dd>
+<dt class="field-even">Key headeronly</dt>
+<dd class="field-even"><p>Used to only load the header information and skip the trace data entirely. Use <cite>headeronly=True</cite>.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt id="PyLTSpice.LTSpice_RawRead.LTSpiceRawRead.ACCEPTED_PLOTNAMES">
+<code class="sig-name descname">ACCEPTED_PLOTNAMES</code><em class="property"> = ('AC Analysis', 'DC transfer characteristic', 'Operating Point', 'Transient Analysis', 'Transfer Function', 'Noise Spectral Density')</em><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.LTSpiceRawRead.ACCEPTED_PLOTNAMES" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="PyLTSpice.LTSpice_RawRead.LTSpiceRawRead.get_axis">
+<code class="sig-name descname">get_axis</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">step</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#LTSpiceRawRead.get_axis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.LTSpiceRawRead.get_axis" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function is equivalent to get_trace(0).get_wave(step) instruction.
+It also implements a workaround on a LTSpice issue when using 2nd Order compression, where some values on
+the time trace have a negative value.
+:param step: Step number
+:type step: int
+:returns: Array with the X axis
+:rtype: list[float] or numpy.array</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="PyLTSpice.LTSpice_RawRead.LTSpiceRawRead.get_len">
+<code class="sig-name descname">get_len</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">step</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">0</span></em><span class="sig-paren">)</span> &#x2192; int<a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#LTSpiceRawRead.get_len"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.LTSpiceRawRead.get_len" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the length of the data at the give step index.
+:param step: Optional parameter the step index.
+:type step: int
+:return: The number of data points
+:rtype: int</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="PyLTSpice.LTSpice_RawRead.LTSpiceRawRead.get_raw_property">
+<code class="sig-name descname">get_raw_property</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">property_name</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#LTSpiceRawRead.get_raw_property"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.LTSpiceRawRead.get_raw_property" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a property. By default it returns all properties defined in the RAW file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>property_name</strong> (<em>str</em>) – name of the property to retrieve.</p>
+</dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Nothing</p>
+<dd class="field-even"><p>Property object</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p>ValueError if the property doesn’t exist</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt id="PyLTSpice.LTSpice_RawRead.DataSet.set_pointB4">
-<code class="sig-name descname">set_pointB4</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#DataSet.set_pointB4"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.DataSet.set_pointB4" title="Permalink to this definition">¶</a></dt>
-<dd><p>Function that converts a normal trace into float on a Binary storage. This codification uses 4 bytes.
-The codification is done as follows:</p>
+<dt id="PyLTSpice.LTSpice_RawRead.LTSpiceRawRead.get_steps">
+<code class="sig-name descname">get_steps</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#LTSpiceRawRead.get_steps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.LTSpiceRawRead.get_steps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the steps that correspond to the query set in the * * kwargs parameters.
+Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">raw_read</span><span class="o">.</span><span class="n">get_steps</span><span class="p">(</span><span class="n">V5</span><span class="o">=</span><span class="mf">1.2</span><span class="p">,</span> <span class="n">TEMP</span><span class="o">=</span><span class="mi">25</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This will return all steps in which the voltage source V5 was set to 1.2V and the TEMP parameter is 24 degrees.
+This feature is only possible if a .log file with the same name as the .raw file exists in the same directory.
+Note: the correspondence between step numbers and .STEP information is stored on the .log file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Key kwargs</dt>
+<dd class="field-odd"><p>key-value arguments in which the key correspond to a stepped parameter or source name, and the value is the
+stepped value.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The steps that match the query</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list[int]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="PyLTSpice.LTSpice_RawRead.LTSpiceRawRead.get_time_axis">
+<code class="sig-name descname">get_time_axis</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">step</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#LTSpiceRawRead.get_time_axis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.LTSpiceRawRead.get_time_axis" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>(Deprecated)</em> Use get_axis method instead</p>
+<p>This function is equivalent to get_trace(‘time’).get_time_axis(step) instruction.
+It’s workaround on a LTSpice issue when using 2nd Order compression, where some values on
+the time trace have a negative value.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="PyLTSpice.LTSpice_RawRead.LTSpiceRawRead.get_trace">
+<code class="sig-name descname">get_trace</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">trace_ref</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>int<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#LTSpiceRawRead.get_trace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.LTSpiceRawRead.get_trace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves the trace with the requested name (trace_ref).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>trace_ref</strong> (<em>str</em><em> or </em><em>int</em>) – Name of the trace or the index of the trace</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>An object containing the requested trace</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>DataSet subclass</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>IndexError</strong> – When a trace is not found</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="PyLTSpice.LTSpice_RawRead.LTSpiceRawRead.get_trace_names">
+<code class="sig-name descname">get_trace_names</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#LTSpiceRawRead.get_trace_names"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.LTSpiceRawRead.get_trace_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of exiting trace names inside of the RAW file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>trace names</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>list[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="PyLTSpice.LTSpice_RawRead.LTSpiceRawRead.header_lines">
+<code class="sig-name descname">header_lines</code><em class="property"> = ('Title', 'Date', 'Plotname', 'Output', 'Flags', 'No. Variables', 'No. Points', 'Offset', 'Command', 'Variables', 'Backannotation')</em><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.LTSpiceRawRead.header_lines" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="PyLTSpice.LTSpice_RawRead.RawRead">
+<code class="sig-prename descclassname">PyLTSpice.LTSpice_RawRead.</code><code class="sig-name descname">RawRead</code><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.RawRead" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#PyLTSpice.LTSpice_RawRead.LTSpiceRawRead" title="PyLTSpice.LTSpice_RawRead.LTSpiceRawRead"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyLTSpice.LTSpice_RawRead.LTSpiceRawRead</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="PyLTSpice.LTSpice_RawRead.Trace">
+<em class="property">class </em><code class="sig-prename descclassname">PyLTSpice.LTSpice_RawRead.</code><code class="sig-name descname">Trace</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">whattype</span></em>, <em class="sig-param"><span class="n">datalen</span></em>, <em class="sig-param"><span class="n">axis</span></em>, <em class="sig-param"><span class="n">numerical_type</span><span class="o">=</span><span class="default_value">'real'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#Trace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.Trace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#PyLTSpice.LTSpice_RawRead.DataSet" title="PyLTSpice.LTSpice_RawRead.DataSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyLTSpice.LTSpice_RawRead.DataSet</span></code></a></p>
+<p>This class is used to represent a trace. It derives from DataSet and implements the additional methods to
+support STEPed simulations.
+This class is constructed by the get_trace() command.
+Data can be accessed through the [] and len() operators, or by the get_wave() method.
+If numpy is available the get_wave() method will return a numpy array.</p>
+<dl class="py method">
+<dt id="PyLTSpice.LTSpice_RawRead.Trace.get_len">
+<code class="sig-name descname">get_len</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">step</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">0</span></em><span class="sig-paren">)</span> &#x2192; int<a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#Trace.get_len"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.Trace.get_len" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the length of the axis.
+:param step: Optional parameter the step index.
+:type step: int
+:return: The number of data points
+:rtype: int</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="PyLTSpice.LTSpice_RawRead.Trace.get_point">
+<code class="sig-name descname">get_point</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">step</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#Trace.get_point"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.Trace.get_point" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implementation of the [] operator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n</strong> (<em>int</em>) – item in the array</p></li>
+<li><p><strong>step</strong> (<em>int</em>) – Optional step number</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>float value of the item</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="PyLTSpice.LTSpice_RawRead.Trace.get_point_at">
+<code class="sig-name descname">get_point_at</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">step</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#Trace.get_point_at"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.Trace.get_point_at" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a point from the trace at the point specified by the /t/ argument.
+If the point doesn’t exist on the axis, the data is interpolated using a linear regression between the two
+adjacent points.
+:param t: point in the axis where to find the point.
+:type t: float, float32(numpy) or float64(numpy)
+:param step: step index
+:type step: int</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="PyLTSpice.LTSpice_RawRead.Trace.get_wave">
+<code class="sig-name descname">get_wave</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">step</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#Trace.get_wave"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.Trace.get_wave" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the data contained in this object. For stepped simulations an argument must be passed specifying the
+step number. If no steps exist, the argument must be left blank.
+To know whether stepped data exist, the user can use the get_raw_property(‘Flags’) method.</p>
+<p>If numpy is available the get_wave() method will return a numpy array.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>step</strong> (<em>int</em>) – To be used when stepped data exist on the RAW file.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a List or numpy array (if installed) containing the data contained in this object.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list or numpy.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="PyLTSpice.LTSpice_RawRead.consume16bytes">
+<code class="sig-prename descclassname">PyLTSpice.LTSpice_RawRead.</code><code class="sig-name descname">consume16bytes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">f</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#consume16bytes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.consume16bytes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used to advance the file pointer 16 bytes</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="PyLTSpice.LTSpice_RawRead.consume4bytes">
+<code class="sig-prename descclassname">PyLTSpice.LTSpice_RawRead.</code><code class="sig-name descname">consume4bytes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">f</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#consume4bytes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.consume4bytes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used to advance the file pointer 4 bytes</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="PyLTSpice.LTSpice_RawRead.consume8bytes">
+<code class="sig-prename descclassname">PyLTSpice.LTSpice_RawRead.</code><code class="sig-name descname">consume8bytes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">f</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#consume8bytes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.consume8bytes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used to advance the file pointer 8 bytes</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="PyLTSpice.LTSpice_RawRead.read_complex">
+<code class="sig-prename descclassname">PyLTSpice.LTSpice_RawRead.</code><code class="sig-name descname">read_complex</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">f</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#read_complex"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.read_complex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used to convert a 16 byte stream into a complex data point. Usually used for the .AC simulations.
+The encoding is the same as for the set_pointB8() but two values are encoded. First one is the real part and
+the second is the complex part.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>f</strong> (<em>file</em>) – data stream</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>complex value</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>complex</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="PyLTSpice.LTSpice_RawRead.read_float32">
+<code class="sig-prename descclassname">PyLTSpice.LTSpice_RawRead.</code><code class="sig-name descname">read_float32</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">f</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#read_float32"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.read_float32" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a 32bit float (single precision) from a stream. This is how most real values are stored in the RAW file.
+This codification uses 4 bytes as follows:</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 17%" />
@@ -388,21 +683,21 @@ The codification is done as follows:</p>
 <p>M[22:0] - Mantissa.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>n</strong> (<em>int</em>) – number of the point to set</p></li>
-<li><p><strong>value</strong> (<em>bytes</em>) – data stream to convert to float</p></li>
-</ul>
+<dd class="field-odd"><p><strong>f</strong> (<em>file</em>) – data stream to read from</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Nothing</p>
+<dd class="field-even"><p>float value</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>float</p>
 </dd>
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt id="PyLTSpice.LTSpice_RawRead.DataSet.set_pointB8">
-<code class="sig-name descname">set_pointB8</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#DataSet.set_pointB8"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.DataSet.set_pointB8" title="Permalink to this definition">¶</a></dt>
-<dd><p>Function that converts the variable 0, normally associated with the plot X axis.
+<dl class="py function">
+<dt id="PyLTSpice.LTSpice_RawRead.read_float64">
+<code class="sig-prename descclassname">PyLTSpice.LTSpice_RawRead.</code><code class="sig-name descname">read_float64</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">f</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#read_float64"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.read_float64" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads a 64 bit float value, normally associated with the plot X axis.
 The codification is done as follows:</p>
 <table class="docutils align-default">
 <colgroup>
@@ -518,233 +813,15 @@ The codification is done as follows:</p>
 <p>M[51:0] - Mantissa.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>n</strong> (<em>int</em>) – number of the point to set</p></li>
-<li><p><strong>value</strong> (<em>bytes</em>) – data stream to convert to float value</p></li>
-</ul>
+<dd class="field-odd"><p><strong>f</strong> (<em>file</em>) – data stream to convert to float value</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Nothing</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt id="PyLTSpice.LTSpice_RawRead.DummyTrace">
-<em class="property">class </em><code class="sig-prename descclassname">PyLTSpice.LTSpice_RawRead.</code><code class="sig-name descname">DummyTrace</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">datatype</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#DummyTrace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.DummyTrace" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Dummy Trace for bypassing traces while reading</p>
-<dl class="py method">
-<dt id="PyLTSpice.LTSpice_RawRead.DummyTrace.set_pointA">
-<code class="sig-name descname">set_pointA</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#DummyTrace.set_pointA"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.DummyTrace.set_pointA" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="PyLTSpice.LTSpice_RawRead.DummyTrace.set_pointB16">
-<code class="sig-name descname">set_pointB16</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#DummyTrace.set_pointB16"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.DummyTrace.set_pointB16" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="PyLTSpice.LTSpice_RawRead.DummyTrace.set_pointB4">
-<code class="sig-name descname">set_pointB4</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#DummyTrace.set_pointB4"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.DummyTrace.set_pointB4" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="PyLTSpice.LTSpice_RawRead.DummyTrace.set_pointB8">
-<code class="sig-name descname">set_pointB8</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#DummyTrace.set_pointB8"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.DummyTrace.set_pointB8" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py exception">
-<dt id="PyLTSpice.LTSpice_RawRead.LTSPiceReadException">
-<em class="property">exception </em><code class="sig-prename descclassname">PyLTSpice.LTSpice_RawRead.</code><code class="sig-name descname">LTSPiceReadException</code><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#LTSPiceReadException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.LTSPiceReadException" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
-<p>Custom class for exception handling</p>
-</dd></dl>
-
-<dl class="py class">
-<dt id="PyLTSpice.LTSpice_RawRead.LTSpiceRawRead">
-<em class="property">class </em><code class="sig-prename descclassname">PyLTSpice.LTSpice_RawRead.</code><code class="sig-name descname">LTSpiceRawRead</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">raw_filename</span></em>, <em class="sig-param"><span class="n">traces_to_read</span><span class="o">=</span><span class="default_value">'*'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#LTSpiceRawRead"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.LTSpiceRawRead" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Class for reading LTSpice wave Files. It can read all types of Files. If stepped data is detected,
-it will also try to read the corresponding LOG file so to retrieve the stepped data.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>raw_filename</strong> (<em>str</em>) – The file containing the RAW data to be read</p></li>
-<li><p><strong>traces_to_read</strong> – A string containing the list of traces to be read. If None is provided, only the header is read and all trace
-data is discarded. If a ‘*’ wildcard is given or no parameter at all then all traces are read.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Key headeronly</dt>
-<dd class="field-even"><p>Used to only load the header information and skip the trace data entirely. Use <cite>headeronly=True</cite>.</p>
-</dd>
-</dl>
-<dl class="py method">
-<dt id="PyLTSpice.LTSpice_RawRead.LTSpiceRawRead.get_axis">
-<code class="sig-name descname">get_axis</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">step</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#LTSpiceRawRead.get_axis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.LTSpiceRawRead.get_axis" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function is equivalent to get_trace(0).get_wave(step) instruction.
-It also implements a workaround on a LTSpice issue when using 2nd Order compression, where some values on
-the time trace have a negative value.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="PyLTSpice.LTSpice_RawRead.LTSpiceRawRead.get_raw_property">
-<code class="sig-name descname">get_raw_property</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">property_name</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#LTSpiceRawRead.get_raw_property"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.LTSpiceRawRead.get_raw_property" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get a property. By default it returns all properties defined in the RAW file.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>property_name</strong> (<em>str</em>) – name of the property to retrieve.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Property object</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-<dt class="field-even">Raises</dt>
-<dd class="field-even"><p>ValueError if the property doesn’t exist</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="PyLTSpice.LTSpice_RawRead.LTSpiceRawRead.get_steps">
-<code class="sig-name descname">get_steps</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#LTSpiceRawRead.get_steps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.LTSpiceRawRead.get_steps" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the steps that correspond to the query set in the <a href="#id1"><span class="problematic" id="id2">**</span></a>kwargs parameters.
-Example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">raw_read</span><span class="o">.</span><span class="n">get_steps</span><span class="p">(</span><span class="n">V5</span><span class="o">=</span><span class="mf">1.2</span><span class="p">,</span> <span class="n">TEMP</span><span class="o">=</span><span class="mi">25</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>This will return all steps in which the voltage source V5 was set to 1.2V and the TEMP parameter is 24 degrees.
-This feature is only possible if a .log file with the same name as the .raw file exists in the same directory.
-Note: the correspondence between step numbers and .STEP information is stored on the .log file.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Key kwargs</dt>
-<dd class="field-odd"><p>key-value arguments in which the key correspond to a stepped parameter or source name, and the value is the
-stepped value.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The steps that match the query</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>list[int]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="PyLTSpice.LTSpice_RawRead.LTSpiceRawRead.get_time_axis">
-<code class="sig-name descname">get_time_axis</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">step</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#LTSpiceRawRead.get_time_axis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.LTSpiceRawRead.get_time_axis" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>(Deprecated)</em> Use get_axis method instead</p>
-<p>This function is equivalent to get_trace(‘time’).get_time_axis(step) instruction.
-It’s workaround on a LTSpice issue when using 2nd Order compression, where some values on
-the time trace have a negative value.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="PyLTSpice.LTSpice_RawRead.LTSpiceRawRead.get_trace">
-<code class="sig-name descname">get_trace</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">trace_ref</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>int<span class="p">]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#LTSpiceRawRead.get_trace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.LTSpiceRawRead.get_trace" title="Permalink to this definition">¶</a></dt>
-<dd><p>Retrieves the trace with the requested name (trace_ref).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>trace_ref</strong> (<em>str</em><em> or </em><em>int</em>) – Name of the trace or the index of the trace</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>An object containing the requested trace</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>DataSet subclass</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="PyLTSpice.LTSpice_RawRead.LTSpiceRawRead.get_trace_names">
-<code class="sig-name descname">get_trace_names</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#LTSpiceRawRead.get_trace_names"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.LTSpiceRawRead.get_trace_names" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a list of exiting trace names inside of the RAW file.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>trace names</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>list[str]</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt id="PyLTSpice.LTSpice_RawRead.LTSpiceRawRead.header_lines">
-<code class="sig-name descname">header_lines</code><em class="property"> = ['Title', 'Date', 'Plotname', 'Output', 'Flags', 'No. Variables', 'No. Points', 'Offset', 'Command', 'Variables', 'Backannotation']</em><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.LTSpiceRawRead.header_lines" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt id="PyLTSpice.LTSpice_RawRead.Op">
-<em class="property">class </em><code class="sig-prename descclassname">PyLTSpice.LTSpice_RawRead.</code><code class="sig-name descname">Op</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">datatype</span></em>, <em class="sig-param"><span class="n">datalen</span></em>, <em class="sig-param"><span class="n">axis</span></em>, <em class="sig-param"><span class="n">numerical_type</span><span class="o">=</span><span class="default_value">'real'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#Op"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.Op" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#PyLTSpice.LTSpice_RawRead.Trace" title="PyLTSpice.LTSpice_RawRead.Trace"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyLTSpice.LTSpice_RawRead.Trace</span></code></a></p>
-<p>Class used for storing operation points.</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt id="PyLTSpice.LTSpice_RawRead.RawRead">
-<code class="sig-prename descclassname">PyLTSpice.LTSpice_RawRead.</code><code class="sig-name descname">RawRead</code><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.RawRead" title="Permalink to this definition">¶</a></dt>
-<dd><p>alias of <a class="reference internal" href="#PyLTSpice.LTSpice_RawRead.LTSpiceRawRead" title="PyLTSpice.LTSpice_RawRead.LTSpiceRawRead"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyLTSpice.LTSpice_RawRead.LTSpiceRawRead</span></code></a></p>
-</dd></dl>
-
-<dl class="py class">
-<dt id="PyLTSpice.LTSpice_RawRead.Trace">
-<em class="property">class </em><code class="sig-prename descclassname">PyLTSpice.LTSpice_RawRead.</code><code class="sig-name descname">Trace</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">datatype</span></em>, <em class="sig-param"><span class="n">datalen</span></em>, <em class="sig-param"><span class="n">axis</span></em>, <em class="sig-param"><span class="n">numerical_type</span><span class="o">=</span><span class="default_value">'real'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#Trace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.Trace" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#PyLTSpice.LTSpice_RawRead.DataSet" title="PyLTSpice.LTSpice_RawRead.DataSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyLTSpice.LTSpice_RawRead.DataSet</span></code></a></p>
-<p>This class is used to represent a trace. It derives from DataSet and implements the additional methods to
-support STEPed simulations.
-This class is constructed by the get_trace() command.
-Data can be accessed through the [] and len() operators, or by the get_wave() method.
-If numpy is available the get_wave() method will return a numpy array.</p>
-<dl class="py method">
-<dt id="PyLTSpice.LTSpice_RawRead.Trace.get_point">
-<code class="sig-name descname">get_point</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">step</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#Trace.get_point"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.Trace.get_point" title="Permalink to this definition">¶</a></dt>
-<dd><p>Implementation of the [] operator. Do not use this method directly.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>n</strong> (<em>int</em>) – item in the array</p></li>
-<li><p><strong>step</strong> (<em>int</em>) – Optional step number</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>float value of the item</p>
+<dd class="field-even"><p>double precision float</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>float</p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="PyLTSpice.LTSpice_RawRead.Trace.get_wave">
-<code class="sig-name descname">get_wave</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">step</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/LTSpice_RawRead.html#Trace.get_wave"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.LTSpice_RawRead.Trace.get_wave" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the data contained in this object. For stepped simulations an argument must be passed specifying the
-the step number. If no steps exist, the argument must be left blank.
-To know whether stepped data exist, the user can use the get_raw_property(‘Flags’) method.</p>
-<p>If numpy is available the get_wave() method will return a numpy array.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>step</strong> (<em>int</em>) – To be used when stepped data exist on the RAW file.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>a List or numpy array (if installed) containing the data contained in this object.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>list or numpy.array</p>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 </div>

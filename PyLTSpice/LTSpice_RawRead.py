@@ -642,7 +642,8 @@ class LTSpiceRawRead(object):
         'DC transfer characteristic',
         'Operating Point',
         'Transient Analysis',
-        'Transfer Function'
+        'Transfer Function',
+        'Noise Spectral Density',
     )
 
     def __init__(self, raw_filename: str, traces_to_read: Union[str, List[str], Tuple[str], None] = '*', **kwargs):
@@ -693,8 +694,8 @@ class LTSpiceRawRead(object):
             self.raw_params[k] = v.strip()
         self.nPoints = int(self.raw_params['No. Points'], 10)
         self.nVariables = int(self.raw_params['No. Variables'], 10)
-        assert self.raw_params['Plotname'] in self.ACCEPTED_PLOTNAMES
-        has_axis = self.raw_params['Plotname'] in ('AC Analysis', 'DC transfer characteristic', 'Transient Analysis')
+
+        has_axis = self.raw_params['Plotname'] not in ('Operating Point', 'Transfer Function',)
 
         self._traces = []
         self.steps = None
@@ -973,11 +974,8 @@ class LTSpiceRawRead(object):
         return self.get_trace(item)
 
     def get_steps(self, **kwargs):
-        """
-        Returns the steps that correspond to the query set in the **kwargs parameters.
-        Example:
-
-        ::
+        """Returns the steps that correspond to the query set in the * * kwargs parameters.
+        Example: ::
 
             raw_read.get_steps(V5=1.2, TEMP=25)
 
@@ -986,9 +984,8 @@ class LTSpiceRawRead(object):
         Note: the correspondence between step numbers and .STEP information is stored on the .log file.
 
         :key kwargs:
-
-            key-value arguments in which the key correspond to a stepped parameter or source name, and the value is the
-            stepped value.
+         key-value arguments in which the key correspond to a stepped parameter or source name, and the value is the
+         stepped value.
 
         :return: The steps that match the query
         :rtype: list[int]
@@ -1047,6 +1044,7 @@ if __name__ == "__main__":
         # filename = 'ac.raw'
         # filename = 'AC - STEP.raw'
         # filename = 'PI_Filter_tf.raw'
+        filename = 'Noise.raw'
         trace_names = '*' # 'V(out)',
         raw_filename = pathjoin(test_directory, filename)
 
