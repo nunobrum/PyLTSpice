@@ -142,8 +142,16 @@
 <span class="sd">LTSpice stores data directly onto the disk during simulation, writing per each time or frequency step the list of</span>
 <span class="sd">values, as exemplified below for a .TRAN simulation.</span>
 
-<span class="sd">     &lt;timestamp 0&gt;&lt;trace 1&gt;&lt;trace 2&gt;&lt;trace 3&gt;&lt;trace 4&gt;.....&lt;trace N&gt;&lt;timestamp 1&gt;&lt;trace 1&gt;&lt;trace2 &gt;...</span>
+<span class="sd">     &lt;timestamp 0&gt;&lt;trace1 0&gt;&lt;trace2 0&gt;&lt;trace3 0&gt;...&lt;traceN 0&gt;</span>
 
+<span class="sd">     &lt;timestamp 1&gt;&lt;trace1 1&gt;&lt;trace2 1&gt;&lt;trace3 1&gt;...&lt;traceN 1&gt;</span>
+
+<span class="sd">     &lt;timestamp 2&gt;&lt;trace1 2&gt;&lt;trace2 2&gt;&lt;trace3 2&gt;...&lt;traceN 2&gt;</span>
+
+<span class="sd">     ...</span>
+
+<span class="sd">     &lt;timestamp T&gt;&lt;trace1 T&gt;&lt;trace2 T&gt;&lt;trace3 T&gt;...&lt;traceN T&gt;</span>
+<span class="sd">     </span>
 <span class="sd">Depending on the type of simulation the type of data changes.</span>
 <span class="sd">On TRAN simulations the timestamp is always stored as 8 bytes float (double) and trace values as a 4 bytes (single).</span>
 <span class="sd">On AC simulations the data is stored in complex format, which includes a real part and an imaginary part, each with 8</span>
@@ -154,10 +162,20 @@
 <span class="sd">Fast Access</span>
 <span class="sd">-----------</span>
 
-<span class="sd">Once a simulation is done, the user can ask LTSpice to optimize the data structure in such that he variables are stored</span>
+<span class="sd">Once a simulation is done, the user can ask LTSpice to optimize the data structure in such that variables are stored</span>
 <span class="sd">contiguously as illustrated below.</span>
 
-<span class="sd">     &lt;timestamp 0&gt;&lt;trace 1&gt;&lt;trace 2&gt;&lt;trace 3&gt;&lt;trace 4&gt;.....&lt;trace N&gt;&lt;timestamp 1&gt;&lt;trace 1&gt;&lt;trace2 &gt;...</span>
+<span class="sd">     &lt;timestamp 0&gt;&lt;timestamp 1&gt;...&lt;timestamp T&gt;</span>
+
+<span class="sd">     &lt;trace1 0&gt;&lt;trace1 1&gt;...&lt;trace1 T&gt;</span>
+
+<span class="sd">     &lt;trace2 0&gt;&lt;trace2 1&gt;...&lt;trace2 T&gt;</span>
+
+<span class="sd">     &lt;trace3 0&gt;&lt;trace3 1&gt;...&lt;trace3 T&gt;</span>
+
+<span class="sd">     ...</span>
+
+<span class="sd">     &lt;traceN T&gt;&lt;traceN T&gt;...&lt;tranceN T&gt;</span>
 
 <span class="sd">This can speed up the data reading. Note that this transformation is not done automatically. Transforming data to Fast</span>
 <span class="sd">Access must be requested by the user. If the transformation is done, it is registered in the Flags: line in the</span>

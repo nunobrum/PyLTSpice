@@ -126,7 +126,11 @@ representation. In this case this section is replaced with a “Values” sectio
 LTSpice stores data directly onto the disk during simulation, writing per each time or frequency step the list of
 values, as exemplified below for a .TRAN simulation.</p>
 <blockquote>
-<div><p>&lt;timestamp 0&gt;&lt;trace 1&gt;&lt;trace 2&gt;&lt;trace 3&gt;&lt;trace 4&gt;…..&lt;trace N&gt;&lt;timestamp 1&gt;&lt;trace 1&gt;&lt;trace2 &gt;…</p>
+<div><p>&lt;timestamp 0&gt;&lt;trace1 0&gt;&lt;trace2 0&gt;&lt;trace3 0&gt;…&lt;traceN 0&gt;</p>
+<p>&lt;timestamp 1&gt;&lt;trace1 1&gt;&lt;trace2 1&gt;&lt;trace3 1&gt;…&lt;traceN 1&gt;</p>
+<p>&lt;timestamp 2&gt;&lt;trace1 2&gt;&lt;trace2 2&gt;&lt;trace3 2&gt;…&lt;traceN 2&gt;</p>
+<p>…</p>
+<p>&lt;timestamp T&gt;&lt;trace1 T&gt;&lt;trace2 T&gt;&lt;trace3 T&gt;…&lt;traceN T&gt;</p>
 </div></blockquote>
 <p>Depending on the type of simulation the type of data changes.
 On TRAN simulations the timestamp is always stored as 8 bytes float (double) and trace values as a 4 bytes (single).
@@ -137,10 +141,15 @@ the integer part.</p>
 </div>
 <div class="section" id="fast-access">
 <h3>Fast Access<a class="headerlink" href="#fast-access" title="Permalink to this headline">¶</a></h3>
-<p>Once a simulation is done, the user can ask LTSpice to optimize the data structure in such that he variables are stored
+<p>Once a simulation is done, the user can ask LTSpice to optimize the data structure in such that variables are stored
 contiguously as illustrated below.</p>
 <blockquote>
-<div><p>&lt;timestamp 0&gt;&lt;trace 1&gt;&lt;trace 2&gt;&lt;trace 3&gt;&lt;trace 4&gt;…..&lt;trace N&gt;&lt;timestamp 1&gt;&lt;trace 1&gt;&lt;trace2 &gt;…</p>
+<div><p>&lt;timestamp 0&gt;&lt;timestamp 1&gt;…&lt;timestamp T&gt;</p>
+<p>&lt;trace1 0&gt;&lt;trace1 1&gt;…&lt;trace1 T&gt;</p>
+<p>&lt;trace2 0&gt;&lt;trace2 1&gt;…&lt;trace2 T&gt;</p>
+<p>&lt;trace3 0&gt;&lt;trace3 1&gt;…&lt;trace3 T&gt;</p>
+<p>…</p>
+<p>&lt;traceN T&gt;&lt;traceN T&gt;…&lt;tranceN T&gt;</p>
 </div></blockquote>
 <p>This can speed up the data reading. Note that this transformation is not done automatically. Transforming data to Fast
 Access must be requested by the user. If the transformation is done, it is registered in the Flags: line in the

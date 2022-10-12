@@ -109,11 +109,15 @@ LTSpice stores data directly onto the disk during simulation, writing per each t
 values, as exemplified below for a .TRAN simulation.
 
      <timestamp 0><trace1 0><trace2 0><trace3 0>...<traceN 0>
-     <timestamp 1><trace1 1><trace2 1><trace3 1>...<traceN 1>
-     <timestamp 2><trace1 2><trace2 2><trace3 2>...<traceN 2>
-     ...
-     <timestamp T><trace1 T><trace2 T><trace3 T>...<traceN T>
 
+     <timestamp 1><trace1 1><trace2 1><trace3 1>...<traceN 1>
+
+     <timestamp 2><trace1 2><trace2 2><trace3 2>...<traceN 2>
+
+     ...
+
+     <timestamp T><trace1 T><trace2 T><trace3 T>...<traceN T>
+     
 Depending on the type of simulation the type of data changes.
 On TRAN simulations the timestamp is always stored as 8 bytes float (double) and trace values as a 4 bytes (single).
 On AC simulations the data is stored in complex format, which includes a real part and an imaginary part, each with 8
@@ -128,11 +132,16 @@ Once a simulation is done, the user can ask LTSpice to optimize the data structu
 contiguously as illustrated below.
 
      <timestamp 0><timestamp 1>...<timestamp T>
+
      <trace1 0><trace1 1>...<trace1 T>
+
      <trace2 0><trace2 1>...<trace2 T>
+
      <trace3 0><trace3 1>...<trace3 T>
+
      ...
-     <trace1 T><trace2 T>...<tranceN T>
+
+     <traceN T><traceN T>...<tranceN T>
 
 This can speed up the data reading. Note that this transformation is not done automatically. Transforming data to Fast
 Access must be requested by the user. If the transformation is done, it is registered in the Flags: line in the
