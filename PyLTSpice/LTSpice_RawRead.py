@@ -539,7 +539,10 @@ class Trace(DataSet):
         :rtype: float
         """
         if self.axis is None:
-            return self.data[n]
+            if n != 0:
+                return self.data[n]
+            else:
+                return self.data[step]  # This is for the case of stepped operation point simulation.
         else:
             return self.data[self.axis.step_offset(step) + n]
 
@@ -863,16 +866,20 @@ class LTSpiceRawRead(object):
                 self._load_step_information(raw_filename)
             except LTSPiceReadException:
                 print("LOG file not found or problems happened while reading it. Auto-detecting steps")
-                number_of_steps = 0
-                for v in self.axis:
-                    if v == self.axis[0]:
-                        number_of_steps += 1
+                if has_axis:
+                    number_of_steps = 0
+                    for v in self.axis:
+                        if v == self.axis[0]:
+                            number_of_steps += 1
+                else:
+                    number_of_steps = self.nPoints
                 self.steps = [{'run': i+1} for i in range(number_of_steps)]
 
             if self.steps is not None:
-                # Individual access to the Trace Classes, this information is stored in the Axis
-                # which is always in position 0
-                self._traces[0]._set_steps(self.steps)
+                if has_axis:
+                    # Individual access to the Trace Classes, this information is stored in the Axis
+                    # which is always in position 0
+                    self._traces[0]._set_steps(self.steps)
 
     def get_raw_property(self, property_name=None):
         """
@@ -939,11 +946,14 @@ class LTSpiceRawRead(object):
         :returns: Array with the X axis
         :rtype: list[float] or numpy.array
         """
-        axis = self.get_trace(0)
-        if axis.whattype == 'time':
-            return axis.get_time_axis(step)
+        if self.axis:
+            axis = self.get_trace(0)
+            if axis.whattype == 'time':
+                return axis.get_time_axis(step)
+            else:
+                return axis.get_wave(step)
         else:
-            return axis.get_wave(step)
+            raise RuntimeError("This RAW file does not have an axis.")
 
     def get_len(self, step: int = 0) -> int:
         """
@@ -1062,8 +1072,11 @@ if __name__ == "__main__":
         # filename = 'ac.raw'
         # filename = 'AC - STEP.raw'
         # filename = 'PI_Filter_tf.raw'
-        filename = 'Noise.raw'
-        trace_names = '*' # 'V(out)',
+        # filename = 'DC op point - STEP_1.raw'
+        # filename = 'Noise.raw'
+        filename = "test2_gs_000.raw"
+        trace_names = ("run", "V(out)", "V(err)")
+        # trace_names = '*' # 'V(out)',
         raw_filename = pathjoin(test_directory, filename)
 
     LTR = RawRead(raw_filename, trace_names, verbose=True)
@@ -1075,7 +1088,10 @@ if __name__ == "__main__":
         trace_names = LTR.get_trace_names()
 
     traces = [LTR.get_trace(trace) for trace in trace_names]
-    steps_data = LTR.get_steps()
+    if LTR.axis is not None:
+        steps_data = LTR.get_steps()
+    else:
+        steps_data = [0]
     print("Steps read are :", list(steps_data))
 
     if 'complex' in LTR.flags:
@@ -1100,7 +1116,10 @@ if __name__ == "__main__":
             if 'log' in LTR.flags:
                 ax.set_xscale('log')
             for step_i in steps_data:
-                x = LTR.get_axis(step_i)
+                if LTR.axis:
+                    x = LTR.get_axis(step_i)
+                else:
+                    x = np.arange(LTR.nPoints)
                 y = traces[i].get_wave(step_i)
                 if 'complex' in LTR.flags:
                     x = mag(x)
