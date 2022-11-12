@@ -228,6 +228,10 @@ A more detailed documentation is directly included in the source file docstrings
 * Alternative contact : nuno.brum@gmail.com
 
 ## History ##
+* Version 2.3\
+Supporting the creation of RAW Noise Analysis\
+Bug Fixes (See GitHub Log) 
+
 * Version 2.2\
 Making numpy as an requirement and eliminating all code that avoided the use of numpy\
 Using new packaging tool\
