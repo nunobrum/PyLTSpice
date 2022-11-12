@@ -37,12 +37,14 @@ class Trace(DataSet):
     def __init__(self, name, data, whattype='voltage', numerical_type=''):
         if name == 'time':
             whattype = 'time'
-            numerical_type = 'double'
         elif name == 'frequency':
             whattype = 'frequency'
-            numerical_type = 'complex'
-        elif numerical_type == '':
-            if isinstance(data[0], float32) or isinstance(data[0], float):
+        if numerical_type == '':
+            if name == 'time':
+                numerical_type = 'double'
+            elif name == 'frequency':
+                numerical_type = 'complex'
+            elif isinstance(data[0], float32) or isinstance(data[0], float):
                 numerical_type = 'real'
             elif isinstance(data[0], complex):
                 numerical_type = 'complex'
@@ -63,9 +65,11 @@ class LTSpiceRawWrite(object):
 
     """
 
-    def __init__(self, plot_name='Transient Analysis', fastacces=True, numtype='real', encoding='utf_16_le'):
+    def __init__(self, plot_name=None, fastacces=True, numtype='real', encoding='utf_16_le'):
         self._traces = list()
         self.flag_numtype = numtype
+        self.flag_forward = False
+        self.flag_log = False
         self.flag_stepped = False
         self.flag_fastaccess = fastacces
         self.plot_name = plot_name
@@ -76,6 +80,10 @@ class LTSpiceRawWrite(object):
 
     def _str_flags(self):
         flags = [self.flag_numtype]
+        if self.flag_forward:
+            flags.append('forward')
+        if self.flag_log:
+            flags.append('log')
         if self.flag_stepped:
             flags.append('stepped')
         if self.flag_fastaccess:
@@ -206,7 +214,8 @@ class LTSpiceRawWrite(object):
         if isinstance(trace_filter, str):
             trace_filter = [trace_filter]
 
-        for flag in other.get_raw_property('Flags').split(' '):
+        other_flags = other.get_raw_property('Flags').split(' ')
+        for flag in other_flags:
             if flag in ('real', 'complex'):
                 other_flag_num_type = flag
                 break
@@ -226,8 +235,11 @@ class LTSpiceRawWrite(object):
         else:  # No traces are present
             # if no X axis is present, copy from the first one
             self.flag_numtype = other_flag_num_type
+            self.flag_log = 'log' in other_flags
+            self.flag_forward = 'forward' in other_flags
+            self.plot_name = other.get_raw_property('Plotname')
             oaxis = other.get_trace(0)
-            new_axis = Trace(oaxis.name, other.get_axis(from_step), oaxis.whattype)
+            new_axis = Trace(oaxis.name, other.get_axis(from_step), oaxis.whattype, oaxis.numerical_type)
             self._traces.append(new_axis)
             force_axis_alignment = False
 

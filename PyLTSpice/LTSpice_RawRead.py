@@ -511,8 +511,10 @@ class Axis(DataSet):
         return self.step_offset(step + 1) - self.step_offset(step)
 
     def __len__(self):
-        assert self.step_info is None, "Len should not be used with stepped data. Use get_gen() instead"
-        return len(self.data)
+        if self.step_info is None:
+            return len(self.data)
+        else:
+            return self.get_len()
 
 
 class Trace(DataSet):
