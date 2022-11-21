@@ -93,7 +93,7 @@ REPLACE_REGXES = {
 }
 
 
-PARAM_REGEX = r"(?<= )%s((\s*=\s*))(?P<value>[\w\*\/\.\+\-\/\*\{\}\(\)\t ]*)(?<!\s)($|\s+)(?!\s*=)"
+PARAM_REGEX = r"(?<= )(?P<replace>%s(\s*=\s*)(?P<value>[\w\*\/\.\+\-\/\*\{\}\(\)\t ]*))(?<!\s)($|\s+)(?!\s*=)"
 SUBCKT_CLAUSE_FIND = r"^.SUBCKT\s+"
 
 # Code Optimization objects, avoiding repeated compilation of regular expressions
@@ -564,7 +564,7 @@ class SpiceCircuit(object):
         regx = re.compile(PARAM_REGEX % param, re.IGNORECASE)
         param_line, match = self._get_line_matching('.PARAM', regx)
         if match:
-            start, stop = match.span()
+            start, stop = match.span(regx.groupindex['replace'])
             line = self.netlist[param_line]
             self.netlist[param_line] = line[:start] + "{}={}".format(param, value) + line[stop:]
         else:
