@@ -228,6 +228,9 @@ A more detailed documentation is directly included in the source file docstrings
 * Alternative contact : nuno.brum@gmail.com
 
 ## History ##
+* Version 2.3.1\
+Bug fix on the parameter replacement
+
 * Version 2.3\
 Supporting the creation of RAW Noise Analysis\
 Bug Fixes (See GitHub Log) 
