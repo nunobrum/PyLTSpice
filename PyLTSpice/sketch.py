@@ -6,13 +6,13 @@ Created on Wed Jul 24 14:39:01 2019
 """
 
 import matplotlib.pyplot as plt
-from LTSpice_RawRead import LTSpiceRawRead
+from RawRead import RawRead
 
 test_directory = "C:/Users/Bruce Banner/Documents/GitHub/ADC_experiments/ideal_sims/"
 filename = 'dyn_comparator.raw'
 
 raw_filename = test_directory + filename
-LTR = LTSpiceRawRead(raw_filename)
+LTR = RawRead(raw_filename)
 print(LTR.get_trace_names())
 print(LTR.get_raw_property())
 

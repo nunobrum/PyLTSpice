@@ -1,6 +1,6 @@
 from collections import OrderedDict
 from typing import Iterable
-from PyLTSpice.LTSpiceBatch import SimCommander
+from PyLTSpice.SpiceBatch import SimCommander
 from PyLTSpice.SpiceEditor import ComponentNotFoundError
 
 

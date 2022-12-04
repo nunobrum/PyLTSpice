@@ -27,8 +27,8 @@ import unittest  # performs test
 sys.path.append(
     os.path.abspath((os.path.dirname(os.path.abspath(__file__)) + "/../../")))  # add project root to lib search path
 from PyLTSpice.LTSteps import LTSpiceLogReader
-from PyLTSpice.LTSpiceBatch import SimCommander
-from PyLTSpice.LTSpice_RawRead import LTSpiceRawRead
+from PyLTSpice.SpiceBatch import SimCommander
+from PyLTSpice.RawRead import RawRead
 
 
 # ------------------------------------------------------------------------------
@@ -251,7 +251,7 @@ class test_pyltspice(unittest.TestCase):
         else:
             log_file = "./tests/Batch_Test_1.log"
         log = LTSpiceLogReader(log_file)
-        # raw = LTSpiceRawRead(raw_file)
+        # raw = RawRead(raw_file)
         for measure in assert_data:
             print("measure", measure)
             for step in range(log.step_count):
@@ -268,7 +268,7 @@ class test_pyltspice(unittest.TestCase):
         else:
             raw_file = "./tests/DC op point_1.raw"
             # log_file = "./tests/DC op point_1.log"
-        raw = LTSpiceRawRead(raw_file)
+        raw = RawRead(raw_file)
         traces = [raw.get_trace(trace)[0] for trace in raw.get_trace_names()]
 
         self.assertListEqual(traces, [1.0, 0.5, 4.999999873689376e-05, 4.999999873689376e-05, -4.999999873689376e-05], "Lists are different")
@@ -281,7 +281,7 @@ class test_pyltspice(unittest.TestCase):
             raw_file, log_file = LTC.run().wait_results()
         else:
             raw_file = "./tests/DC op point - STEP_1.raw"
-        raw = LTSpiceRawRead(raw_file)
+        raw = RawRead(raw_file)
         vin = raw.get_trace('V(in)')
 
         for i, b in enumerate(('V(in)', 'V(b4)', 'V(b3)', 'V(b2)', 'V(b1)', 'V(b0)'),):
@@ -298,7 +298,7 @@ class test_pyltspice(unittest.TestCase):
         else:
             raw_file = "./tests/TRAN_1.raw"
             log_file = "./tests/TRAN_1.log"
-        raw = LTSpiceRawRead(raw_file)
+        raw = RawRead(raw_file)
         log = LTSpiceLogReader(log_file)
         vout = raw.get_trace('V(out)')
         meas = ('t1', 't2', 't3', 't4', 't5',)
@@ -319,7 +319,7 @@ class test_pyltspice(unittest.TestCase):
             raw_file = "./tests/TRAN - STEP_1.raw"
             log_file = "./tests/TRAN - STEP_1.log"
 
-        raw = LTSpiceRawRead(raw_file)
+        raw = RawRead(raw_file)
         log = LTSpiceLogReader(log_file)
         vout = raw.get_trace('V(out)')
         meas = ('t1', 't2', 't3', 't4', 't5',)
@@ -347,7 +347,7 @@ class test_pyltspice(unittest.TestCase):
             R1 = 100
             C1 = 10E-6
         # Compute the RC AC response with the resistor and capacitor values from the netlist.
-        raw = LTSpiceRawRead(raw_file)
+        raw = RawRead(raw_file)
         vout_trace = raw.get_trace('V(out)')
         vin_trace = raw.get_trace('V(in)')
         for point, freq in enumerate(raw.axis):
@@ -374,7 +374,7 @@ class test_pyltspice(unittest.TestCase):
             log_file = "./tests/AC - STEP_1.log"
             C1 = 159.1549e-6  # 159.1549uF
         # Compute the RC AC response with the resistor and capacitor values from the netlist.
-        raw = LTSpiceRawRead(raw_file)
+        raw = RawRead(raw_file)
         vin_trace = raw.get_trace('V(in)')
         vout_trace = raw.get_trace('V(out)')
         for step, step_dict in enumerate(raw.steps):
@@ -399,7 +399,7 @@ class test_pyltspice(unittest.TestCase):
         import pathlib
         DIR = pathlib.Path("./tests")
         raw_file = DIR / "AC - STEP_1.raw"
-        raw = LTSpiceRawRead(raw_file)
+        raw = RawRead(raw_file)
 
 
 # ------------------------------------------------------------------------------

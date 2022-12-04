@@ -628,7 +628,7 @@ class LTSpiceLogReader(object):
         Exports the measurement information to a tab separated value (.tsv) format. If step data is found, it is
         included in the exported file.
 
-        When using export data together with LTSpiceBatch.py classes, it may be helpful to append data to an existing
+        When using export data together with SpiceBatch.py classes, it may be helpful to append data to an existing
         file. For this purpose, the user can user the append_with_line_prefix argument to indicate that an append should
         be done. And in this case, the user must provide a string that will identify the LTSpice batch run.
 
