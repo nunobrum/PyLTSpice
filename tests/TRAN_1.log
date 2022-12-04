@@ -1,4 +1,4 @@
-Circuit: * C:\sandbox\PyLTSpice_GitHub_nunobrum\tests\TRAN.asc
+Circuit: * C:\sandbox\PySpice\tests\TRAN.asc
 
 .OP point found by inspection.
 
@@ -9,8 +9,8 @@ t4: v(out)=0.981665 at 0.004
 t5: v(out)=0.993262 at 0.005
 
 
-Date: Sun Oct 09 21:56:31 2022
-Total elapsed time: 0.009 seconds.
+Date: Sun Dec 04 22:37:15 2022
+Total elapsed time: 0.024 seconds.
 
 tnom = 27
 temp = 27

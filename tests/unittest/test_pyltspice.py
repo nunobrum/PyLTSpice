@@ -33,7 +33,7 @@ from PyLTSpice.RawRead import RawRead
 
 # ------------------------------------------------------------------------------
 debugging = False
-has_ltspice = False
+has_ltspice = True
 # ------------------------------------------------------------------------------
 
 
@@ -54,7 +54,7 @@ class test_pyltspice(unittest.TestCase):
             self.sim_files.append((raw_file, log_file))
 
         # select spice model
-        LTC = SimCommander("tests/Batch_Test.asc")
+        LTC = SimCommander("../../tests/Batch_Test.asc")
         LTC.set_parameters(res=0, cap=100e-6)
         LTC.set_component_value('R2', '2k')  # Modifying the value of a resistor
         LTC.set_component_value('R1', '4k')
@@ -245,7 +245,7 @@ class test_pyltspice(unittest.TestCase):
             ]
         }
         if has_ltspice:
-            LTC = SimCommander("./tests/Batch_Test.asc")
+            LTC = SimCommander("../../tests/Batch_Test.asc")
             raw_file, log_file = LTC.run().wait_results()
             print(raw_file, log_file)
         else:
@@ -263,7 +263,7 @@ class test_pyltspice(unittest.TestCase):
     def test_operating_point(self):
         """Operating Point Simulation Test"""
         if has_ltspice:
-            LTC = SimCommander("./tests/DC op point.asc")
+            LTC = SimCommander("../../tests/DC op point.asc")
             raw_file, log_file = LTC.run().wait_results()
         else:
             raw_file = "./tests/DC op point_1.raw"
@@ -277,7 +277,7 @@ class test_pyltspice(unittest.TestCase):
     def test_operating_point_step(self):
         """Operating Point Simulation with Steps """
         if has_ltspice:
-            LTC = SimCommander("./tests/DC op point - STEP.asc")
+            LTC = SimCommander("../../tests/DC op point - STEP.asc")
             raw_file, log_file = LTC.run().wait_results()
         else:
             raw_file = "./tests/DC op point - STEP_1.raw"
@@ -293,7 +293,7 @@ class test_pyltspice(unittest.TestCase):
     def test_transient(self):
         """Transient Simulation test """
         if has_ltspice:
-            LTC = SimCommander("./tests/TRAN.asc")
+            LTC = SimCommander("../../tests/TRAN.asc")
             raw_file, log_file = LTC.run().wait_results()
         else:
             raw_file = "./tests/TRAN_1.raw"
@@ -313,7 +313,7 @@ class test_pyltspice(unittest.TestCase):
     def test_transient_steps(self):
         """Transient simulation with stepped data."""
         if has_ltspice:
-            LTC = SimCommander("./tests/TRAN - STEP.asc")
+            LTC = SimCommander("../../tests/TRAN - STEP.asc")
             raw_file, log_file = LTC.run().wait_results()
         else:
             raw_file = "./tests/TRAN - STEP_1.raw"
@@ -337,7 +337,7 @@ class test_pyltspice(unittest.TestCase):
         """AC Analysis Test"""
         from numpy import pi, angle
         if has_ltspice:
-            LTC = SimCommander("./tests/AC.asc")
+            LTC = SimCommander("../../tests/AC.asc")
             raw_file, log_file = LTC.run().wait_results()
             R1 = LTC.get_component_floatvalue('R1')
             C1 = LTC.get_component_floatvalue('C1')
@@ -366,7 +366,7 @@ class test_pyltspice(unittest.TestCase):
         """AC Analysis Test with steps"""
         from numpy import pi, angle
         if has_ltspice:
-            LTC = SimCommander("./tests/AC - STEP.asc")
+            LTC = SimCommander("../../tests/AC - STEP.asc")
             raw_file, log_file = LTC.run().wait_results()
             C1 = LTC.get_component_floatvalue('C1')
         else:
@@ -397,7 +397,7 @@ class test_pyltspice(unittest.TestCase):
     def test_pathlib(self):
         """pathlib support"""
         import pathlib
-        DIR = pathlib.Path("./tests")
+        DIR = pathlib.Path("../tests")
         raw_file = DIR / "AC - STEP_1.raw"
         raw = RawRead(raw_file)
 
