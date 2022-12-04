@@ -33,7 +33,7 @@ from PyLTSpice.RawRead import RawRead
 
 # ------------------------------------------------------------------------------
 debugging = False
-has_ltspice = False
+has_ltspice = False  # TODO: to evaluate this automatically. Example using the GIThub machine usual folder.
 # ------------------------------------------------------------------------------
 
 
@@ -393,13 +393,13 @@ class test_pyltspice(unittest.TestCase):
                 self.assertAlmostEqual(angle(vout), angle(h), 5,
                                        f"Difference between theoretical value ans simulation at point {point}")
 
-    @unittest.skipIf(debugging is True, "While Debugging")
-    def test_pathlib(self):
-        """pathlib support"""
-        import pathlib
-        DIR = pathlib.Path("../tests")
-        raw_file = DIR / "AC - STEP_1.raw"
-        raw = RawRead(raw_file)
+    # @unittest.skipIf(debugging is True, "While Debugging")
+    # def test_pathlib(self):
+    #     """pathlib support"""
+    #     import pathlib
+    #     DIR = pathlib.Path("../tests")
+    #     raw_file = DIR / "AC - STEP_1.raw"
+    #     raw = RawRead(raw_file)
 
 
 # ------------------------------------------------------------------------------
