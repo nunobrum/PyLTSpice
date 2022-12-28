@@ -85,7 +85,7 @@ import os
 import sys
 from collections import OrderedDict
 from typing import Union, Iterable, List
-from PyLTSpice.detect_encoding import detect_encoding
+from .detect_encoding import detect_encoding
 
 if __name__ == "__main__":
     def message(*strs):

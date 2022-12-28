@@ -208,8 +208,8 @@ from struct import unpack
 from typing import Union, List, Tuple
 from pathlib import Path
 
-from PyLTSpice.RawClasses import Axis, Trace, DummyTrace, SpiceReadException
-from PyLTSpice.detect_encoding import detect_encoding
+from .RawClasses import Axis, Trace, DummyTrace, SpiceReadException
+from .detect_encoding import detect_encoding
 
 import numpy as np
 from numpy import zeros, complex128, float32, float64, frombuffer, angle

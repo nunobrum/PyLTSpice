@@ -1,7 +1,7 @@
 from collections import OrderedDict
 from typing import Iterable
-from PyLTSpice.SpiceBatch import SimCommander
-from PyLTSpice.SpiceEditor import ComponentNotFoundError
+from .SpiceBatch import SimCommander
+from .SpiceEditor import ComponentNotFoundError
 
 
 class SimAnalysis(object):

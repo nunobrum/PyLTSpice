@@ -11,8 +11,7 @@ LTC.set_parameters(res=0, cap=100e-6)
 LTC.set_component_value('R2', '2k')  # Modifying the value of a resistor
 LTC.set_component_value('R1', '4k')
 LTC.set_element_model('V3', "SINE(0 1 3k 0 0 0)")  # Modifying the
-LTC.set_component_value('XU1:C2', 20e-12)  # modifying a
-# define simulation
+LTC.set_component_value('XU1:C2', 20e-12)  # modifying a define simulation
 LTC.add_instructions(
     "; Simulation settings",
     ".param run = 0"
