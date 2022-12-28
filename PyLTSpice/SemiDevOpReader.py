@@ -2,7 +2,7 @@
 # coding=utf-8
 
 # -------------------------------------------------------------------------------
-# Name:        LTSpice_SemiDevOpReader.py
+# Name:        SemiDevOpReader.py
 # Purpose:     Read Semiconductor Device Operating Points from a log file
 #
 # Author:      Nuno Brum (nuno.brum@gmail.com)

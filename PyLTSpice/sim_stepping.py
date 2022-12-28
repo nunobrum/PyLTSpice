@@ -17,7 +17,7 @@ __copyright__ = "Copyright 2017, Fribourg Switzerland"
 
 from typing import Callable, Any
 from typing import Iterable
-from PyLTSpice.LTSpiceBatch import SimCommander
+from .SpiceBatch import SimCommander
 
 
 class StepInfo(object):

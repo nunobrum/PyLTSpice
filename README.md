@@ -1,28 +1,28 @@
 # README #
 
-PySpicer is a toolchain of python utilities design to interact with LTSpice Electronic Simulator.
+PySpicer is a toolchain of python utilities design to interact with LTSpice and NGSpice Electronic Simulator.
 
 ## What is contained in this repository ##
 
 * __LTSteps.py__
 An utility that extracts from LTSpice output files data, and formats it for import in a spreadsheet, such like Excel or Calc.
 
-* __LTSpice_RawRead.py__
+* __RawRead.py__
 A pure python class that serves to read raw files into a python class.
 
-* __LTSpice_RawWrite.py__
-A class to write RAW files that can be read by LTSpice Application.
+* __RawWrite.py__
+A class to write RAW files that can be read by LTSpice Wave Application.
 
 * __Histogram.py__
 A python script that uses numpy and matplotlib to create an histogram and calculate the sigma deviations. This is useful for Monte-Carlo analysis.
 
-* __LTSpiceBatch.py__
-This is a script to launch LTSpice Simulations. This is useful because:
+* __SpiceBatch.py__
+This is a script to launch Spice Simulations. This is useful because:
 
     - Can overcome the limitation of only stepping 3 parameters
     - Different types of simulations .TRAN .AC .NOISE can be run in a single batch
     - The RAW Files are smaller and easier to treat
-    - When used with the LTSpiceRaw_Reader.py and LTSteps.py, validation of the circuit can be done automatically.
+    - When used with the RawRead.py and LTSteps.py, validation of the circuit can be done automatically.
     - Different models can be simulated in a single batch, by using the following instructions:
         - `set_element_model('D1', '1N4148') # Replaces the Diode D1 with the model 1N4148 `  
         - `set_component_value('R2', '33k') # Replaces the value of R2 by 33k`  
@@ -58,16 +58,16 @@ More comprehensive documentation can be found in https://pyltspice.readthedocs.i
 GNU V3 License
 (refer to the LICENSE file)
 
-### LTSpice_RawRead.py ###
-The example below reads the data from a LTSpice Simulation called
+### RawRead.py ###
+The example below reads the data from a Spice Simulation called
 "TRAN - STEP.raw" and displays all steps of the "I(R1)" trace in a matplotlib plot
 
  ```python
-from PyLTSpice.LTSpice_RawRead import LTSpiceRawRead
+from PyLTSpice import RawRead
 
 from matplotlib import pyplot as plt
 
-LTR = LTSpiceRawRead("TRAN - STEP.raw")
+LTR = RawRead("TRAN - STEP.raw")
 
 print(LTR.get_trace_names())
 print(LTR.get_raw_property())
@@ -83,14 +83,14 @@ plt.legend()  # order a legend
 plt.show()
  ```   
 
-### LTSpice_RawWrite.py ###
+### RawWrite.py ###
 The following example writes a RAW file with a 3 milliseconds transient simulation sine with a
 10kHz and a cosine with 9.997kHz
  ```python
 import numpy as np
-from PyLTSpice.LTSpice_RawWrite import Trace, LTSpiceRawWrite
+from PyLTSpice import Trace, RawWrite
 
-LW = LTSpiceRawWrite()
+LW = RawWrite()
 tx = Trace('time', np.arange(0.0, 3e-3, 997E-11))
 vy = Trace('N001', np.sin(2 * np.pi * tx.data * 10000))
 vz = Trace('N002', np.cos(2 * np.pi * tx.data * 9970))
@@ -102,8 +102,8 @@ LW.save("teste_w.raw")
  ```   
 
 
-### LTSpice_Batch ###
-This module is used to launch LTSPice simulations. Results then can be processed with either the LTSpiceRawRead
+### SpiceBatch ###
+This module is used to launch LTSPice simulations. Results then can be processed with either the RawRead
 or with the LTSteps module to read the log file which can contain .MEAS results.
 
 The script will firstly invoke the LTSpice in command line to generate a netlist, and then this netlist can be
@@ -113,7 +113,7 @@ Here follows an example of operation.
 
 ```python
 import os
-from PyLTSpice.LTSpiceBatch import SimCommander
+from PyLTSpice import SimCommander
 
 def processing_data(raw_file, log_file):
     print("Handling the simulation data of %s, log file %s" % (raw_file, log_file))
@@ -217,7 +217,7 @@ Options:
                         Name of the image File. extension 'png'    
  ```
 
-### LTSpice_SemiDevOpReader.py ###
+### SemiDevOpReader.py ###
 This module is used to read from LTSpice log files Semiconductor Devices Operating Point Information.
 A more detailed documentation is directly included in the source file docstrings.
 
@@ -228,6 +228,9 @@ A more detailed documentation is directly included in the source file docstrings
 * Alternative contact : nuno.brum@gmail.com
 
 ## History ##
+* Version 3.0\
+Eliminating the LTSpice prefixes from files and classes. 
+
 * Version 2.3.1\
 Bug fix on the parameter replacement
 

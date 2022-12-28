@@ -27,13 +27,13 @@ import unittest  # performs test
 sys.path.append(
     os.path.abspath((os.path.dirname(os.path.abspath(__file__)) + "/../../")))  # add project root to lib search path
 from PyLTSpice.LTSteps import LTSpiceLogReader
-from PyLTSpice.LTSpiceBatch import SimCommander
-from PyLTSpice.LTSpice_RawRead import LTSpiceRawRead
+from PyLTSpice.SpiceBatch import SimCommander
+from PyLTSpice.RawRead import RawRead
 
 
 # ------------------------------------------------------------------------------
 debugging = False
-has_ltspice = False
+has_ltspice = False  # TODO: to evaluate this automatically. Example using the GIThub machine usual folder.
 # ------------------------------------------------------------------------------
 
 
@@ -54,7 +54,7 @@ class test_pyltspice(unittest.TestCase):
             self.sim_files.append((raw_file, log_file))
 
         # select spice model
-        LTC = SimCommander("tests/Batch_Test.asc")
+        LTC = SimCommander("../../tests/Batch_Test.asc")
         LTC.set_parameters(res=0, cap=100e-6)
         LTC.set_component_value('R2', '2k')  # Modifying the value of a resistor
         LTC.set_component_value('R1', '4k')
@@ -245,13 +245,13 @@ class test_pyltspice(unittest.TestCase):
             ]
         }
         if has_ltspice:
-            LTC = SimCommander("./tests/Batch_Test.asc")
+            LTC = SimCommander("../../tests/Batch_Test.asc")
             raw_file, log_file = LTC.run().wait_results()
             print(raw_file, log_file)
         else:
             log_file = "./tests/Batch_Test_1.log"
         log = LTSpiceLogReader(log_file)
-        # raw = LTSpiceRawRead(raw_file)
+        # raw = RawRead(raw_file)
         for measure in assert_data:
             print("measure", measure)
             for step in range(log.step_count):
@@ -263,12 +263,12 @@ class test_pyltspice(unittest.TestCase):
     def test_operating_point(self):
         """Operating Point Simulation Test"""
         if has_ltspice:
-            LTC = SimCommander("./tests/DC op point.asc")
+            LTC = SimCommander("../../tests/DC op point.asc")
             raw_file, log_file = LTC.run().wait_results()
         else:
             raw_file = "./tests/DC op point_1.raw"
             # log_file = "./tests/DC op point_1.log"
-        raw = LTSpiceRawRead(raw_file)
+        raw = RawRead(raw_file)
         traces = [raw.get_trace(trace)[0] for trace in raw.get_trace_names()]
 
         self.assertListEqual(traces, [1.0, 0.5, 4.999999873689376e-05, 4.999999873689376e-05, -4.999999873689376e-05], "Lists are different")
@@ -277,11 +277,11 @@ class test_pyltspice(unittest.TestCase):
     def test_operating_point_step(self):
         """Operating Point Simulation with Steps """
         if has_ltspice:
-            LTC = SimCommander("./tests/DC op point - STEP.asc")
+            LTC = SimCommander("../../tests/DC op point - STEP.asc")
             raw_file, log_file = LTC.run().wait_results()
         else:
             raw_file = "./tests/DC op point - STEP_1.raw"
-        raw = LTSpiceRawRead(raw_file)
+        raw = RawRead(raw_file)
         vin = raw.get_trace('V(in)')
 
         for i, b in enumerate(('V(in)', 'V(b4)', 'V(b3)', 'V(b2)', 'V(b1)', 'V(b0)'),):
@@ -293,12 +293,12 @@ class test_pyltspice(unittest.TestCase):
     def test_transient(self):
         """Transient Simulation test """
         if has_ltspice:
-            LTC = SimCommander("./tests/TRAN.asc")
+            LTC = SimCommander("../../tests/TRAN.asc")
             raw_file, log_file = LTC.run().wait_results()
         else:
             raw_file = "./tests/TRAN_1.raw"
             log_file = "./tests/TRAN_1.log"
-        raw = LTSpiceRawRead(raw_file)
+        raw = RawRead(raw_file)
         log = LTSpiceLogReader(log_file)
         vout = raw.get_trace('V(out)')
         meas = ('t1', 't2', 't3', 't4', 't5',)
@@ -313,13 +313,13 @@ class test_pyltspice(unittest.TestCase):
     def test_transient_steps(self):
         """Transient simulation with stepped data."""
         if has_ltspice:
-            LTC = SimCommander("./tests/TRAN - STEP.asc")
+            LTC = SimCommander("../../tests/TRAN - STEP.asc")
             raw_file, log_file = LTC.run().wait_results()
         else:
             raw_file = "./tests/TRAN - STEP_1.raw"
             log_file = "./tests/TRAN - STEP_1.log"
 
-        raw = LTSpiceRawRead(raw_file)
+        raw = RawRead(raw_file)
         log = LTSpiceLogReader(log_file)
         vout = raw.get_trace('V(out)')
         meas = ('t1', 't2', 't3', 't4', 't5',)
@@ -337,7 +337,7 @@ class test_pyltspice(unittest.TestCase):
         """AC Analysis Test"""
         from numpy import pi, angle
         if has_ltspice:
-            LTC = SimCommander("./tests/AC.asc")
+            LTC = SimCommander("../../tests/AC.asc")
             raw_file, log_file = LTC.run().wait_results()
             R1 = LTC.get_component_floatvalue('R1')
             C1 = LTC.get_component_floatvalue('C1')
@@ -347,7 +347,7 @@ class test_pyltspice(unittest.TestCase):
             R1 = 100
             C1 = 10E-6
         # Compute the RC AC response with the resistor and capacitor values from the netlist.
-        raw = LTSpiceRawRead(raw_file)
+        raw = RawRead(raw_file)
         vout_trace = raw.get_trace('V(out)')
         vin_trace = raw.get_trace('V(in)')
         for point, freq in enumerate(raw.axis):
@@ -366,7 +366,7 @@ class test_pyltspice(unittest.TestCase):
         """AC Analysis Test with steps"""
         from numpy import pi, angle
         if has_ltspice:
-            LTC = SimCommander("./tests/AC - STEP.asc")
+            LTC = SimCommander("../../tests/AC - STEP.asc")
             raw_file, log_file = LTC.run().wait_results()
             C1 = LTC.get_component_floatvalue('C1')
         else:
@@ -374,7 +374,7 @@ class test_pyltspice(unittest.TestCase):
             log_file = "./tests/AC - STEP_1.log"
             C1 = 159.1549e-6  # 159.1549uF
         # Compute the RC AC response with the resistor and capacitor values from the netlist.
-        raw = LTSpiceRawRead(raw_file)
+        raw = RawRead(raw_file)
         vin_trace = raw.get_trace('V(in)')
         vout_trace = raw.get_trace('V(out)')
         for step, step_dict in enumerate(raw.steps):
@@ -393,13 +393,13 @@ class test_pyltspice(unittest.TestCase):
                 self.assertAlmostEqual(angle(vout), angle(h), 5,
                                        f"Difference between theoretical value ans simulation at point {point}")
 
-    @unittest.skipIf(debugging is True, "While Debugging")
-    def test_pathlib(self):
-        """pathlib support"""
-        import pathlib
-        DIR = pathlib.Path("./tests")
-        raw_file = DIR / "AC - STEP_1.raw"
-        raw = LTSpiceRawRead(raw_file)
+    # @unittest.skipIf(debugging is True, "While Debugging")
+    # def test_pathlib(self):
+    #     """pathlib support"""
+    #     import pathlib
+    #     DIR = pathlib.Path("../tests")
+    #     raw_file = DIR / "AC - STEP_1.raw"
+    #     raw = RawRead(raw_file)
 
 
 # ------------------------------------------------------------------------------

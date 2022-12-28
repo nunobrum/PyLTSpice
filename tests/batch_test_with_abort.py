@@ -1,5 +1,5 @@
 import os
-from PyLTSpice.LTSpiceBatch import SimCommander
+from PyLTSpice.SpiceBatch import SimCommander
 
 def processing_data(raw_file, log_file):
     print("Handling the simulation data of %s, log file %s" % (raw_file, log_file))
