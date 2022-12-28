@@ -3,7 +3,7 @@
 
 # -------------------------------------------------------------------------------
 # Name:        Histogram.py
-# Purpose:     Make an histogram plot based on the results of LTSpice.py
+# Purpose:     Make an histogram plot based on the results of an LTSpice log file
 #
 # Author:      Nuno Brum (nuno.brum@gmail.com)
 #
