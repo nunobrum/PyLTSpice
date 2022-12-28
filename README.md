@@ -63,7 +63,7 @@ The example below reads the data from a Spice Simulation called
 "TRAN - STEP.raw" and displays all steps of the "I(R1)" trace in a matplotlib plot
 
  ```python
-from PyLTSpice.RawRead import RawRead
+from PyLTSpice import RawRead
 
 from matplotlib import pyplot as plt
 
@@ -88,7 +88,7 @@ The following example writes a RAW file with a 3 milliseconds transient simulati
 10kHz and a cosine with 9.997kHz
  ```python
 import numpy as np
-from PyLTSpice.RawWrite import Trace, RawWrite
+from PyLTSpice import Trace, RawWrite
 
 LW = RawWrite()
 tx = Trace('time', np.arange(0.0, 3e-3, 997E-11))
@@ -113,7 +113,7 @@ Here follows an example of operation.
 
 ```python
 import os
-from PyLTSpice.SpiceBatch import SimCommander
+from PyLTSpice import SimCommander
 
 def processing_data(raw_file, log_file):
     print("Handling the simulation data of %s, log file %s" % (raw_file, log_file))
@@ -228,6 +228,9 @@ A more detailed documentation is directly included in the source file docstrings
 * Alternative contact : nuno.brum@gmail.com
 
 ## History ##
+* Version 3.0\
+Eliminating the LTSpice prefixes from files and classes. 
+
 * Version 2.3.1\
 Bug fix on the parameter replacement
 
