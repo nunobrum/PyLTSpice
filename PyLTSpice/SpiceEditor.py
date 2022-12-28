@@ -88,7 +88,7 @@ REPLACE_REGXES = {
                                                         # This implementation replaces everything after the 2 first nets
     'W': r"^(?P<designator>W§?\w+)(?P<nodes>(\s+\S+){2})\s+(?P<value>.*)$",  # Current Controlled Switch
                                                         # This implementation replaces everything after the 2 first nets
-    'X': r"^(?P<designator>X§?\w+)(?P<nodes>(\s+\S+){1,99}?)\s+(?P<value>\w+)(\s+params:)?(?P<params>\s+\w+\s*=\s*\S+)*\s*$",  # Sub-circuit, Parameter substitution not supported
+    'X': r"^(?P<designator>X§?\w+)(?P<nodes>(\s+\S+){1,99}?)\s+(?P<value>\w+)(\s+params:)?(?P<params>(\s+\w+\s*=\s*[\d\w{}()\-\+\*/]+)*)\s*\\?$",  # Sub-circuit, Parameter substitution not supported
     'Z': r"^(?P<designator>Z§?\w+)(?P<nodes>(\s+\S+){3})\s+(?P<value>\w+).*$",  # MESFET and IBGT. TODO: Parameters substitution not supported
 }
 
@@ -346,7 +346,7 @@ class SpiceCircuit(object):
         if m:
             subcircuit_name = m.group('value')  # last_token of the line before Params:
         else:
-            raise UnrecognizedSyntaxError(sub_circuit_instance, regxstr)
+            raise UnrecognizedSyntaxError(sub_circuit_instance, REPLACE_REGXES['X'])
 
         line_no = 0
         reg_subckt = re.compile(SUBCKT_CLAUSE_FIND + subcircuit_name, re.IGNORECASE)
@@ -414,7 +414,7 @@ class SpiceCircuit(object):
         line = self.netlist[line_no]
         m = regex.match(line)
         if m is None:
-            raise UnrecognizedSyntaxError(line, regxstr)
+            raise UnrecognizedSyntaxError(line, REPLACE_REGXES[prefix])
             # print("Unsupported line ""{}""".format(line))
         else:
             start = m.start('value')
@@ -514,9 +514,9 @@ class SpiceCircuit(object):
         line = self.netlist[line_no]
         m = regex.match(line)
         if m is None:
-            error_msg = 'Unsupported line "{}"\nExpected format is "{}"'.format(line, regxstr)
+            error_msg = 'Unsupported line "{}"\nExpected format is "{}"'.format(line, REPLACE_REGXES[prefix])
             self.logger.error(error_msg)
-            raise UnrecognizedSyntaxError(line, regxstr)
+            raise UnrecognizedSyntaxError(error_msg)
 
         info = m.groupdict()
         info['line'] = line_no  # adding the line number to the component information
@@ -821,7 +821,7 @@ class SpiceEditor(SpiceCircuit):
             component = component_split[-1] # This is the last component to modify
 
             if modified_path in self.modified_subcircuits:  # See if this was already a modified subcircuit instance
-                subcircuit = self.modified_subcircuits[circuit_ref]
+                sub_circuit = self.modified_subcircuits[modified_path]
             else:
                 sub_circuit_original = self._get_subcircuit(modified_path)  # If not will look of it.
                 if sub_circuit_original:
