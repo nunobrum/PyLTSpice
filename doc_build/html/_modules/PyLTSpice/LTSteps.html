@@ -1,18 +1,16 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PyLTSpice.LTSteps &#8212; PyLTSpice 2.0 documentation</title>
-    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-    <script src="../../_static/jquery.js"></script>
-    <script src="../../_static/underscore.js"></script>
+    <title>PyLTSpice.LTSteps &#8212; PyLTSpice 3.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
     <script src="../../_static/doctools.js"></script>
-    <script src="../../_static/language_data.js"></script>
+    <script src="../../_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
    
@@ -119,7 +117,7 @@
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span>
-<span class="kn">from</span> <span class="nn">PyLTSpice.detect_encoding</span> <span class="kn">import</span> <span class="n">detect_encoding</span>
+<span class="kn">from</span> <span class="nn">.detect_encoding</span> <span class="kn">import</span> <span class="n">detect_encoding</span>
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
     <span class="k">def</span> <span class="nf">message</span><span class="p">(</span><span class="o">*</span><span class="n">strs</span><span class="p">):</span>
@@ -131,7 +129,7 @@
 
 
 <div class="viewcode-block" id="LTComplex"><a class="viewcode-back" href="../../LTSteps.html#PyLTSpice.LTSteps.LTComplex">[docs]</a><span class="k">class</span> <span class="nc">LTComplex</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Class to represent complex numbers as exported by LTSpice</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">complex_match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\((?P&lt;mag&gt;[^dB]*)(dB)?,(?P&lt;ph&gt;.*)°\)&quot;</span><span class="p">)</span>
@@ -153,7 +151,7 @@
 
 
 <div class="viewcode-block" id="try_convert_value"><a class="viewcode-back" href="../../LTSteps.html#PyLTSpice.LTSteps.try_convert_value">[docs]</a><span class="k">def</span> <span class="nf">try_convert_value</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Tries to convert the string into an integer and if it fails, tries to convert to a float, if it fails, then returns the</span>
 <span class="sd">    value as string.</span>
 
@@ -178,7 +176,7 @@
 
 
 <div class="viewcode-block" id="try_convert_values"><a class="viewcode-back" href="../../LTSteps.html#PyLTSpice.LTSteps.try_convert_values">[docs]</a><span class="k">def</span> <span class="nf">try_convert_values</span><span class="p">(</span><span class="n">values</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Same as try_convert_values but applicable to an iterable</span>
 
 <span class="sd">    :param values: Iterable that returns strings</span>
@@ -193,7 +191,7 @@
 
 
 <div class="viewcode-block" id="reformat_LTSpice_export"><a class="viewcode-back" href="../../LTSteps.html#PyLTSpice.LTSteps.reformat_LTSpice_export">[docs]</a><span class="k">def</span> <span class="nf">reformat_LTSpice_export</span><span class="p">(</span><span class="n">export_file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">tabular_file</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Reads an LTSpice File Export file and writes it back in a format that is more convenient for data treatment.</span>
 
 <span class="sd">    When using the &quot;Export data as text&quot; in the raw file menu the data is already exported in a tabular format.</span>
@@ -257,7 +255,7 @@
 
 
 <div class="viewcode-block" id="LTSpiceExport"><a class="viewcode-back" href="../../LTSteps.html#PyLTSpice.LTSteps.LTSpiceExport">[docs]</a><span class="k">class</span> <span class="nc">LTSpiceExport</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Opens and reads LTSpice export data when using the &quot;Export data as text&quot; in the File Menu on the waveform window.</span>
 
 <span class="sd">    The data is then accessible by using the following attributes implemented in this class.</span>
@@ -325,7 +323,7 @@
 
 
 <div class="viewcode-block" id="LTSpiceLogReader"><a class="viewcode-back" href="../../LTSteps.html#PyLTSpice.LTSteps.LTSpiceLogReader">[docs]</a><span class="k">class</span> <span class="nc">LTSpiceLogReader</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Reads an LTSpice log file and retrieves the step information if it exists. The step information is then accessible</span>
 <span class="sd">    by using the &#39;stepset&#39; property of this class.</span>
 <span class="sd">    This class is intended to be used together with the LTSpice_RawRead to retrieve the runs that are associated with a</span>
@@ -546,7 +544,7 @@
             <span class="n">message</span><span class="p">(</span><span class="s2">&quot;Identified </span><span class="si">%d</span><span class="s2"> steps, read </span><span class="si">%d</span><span class="s2"> measurements&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">step_count</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">measure_count</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        __getitem__ implements</span>
 <span class="sd">        :key: step or measurement name</span>
 <span class="sd">        :return: step or measurement set</span>
@@ -561,7 +559,7 @@
         <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s2">&quot;&#39;</span><span class="si">%s</span><span class="s2">&#39; is not a valid step variable or measurement name&quot;</span> <span class="o">%</span> <span class="n">key</span><span class="p">)</span>
 
 <div class="viewcode-block" id="LTSpiceLogReader.steps_with_parameter_equal_to"><a class="viewcode-back" href="../../LTSteps.html#PyLTSpice.LTSteps.LTSpiceLogReader.steps_with_parameter_equal_to">[docs]</a>    <span class="k">def</span> <span class="nf">steps_with_parameter_equal_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the steps that contain a given condition.</span>
 
 <span class="sd">        :param param: parameter identifier on LTSpice simulation</span>
@@ -578,7 +576,7 @@
         <span class="k">return</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">condition_set</span><span class="p">)</span> <span class="k">if</span> <span class="n">a</span> <span class="o">==</span> <span class="n">v</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="LTSpiceLogReader.steps_with_conditions"><a class="viewcode-back" href="../../LTSteps.html#PyLTSpice.LTSteps.LTSpiceLogReader.steps_with_conditions">[docs]</a>    <span class="k">def</span> <span class="nf">steps_with_conditions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">conditions</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the steps that respect one more more equality conditions</span>
 
 <span class="sd">        :key conditions: parameters within the LTSpice simulation. Values are the matches to be found.</span>
@@ -597,7 +595,7 @@
         <span class="k">return</span> <span class="n">current_set</span></div>
 
 <div class="viewcode-block" id="LTSpiceLogReader.get_step_vars"><a class="viewcode-back" href="../../LTSteps.html#PyLTSpice.LTSteps.LTSpiceLogReader.get_step_vars">[docs]</a>    <span class="k">def</span> <span class="nf">get_step_vars</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the stepped variable names of .</span>
 <span class="sd">        :return: List of step variables.</span>
 <span class="sd">        :rtype: list of str</span>
@@ -605,7 +603,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">stepset</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="LTSpiceLogReader.get_measure_names"><a class="viewcode-back" href="../../LTSteps.html#PyLTSpice.LTSteps.LTSpiceLogReader.get_measure_names">[docs]</a>    <span class="k">def</span> <span class="nf">get_measure_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the names of the measurements read from the log file.</span>
 <span class="sd">        :return: List of measurement names.</span>
 <span class="sd">        :rtype: list of str</span>
@@ -613,7 +611,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="LTSpiceLogReader.get_measure_value"><a class="viewcode-back" href="../../LTSteps.html#PyLTSpice.LTSteps.LTSpiceLogReader.get_measure_value">[docs]</a>    <span class="k">def</span> <span class="nf">get_measure_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">measure</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">complex</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns a measure value on a given step.</span>
 
 <span class="sd">        :param measure: name of the measurement to get</span>
@@ -630,7 +628,7 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="n">measure</span><span class="p">][</span><span class="n">step</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="LTSpiceLogReader.get_measure_values_at_steps"><a class="viewcode-back" href="../../LTSteps.html#PyLTSpice.LTSteps.LTSpiceLogReader.get_measure_values_at_steps">[docs]</a>    <span class="k">def</span> <span class="nf">get_measure_values_at_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">measure</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">steps</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">]):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the measurements taken at a list of steps provided by the steps list.</span>
 
 <span class="sd">        :param measure: name of the measurement to get.</span>
@@ -648,7 +646,7 @@
             <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="n">measure</span><span class="p">][</span><span class="n">step</span><span class="p">]</span> <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">steps</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="LTSpiceLogReader.split_complex_values_on_datasets"><a class="viewcode-back" href="../../LTSteps.html#PyLTSpice.LTSteps.LTSpiceLogReader.split_complex_values_on_datasets">[docs]</a>    <span class="k">def</span> <span class="nf">split_complex_values_on_datasets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Internal function to split the complex values into additional two columns</span>
 <span class="sd">        TODO: Delete the old data and insert new ones the the right position</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -658,11 +656,11 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="n">param</span> <span class="o">+</span> <span class="s1">&#39;_ph&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span><span class="o">.</span><span class="n">ph</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">[</span><span class="n">param</span><span class="p">]]</span></div>
 
 <div class="viewcode-block" id="LTSpiceLogReader.export_data"><a class="viewcode-back" href="../../LTSteps.html#PyLTSpice.LTSteps.LTSpiceLogReader.export_data">[docs]</a>    <span class="k">def</span> <span class="nf">export_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">export_file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">append_with_line_prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Exports the measurement information to a tab separated value (.tsv) format. If step data is found, it is</span>
 <span class="sd">        included in the exported file.</span>
 
-<span class="sd">        When using export data together with LTSpiceBatch.py classes, it may be helpful to append data to an existing</span>
+<span class="sd">        When using export data together with sim_batch.py classes, it may be helpful to append data to an existing</span>
 <span class="sd">        file. For this purpose, the user can user the append_with_line_prefix argument to indicate that an append should</span>
 <span class="sd">        be done. And in this case, the user must provide a string that will identify the LTSpice batch run.</span>
 
@@ -792,12 +790,9 @@
 
 
 <h3>Navigation</h3>
-<p class="caption"><span class="caption-text">Contents:</span></p>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../LTSpiceBatch.html">LTSpiceBatch.py</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../SpiceEditor.html">SpiceEditor.py</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../LTSpice_RawRead.html">LTSpice_RawRead.py</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../LTSpice_RawWrite.html">LTSpice_RawWrite.py</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../LTSteps.html">LTSteps.py</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../Histogram.html">Histogram.py</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../SemiOpLogReader.html">LTSpice_SemiDevOpReader.py</a></li>
@@ -816,12 +811,12 @@
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../../search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 
 
 
@@ -835,10 +830,10 @@
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2021, Nuno Brum.
+      &copy;2023, Nuno Brum.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 6.0.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

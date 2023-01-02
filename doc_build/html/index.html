@@ -1,18 +1,17 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Welcome to PyLTSpice’s documentation! &#8212; PyLTSpice 2.0 documentation</title>
-    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>Welcome to PyLTSpice’s documentation! &#8212; PyLTSpice 3.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/doctools.js"></script>
-    <script src="_static/language_data.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="&lt;no title&gt;" href="modules.html" />
@@ -32,38 +31,71 @@
 
           <div class="body" role="main">
             
-  <div class="section" id="welcome-to-pyltspice-s-documentation">
-<h1>Welcome to PyLTSpice’s documentation!<a class="headerlink" href="#welcome-to-pyltspice-s-documentation" title="Permalink to this headline">¶</a></h1>
+  <section id="welcome-to-pyltspice-s-documentation">
+<h1>Welcome to PyLTSpice’s documentation!<a class="headerlink" href="#welcome-to-pyltspice-s-documentation" title="Permalink to this heading">¶</a></h1>
 <div class="toctree-wrapper compound">
-<p class="caption"><span class="caption-text">Contents:</span></p>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="LTSpiceBatch.html">LTSpiceBatch.py</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="LTSpiceBatch.html#multiprocessing">Multiprocessing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="LTSpiceBatch.html#callbacks">Callbacks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sim_batch.html">LTSpiceBatch.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="SpiceEditor.html">SpiceEditor.py</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="SpiceEditor.html#PyLTSpice.SpiceEditor.ComponentNotFoundError"><code class="docutils literal notranslate"><span class="pre">ComponentNotFoundError</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="SpiceEditor.html#PyLTSpice.SpiceEditor.END_LINE_TERM"><code class="docutils literal notranslate"><span class="pre">END_LINE_TERM</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="SpiceEditor.html#PyLTSpice.SpiceEditor.ParameterNotFoundError"><code class="docutils literal notranslate"><span class="pre">ParameterNotFoundError</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="SpiceEditor.html#PyLTSpice.SpiceEditor.SUBCIRCUIT_DIVIDER"><code class="docutils literal notranslate"><span class="pre">SUBCIRCUIT_DIVIDER</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="SpiceEditor.html#PyLTSpice.SpiceEditor.SpiceCircuit"><code class="docutils literal notranslate"><span class="pre">SpiceCircuit</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="SpiceEditor.html#PyLTSpice.SpiceEditor.SpiceEditor"><code class="docutils literal notranslate"><span class="pre">SpiceEditor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="SpiceEditor.html#PyLTSpice.SpiceEditor.UnrecognizedSyntaxError"><code class="docutils literal notranslate"><span class="pre">UnrecognizedSyntaxError</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="SpiceEditor.html#PyLTSpice.SpiceEditor.format_eng"><code class="docutils literal notranslate"><span class="pre">format_eng()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="SpiceEditor.html#PyLTSpice.SpiceEditor.get_line_command"><code class="docutils literal notranslate"><span class="pre">get_line_command()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="SpiceEditor.html#PyLTSpice.SpiceEditor.scan_eng"><code class="docutils literal notranslate"><span class="pre">scan_eng()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="SpiceEditor.html">SpiceEditor.py</a></li>
-<li class="toctree-l1"><a class="reference internal" href="LTSpice_RawRead.html">LTSpice_RawRead.py</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="LTSpice_RawRead.html#raw-file-structure">RAW File Structure</a></li>
-<li class="toctree-l2"><a class="reference internal" href="LTSpice_RawRead.html#classes-defined">Classes Defined</a></li>
-<li class="toctree-l2"><a class="reference internal" href="LTSpice_RawRead.html#examples">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="raw_read.html">raw_read.py</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="raw_read.html#raw-file-structure">RAW File Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="raw_read.html#classes-defined">Classes Defined</a></li>
+<li class="toctree-l2"><a class="reference internal" href="raw_read.html#examples">Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="raw_read.html#PyLTSpice.raw_read.LTSpiceRawRead"><code class="docutils literal notranslate"><span class="pre">LTSpiceRawRead</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="raw_read.html#PyLTSpice.raw_read.RawRead"><code class="docutils literal notranslate"><span class="pre">RawRead</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="raw_read.html#PyLTSpice.raw_read.consume16bytes"><code class="docutils literal notranslate"><span class="pre">consume16bytes()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="raw_read.html#PyLTSpice.raw_read.consume4bytes"><code class="docutils literal notranslate"><span class="pre">consume4bytes()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="raw_read.html#PyLTSpice.raw_read.consume8bytes"><code class="docutils literal notranslate"><span class="pre">consume8bytes()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="raw_read.html#PyLTSpice.raw_read.read_complex"><code class="docutils literal notranslate"><span class="pre">read_complex()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="raw_read.html#PyLTSpice.raw_read.read_float32"><code class="docutils literal notranslate"><span class="pre">read_float32()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="raw_read.html#PyLTSpice.raw_read.read_float64"><code class="docutils literal notranslate"><span class="pre">read_float64()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="LTSpice_RawWrite.html">LTSpice_RawWrite.py</a></li>
-<li class="toctree-l1"><a class="reference internal" href="LTSteps.html">LTSteps.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="raw_write.html">LTSpice_RawWrite.py</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="raw_write.html#PyLTSpice.raw_write.RawWrite"><code class="docutils literal notranslate"><span class="pre">RawWrite</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="raw_write.html#PyLTSpice.raw_write.Trace"><code class="docutils literal notranslate"><span class="pre">Trace</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="raw_write.html#PyLTSpice.raw_write.tobytes_for_trace"><code class="docutils literal notranslate"><span class="pre">tobytes_for_trace()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="LTSteps.html">LTSteps.py</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="LTSteps.html#PyLTSpice.LTSteps.LTComplex"><code class="docutils literal notranslate"><span class="pre">LTComplex</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="LTSteps.html#PyLTSpice.LTSteps.LTSpiceExport"><code class="docutils literal notranslate"><span class="pre">LTSpiceExport</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="LTSteps.html#PyLTSpice.LTSteps.LTSpiceLogReader"><code class="docutils literal notranslate"><span class="pre">LTSpiceLogReader</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="LTSteps.html#PyLTSpice.LTSteps.message"><code class="docutils literal notranslate"><span class="pre">message()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="LTSteps.html#PyLTSpice.LTSteps.reformat_LTSpice_export"><code class="docutils literal notranslate"><span class="pre">reformat_LTSpice_export()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="LTSteps.html#PyLTSpice.LTSteps.try_convert_value"><code class="docutils literal notranslate"><span class="pre">try_convert_value()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="LTSteps.html#PyLTSpice.LTSteps.try_convert_values"><code class="docutils literal notranslate"><span class="pre">try_convert_values()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="Histogram.html">Histogram.py</a></li>
-<li class="toctree-l1"><a class="reference internal" href="SemiOpLogReader.html">LTSpice_SemiDevOpReader.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="SemiOpLogReader.html">LTSpice_SemiDevOpReader.py</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="SemiOpLogReader.html#PyLTSpice.SemiDevOpReader.opLogReader"><code class="docutils literal notranslate"><span class="pre">opLogReader()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </div>
-</div>
-<div class="section" id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+</section>
+<section id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this heading">¶</a></h1>
 <ul class="simple">
 <li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
 <li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
 <li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
 </ul>
-</div>
+</section>
 
 
           </div>
@@ -82,12 +114,12 @@
 
 
 <h3>Navigation</h3>
-<p class="caption"><span class="caption-text">Contents:</span></p>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="LTSpiceBatch.html">LTSpiceBatch.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sim_batch.html">LTSpiceBatch.py</a></li>
 <li class="toctree-l1"><a class="reference internal" href="SpiceEditor.html">SpiceEditor.py</a></li>
-<li class="toctree-l1"><a class="reference internal" href="LTSpice_RawRead.html">LTSpice_RawRead.py</a></li>
-<li class="toctree-l1"><a class="reference internal" href="LTSpice_RawWrite.html">LTSpice_RawWrite.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="raw_read.html">raw_read.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="raw_write.html">LTSpice_RawWrite.py</a></li>
 <li class="toctree-l1"><a class="reference internal" href="LTSteps.html">LTSteps.py</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Histogram.html">Histogram.py</a></li>
 <li class="toctree-l1"><a class="reference internal" href="SemiOpLogReader.html">LTSpice_SemiDevOpReader.py</a></li>
@@ -105,12 +137,12 @@
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
 
 
 
@@ -124,10 +156,10 @@
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2021, Nuno Brum.
+      &copy;2023, Nuno Brum.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 6.0.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

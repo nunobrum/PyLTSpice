@@ -19,11 +19,11 @@ print(sys.path)
 # -- Project information -----------------------------------------------------
 
 project = 'PyLTSpice'
-copyright = '2021, Nuno Brum'
+copyright = '2023, Nuno Brum'
 author = 'Nuno Brum'
 
 # The full version, including alpha/beta/rc tags
-release = '2.0'
+release = '3.0'
 
 
 # -- General configuration ---------------------------------------------------

@@ -1,10 +1,10 @@
 .. toctree::
    :maxdepth: 4
 
-   LTSpiceBatch
+   sim_batch
    SpiceEditor
-   LTSpice_RawRead
-   LTSpice_RawWrite
+   raw_read
+   raw_write
    LTSteps
    Histogram
    SemiOpLogReader

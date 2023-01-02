@@ -1,6 +1,6 @@
 LTSpice_SemiDevOpReader.py
 ==========================
-.. automodule:: PyLTSpice.LTSpice_SemiDevOpReader
+.. automodule:: PyLTSpice.SemiDevOpReader
    :members:
    :undoc-members:
    :show-inheritance:
