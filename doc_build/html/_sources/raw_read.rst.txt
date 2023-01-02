@@ -1,6 +1,6 @@
-LTSpice_RawRead.py
+raw_read.py
 ==================
-.. automodule:: PyLTSpice.LTSpice_RawRead
+.. automodule:: PyLTSpice.raw_read
    :members:
    :undoc-members:
    :show-inheritance:
