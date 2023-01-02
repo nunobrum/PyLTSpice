@@ -14,7 +14,7 @@
     <script src="_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="LTSpiceBatch.py" href="sim_batch.html" />
+    <link rel="next" title="sim_batch.py" href="sim_batch.html" />
     <link rel="prev" title="Welcome to PyLTSpice’s documentation!" href="index.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
@@ -34,7 +34,20 @@
             
   <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="sim_batch.html">LTSpiceBatch.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sim_batch.html">sim_batch.py</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="sim_batch.html#multiprocessing">Multiprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sim_batch.html#callbacks">Callbacks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sim_batch.html#PyLTSpice.sim_batch.SimCommander"><code class="docutils literal notranslate"><span class="pre">SimCommander</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="sim_batch.html#PyLTSpice.sim_batch.SimCommander.add_LTspiceRunCmdLineSwitches"><code class="docutils literal notranslate"><span class="pre">SimCommander.add_LTspiceRunCmdLineSwitches()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="sim_batch.html#PyLTSpice.sim_batch.SimCommander.kill_all_ltspice"><code class="docutils literal notranslate"><span class="pre">SimCommander.kill_all_ltspice()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="sim_batch.html#PyLTSpice.sim_batch.SimCommander.run"><code class="docutils literal notranslate"><span class="pre">SimCommander.run()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="sim_batch.html#PyLTSpice.sim_batch.SimCommander.setLTspiceRunCommand"><code class="docutils literal notranslate"><span class="pre">SimCommander.setLTspiceRunCommand()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="sim_batch.html#PyLTSpice.sim_batch.SimCommander.updated_stats"><code class="docutils literal notranslate"><span class="pre">SimCommander.updated_stats()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="sim_batch.html#PyLTSpice.sim_batch.SimCommander.wait_completion"><code class="docutils literal notranslate"><span class="pre">SimCommander.wait_completion()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="SpiceEditor.html">SpiceEditor.py</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="SpiceEditor.html#PyLTSpice.SpiceEditor.ComponentNotFoundError"><code class="docutils literal notranslate"><span class="pre">ComponentNotFoundError</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="SpiceEditor.html#PyLTSpice.SpiceEditor.END_LINE_TERM"><code class="docutils literal notranslate"><span class="pre">END_LINE_TERM</span></code></a></li>
@@ -105,7 +118,7 @@
 <li class="toctree-l2"><a class="reference internal" href="raw_read.html#PyLTSpice.raw_read.read_float64"><code class="docutils literal notranslate"><span class="pre">read_float64()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="raw_write.html">LTSpice_RawWrite.py</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="raw_write.html">raw_write.py</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="raw_write.html#PyLTSpice.raw_write.RawWrite"><code class="docutils literal notranslate"><span class="pre">RawWrite</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="raw_write.html#PyLTSpice.raw_write.RawWrite.add_trace"><code class="docutils literal notranslate"><span class="pre">RawWrite.add_trace()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="raw_write.html#PyLTSpice.raw_write.RawWrite.add_traces_from_raw"><code class="docutils literal notranslate"><span class="pre">RawWrite.add_traces_from_raw()</span></code></a></li>
@@ -168,10 +181,10 @@
 <h3>Navigation</h3>
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="sim_batch.html">LTSpiceBatch.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sim_batch.html">sim_batch.py</a></li>
 <li class="toctree-l1"><a class="reference internal" href="SpiceEditor.html">SpiceEditor.py</a></li>
 <li class="toctree-l1"><a class="reference internal" href="raw_read.html">raw_read.py</a></li>
-<li class="toctree-l1"><a class="reference internal" href="raw_write.html">LTSpice_RawWrite.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="raw_write.html">raw_write.py</a></li>
 <li class="toctree-l1"><a class="reference internal" href="LTSteps.html">LTSteps.py</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Histogram.html">Histogram.py</a></li>
 <li class="toctree-l1"><a class="reference internal" href="SemiOpLogReader.html">LTSpice_SemiDevOpReader.py</a></li>
@@ -182,7 +195,7 @@
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
       <li>Previous: <a href="index.html" title="previous chapter">Welcome to PyLTSpice’s documentation!</a></li>
-      <li>Next: <a href="sim_batch.html" title="next chapter">LTSpiceBatch.py</a></li>
+      <li>Next: <a href="sim_batch.html" title="next chapter">sim_batch.py</a></li>
   </ul></li>
 </ul>
 </div>

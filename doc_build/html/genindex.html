@@ -39,6 +39,7 @@
  | <a href="#F"><strong>F</strong></a>
  | <a href="#G"><strong>G</strong></a>
  | <a href="#H"><strong>H</strong></a>
+ | <a href="#K"><strong>K</strong></a>
  | <a href="#L"><strong>L</strong></a>
  | <a href="#M"><strong>M</strong></a>
  | <a href="#N"><strong>N</strong></a>
@@ -63,6 +64,8 @@
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="SpiceEditor.html#PyLTSpice.SpiceEditor.SpiceCircuit.add_library_search_paths">add_library_search_paths() (PyLTSpice.SpiceEditor.SpiceCircuit static method)</a>
+</li>
+      <li><a href="sim_batch.html#PyLTSpice.sim_batch.SimCommander.add_LTspiceRunCmdLineSwitches">add_LTspiceRunCmdLineSwitches() (PyLTSpice.sim_batch.SimCommander method)</a>
 </li>
       <li><a href="raw_write.html#PyLTSpice.raw_write.RawWrite.add_trace">add_trace() (PyLTSpice.raw_write.RawWrite method)</a>
 </li>
@@ -173,6 +176,14 @@
   </ul></td>
 </tr></table>
 
+<h2 id="K">K</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="sim_batch.html#PyLTSpice.sim_batch.SimCommander.kill_all_ltspice">kill_all_ltspice() (PyLTSpice.sim_batch.SimCommander static method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
 <h2 id="L">L</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -198,8 +209,6 @@
     module
 
       <ul>
-        <li><a href="sim_batch.html#module-PyLTSpice.LTSpiceBatch">PyLTSpice.LTSpiceBatch</a>
-</li>
         <li><a href="LTSteps.html#module-PyLTSpice.LTSteps">PyLTSpice.LTSteps</a>
 </li>
         <li><a href="raw_read.html#module-PyLTSpice.raw_read">PyLTSpice.raw_read</a>
@@ -207,6 +216,8 @@
         <li><a href="raw_write.html#module-PyLTSpice.raw_write">PyLTSpice.raw_write</a>
 </li>
         <li><a href="SemiOpLogReader.html#module-PyLTSpice.SemiDevOpReader">PyLTSpice.SemiDevOpReader</a>
+</li>
+        <li><a href="sim_batch.html#module-PyLTSpice.sim_batch">PyLTSpice.sim_batch</a>
 </li>
         <li><a href="SpiceEditor.html#module-PyLTSpice.SpiceEditor">PyLTSpice.SpiceEditor</a>
 </li>
@@ -236,13 +247,6 @@
       <li><a href="SpiceEditor.html#PyLTSpice.SpiceEditor.ParameterNotFoundError">ParameterNotFoundError</a>
 </li>
       <li>
-    PyLTSpice.LTSpiceBatch
-
-      <ul>
-        <li><a href="sim_batch.html#module-PyLTSpice.LTSpiceBatch">module</a>
-</li>
-      </ul></li>
-      <li>
     PyLTSpice.LTSteps
 
       <ul>
@@ -256,8 +260,6 @@
         <li><a href="raw_read.html#module-PyLTSpice.raw_read">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     PyLTSpice.raw_write
 
@@ -265,11 +267,20 @@
         <li><a href="raw_write.html#module-PyLTSpice.raw_write">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     PyLTSpice.SemiDevOpReader
 
       <ul>
         <li><a href="SemiOpLogReader.html#module-PyLTSpice.SemiDevOpReader">module</a>
+</li>
+      </ul></li>
+      <li>
+    PyLTSpice.sim_batch
+
+      <ul>
+        <li><a href="sim_batch.html#module-PyLTSpice.sim_batch">module</a>
 </li>
       </ul></li>
       <li>
@@ -293,10 +304,10 @@
 </li>
       <li><a href="raw_read.html#PyLTSpice.raw_read.read_float32">read_float32() (in module PyLTSpice.raw_read)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="raw_read.html#PyLTSpice.raw_read.read_float64">read_float64() (in module PyLTSpice.raw_read)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="LTSteps.html#PyLTSpice.LTSteps.reformat_LTSpice_export">reformat_LTSpice_export() (in module PyLTSpice.LTSteps)</a>
 </li>
       <li><a href="SpiceEditor.html#PyLTSpice.SpiceEditor.SpiceCircuit.remove_component">remove_component() (PyLTSpice.SpiceEditor.SpiceCircuit method)</a>
@@ -304,6 +315,8 @@
       <li><a href="SpiceEditor.html#PyLTSpice.SpiceEditor.SpiceEditor.remove_instruction">remove_instruction() (PyLTSpice.SpiceEditor.SpiceEditor method)</a>
 </li>
       <li><a href="SpiceEditor.html#PyLTSpice.SpiceEditor.SpiceEditor.reset_netlist">reset_netlist() (PyLTSpice.SpiceEditor.SpiceEditor method)</a>
+</li>
+      <li><a href="sim_batch.html#PyLTSpice.sim_batch.SimCommander.run">run() (PyLTSpice.sim_batch.SimCommander method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -325,9 +338,13 @@
 </li>
       <li><a href="SpiceEditor.html#PyLTSpice.SpiceEditor.SpiceCircuit.set_parameters">set_parameters() (PyLTSpice.SpiceEditor.SpiceCircuit method)</a>
 </li>
+      <li><a href="sim_batch.html#PyLTSpice.sim_batch.SimCommander.setLTspiceRunCommand">setLTspiceRunCommand() (PyLTSpice.sim_batch.SimCommander method)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="SpiceEditor.html#PyLTSpice.SpiceEditor.SpiceCircuit.setname">setname() (PyLTSpice.SpiceEditor.SpiceCircuit method)</a>
+</li>
+      <li><a href="sim_batch.html#PyLTSpice.sim_batch.SimCommander">SimCommander (class in PyLTSpice.sim_batch)</a>
 </li>
       <li><a href="SpiceEditor.html#PyLTSpice.SpiceEditor.SpiceCircuit">SpiceCircuit (class in PyLTSpice.SpiceEditor)</a>
 </li>
@@ -368,10 +385,18 @@
       <li><a href="SpiceEditor.html#PyLTSpice.SpiceEditor.UnrecognizedSyntaxError">UnrecognizedSyntaxError</a>
 </li>
   </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="sim_batch.html#PyLTSpice.sim_batch.SimCommander.updated_stats">updated_stats() (PyLTSpice.sim_batch.SimCommander method)</a>
+</li>
+  </ul></td>
 </tr></table>
 
 <h2 id="W">W</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="sim_batch.html#PyLTSpice.sim_batch.SimCommander.wait_completion">wait_completion() (PyLTSpice.sim_batch.SimCommander method)</a>
+</li>
+  </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="SpiceEditor.html#PyLTSpice.SpiceEditor.SpiceEditor.write_netlist">write_netlist() (PyLTSpice.SpiceEditor.SpiceEditor method)</a>
 </li>
@@ -398,10 +423,10 @@
 <h3>Navigation</h3>
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="sim_batch.html">LTSpiceBatch.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sim_batch.html">sim_batch.py</a></li>
 <li class="toctree-l1"><a class="reference internal" href="SpiceEditor.html">SpiceEditor.py</a></li>
 <li class="toctree-l1"><a class="reference internal" href="raw_read.html">raw_read.py</a></li>
-<li class="toctree-l1"><a class="reference internal" href="raw_write.html">LTSpice_RawWrite.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="raw_write.html">raw_write.py</a></li>
 <li class="toctree-l1"><a class="reference internal" href="LTSteps.html">LTSteps.py</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Histogram.html">Histogram.py</a></li>
 <li class="toctree-l1"><a class="reference internal" href="SemiOpLogReader.html">LTSpice_SemiDevOpReader.py</a></li>
