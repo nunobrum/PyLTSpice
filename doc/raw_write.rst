@@ -1,6 +1,6 @@
 LTSpice_RawWrite.py
 ===================
-.. automodule:: PyLTSpice.LTSpice_RawWrite
+.. automodule:: PyLTSpice.raw_write
    :members:
    :undoc-members:
    :show-inheritance:
