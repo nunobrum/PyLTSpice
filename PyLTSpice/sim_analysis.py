@@ -1,6 +1,6 @@
 from collections import OrderedDict
 from typing import Iterable
-from .SpiceBatch import SimCommander
+from .sim_batch import SimCommander
 from .SpiceEditor import ComponentNotFoundError
 
 

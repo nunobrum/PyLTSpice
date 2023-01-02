@@ -7,16 +7,16 @@ PySpicer is a toolchain of python utilities design to interact with LTSpice and 
 * __LTSteps.py__
 An utility that extracts from LTSpice output files data, and formats it for import in a spreadsheet, such like Excel or Calc.
 
-* __RawRead.py__
+* __raw_read.py__
 A pure python class that serves to read raw files into a python class.
 
-* __RawWrite.py__
+* __raw_write.py__
 A class to write RAW files that can be read by LTSpice Wave Application.
 
 * __Histogram.py__
 A python script that uses numpy and matplotlib to create an histogram and calculate the sigma deviations. This is useful for Monte-Carlo analysis.
 
-* __SpiceBatch.py__
+* __sim_batch.py__
 This is a script to launch Spice Simulations. This is useful because:
 
     - Can overcome the limitation of only stepping 3 parameters
@@ -58,7 +58,7 @@ More comprehensive documentation can be found in https://pyltspice.readthedocs.i
 GNU V3 License
 (refer to the LICENSE file)
 
-### RawRead.py ###
+### raw_read.py ###
 The example below reads the data from a Spice Simulation called
 "TRAN - STEP.raw" and displays all steps of the "I(R1)" trace in a matplotlib plot
 
@@ -83,7 +83,7 @@ plt.legend()  # order a legend
 plt.show()
  ```   
 
-### RawWrite.py ###
+### raw_write.py ###
 The following example writes a RAW file with a 3 milliseconds transient simulation sine with a
 10kHz and a cosine with 9.997kHz
  ```python
@@ -102,7 +102,7 @@ LW.save("teste_w.raw")
  ```   
 
 
-### SpiceBatch ###
+### sim_batch.py ###
 This module is used to launch LTSPice simulations. Results then can be processed with either the RawRead
 or with the LTSteps module to read the log file which can contain .MEAS results.
 
@@ -229,7 +229,8 @@ A more detailed documentation is directly included in the source file docstrings
 
 ## History ##
 * Version 3.0\
-Eliminating the LTSpice prefixes from files and classes. 
+Eliminating the LTSpice prefixes from files and classes.\
+Adopting the lowercase convention for filenames.
 
 * Version 2.3.1\
 Bug fix on the parameter replacement

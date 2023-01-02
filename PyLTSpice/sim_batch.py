@@ -2,7 +2,7 @@
 # coding=utf-8
 
 # -------------------------------------------------------------------------------
-# Name:        SpiceBatch.py
+# Name:        sim_batch.py
 # Purpose:     Tool used to launch LTSpice simulation in batch mode. Netlsts can
 #              be updated by user instructions
 #
@@ -77,7 +77,7 @@ The RAW file and the LOG file names. Below is an example of a callback function:
     def processing_data(raw_filename, log_filename):
         '''This is a call back function that just prints the filenames'''
         print("Simulation Raw file is %s. The log is %s" % (raw_filename, log_filename)
-        # Other code below either using LTSteps.py or RawRead.py
+        # Other code below either using LTSteps.py or raw_read.py
         log_info = LTSpiceLogReader(log_filename)
         log_info.read_measures()
         rise, measures = log_info.dataset["rise_time"]

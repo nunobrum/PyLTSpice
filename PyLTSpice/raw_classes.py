@@ -2,7 +2,7 @@
 # coding=utf-8
 
 # -------------------------------------------------------------------------------
-# Name:        RawClasses.py
+# Name:        raw_classes.py
 # Purpose:     Implements helper classes that contain
 #
 # Author:      Nuno Brum (nuno.brum@gmail.com)

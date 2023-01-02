@@ -2,7 +2,7 @@
 # coding=utf-8
 
 # -------------------------------------------------------------------------------
-# Name:        RawRead.py
+# Name:        raw_read.py
 # Purpose:     Process LTSpice output files and align data for usage in a spread-
 #              sheet tool such as Excel, or Calc.
 #
@@ -208,7 +208,7 @@ from struct import unpack
 from typing import Union, List, Tuple
 from pathlib import Path
 
-from .RawClasses import Axis, Trace, DummyTrace, SpiceReadException
+from .raw_classes import Axis, Trace, DummyTrace, SpiceReadException
 from .detect_encoding import detect_encoding
 
 import numpy as np
