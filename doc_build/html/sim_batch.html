@@ -1,39 +1,77 @@
 
 <!DOCTYPE html>
 
-<html lang="en">
+<html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>sim_batch.py &#8212; PyLTSpice 3.0 documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <link rel="stylesheet" href="_static/agogo.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="SpiceEditor.py" href="SpiceEditor.html" />
-    <link rel="prev" title="&lt;no title&gt;" href="modules.html" />
-   
-  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-  
-  
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
-
+    <link rel="prev" title="&lt;no title&gt;" href="modules.html" /> 
   </head><body>
-  
+    <div class="header-wrapper" role="banner">
+      <div class="header">
+        <div class="headertitle"><a
+          href="index.html">PyLTSpice 3.0 documentation</a></div>
+        <div class="rel" role="navigation" aria-label="related navigation">
+          <a href="modules.html" title="&lt;no title&gt;"
+             accesskey="P">previous</a> |
+          <a href="SpiceEditor.html" title="SpiceEditor.py"
+             accesskey="N">next</a> |
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a>
+        </div>
+       </div>
+    </div>
 
-    <div class="document">
+    <div class="content-wrapper">
+      <div class="content">
+        <div class="sidebar">
+          
+          <h3>Table of Contents</h3>
+          <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">sim_batch.py</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#multiprocessing">Multiprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#callbacks">Callbacks</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="SpiceEditor.html">SpiceEditor.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="raw_read.html">raw_read.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="raw_write.html">raw_write.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="LTSteps.html">LTSteps.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Histogram.html">Histogram.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="SemiOpLogReader.html">LTSpice_SemiDevOpReader.py</a></li>
+</ul>
+
+          <div role="search">
+            <h3 style="margin-top: 1.5em;">Search</h3>
+            <form class="search" action="search.html" method="get">
+                <input type="text" name="q" />
+                <input type="submit" value="Go" />
+            </form>
+          </div>
+
+        </div>
+        <div class="document">
+            
       <div class="documentwrapper">
         <div class="bodywrapper">
-          
-
           <div class="body" role="main">
             
-  <section id="module-PyLTSpice.sim_batch">
-<span id="sim-batch-py"></span><h1>sim_batch.py<a class="headerlink" href="#module-PyLTSpice.sim_batch" title="Permalink to this heading">¶</a></h1>
+  <div class="section" id="module-PyLTSpice.sim_batch">
+<span id="sim-batch-py"></span><h1>sim_batch.py<a class="headerlink" href="#module-PyLTSpice.sim_batch" title="Permalink to this headline">¶</a></h1>
 <p>Allows launching LTSpice simulations from a Python Script, thus allowing to overcome the 3 dimensions STEP limitation on
 LTSpice, update resistor values, or component models.</p>
 <p>The code snipped below will simulate a circuit with two different diode models, set the simulation
@@ -58,8 +96,8 @@ temperature to 80 degrees, and update the values of R1 and R2 to 3.3k.</p>
 simulated. This object implements methods that are used to manipulate the spice netlist. For example, the method
 set_parameters() will set or update existing parameters defined in the netlist. The method set_component_value() is
 used to update existing component values or models.</p>
-<section id="multiprocessing">
-<h2>Multiprocessing<a class="headerlink" href="#multiprocessing" title="Permalink to this heading">¶</a></h2>
+<div class="section" id="multiprocessing">
+<h2>Multiprocessing<a class="headerlink" href="#multiprocessing" title="Permalink to this headline">¶</a></h2>
 <p>For making better use of today’s computer capabilities, the SimCommander spawns several LTSpice instances
 each executing in parallel a simulation.</p>
 <p>By default, the number of parallel simulations is 4, however the user can override this in two ways. Either
@@ -77,9 +115,9 @@ processes are not executed right away, but rather just scheduled for simulation,
 needed if the user wants to execute code only after the completion of all scheduled simulations.</p>
 <p>The usage of wait_completion() is optional. Just note that the script will only end when all the scheduled tasks are
 executed.</p>
-</section>
-<section id="callbacks">
-<h2>Callbacks<a class="headerlink" href="#callbacks" title="Permalink to this heading">¶</a></h2>
+</div>
+<div class="section" id="callbacks">
+<h2>Callbacks<a class="headerlink" href="#callbacks" title="Permalink to this headline">¶</a></h2>
 <p>As seen above, the <cite>wait_completion()</cite> can be used to wait for all the simulations to be finished. However, this is
 not efficient from a multiprocessor point of view. Ideally, the post-processing should be also handled while other
 simulations are still running. For this purpose, the user can use a function call back.</p>
@@ -87,7 +125,7 @@ simulations are still running. For this purpose, the user can use a function cal
 simulation. A function callback receives two arguments.
 The RAW file and the LOG file names. Below is an example of a callback function:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">processing_data</span><span class="p">(</span><span class="n">raw_filename</span><span class="p">,</span> <span class="n">log_filename</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;This is a call back function that just prints the filenames&#39;&#39;&#39;</span>
+    <span class="sd">&#39;&#39;&#39;This is a call back function that just prints the filenames&#39;&#39;&#39;</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Simulation Raw file is </span><span class="si">%s</span><span class="s2">. The log is </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">raw_filename</span><span class="p">,</span> <span class="n">log_filename</span><span class="p">)</span>
     <span class="c1"># Other code below either using LTSteps.py or raw_read.py</span>
     <span class="n">log_info</span> <span class="o">=</span> <span class="n">LTSpiceLogReader</span><span class="p">(</span><span class="n">log_filename</span><span class="p">)</span>
@@ -97,17 +135,16 @@ The RAW file and the LOG file names. Below is an example of a callback function:
 </div>
 <p>The callback function is optional. If  no callback function is given, the thread is terminated just after the
 simulation is finished.</p>
-</section>
 <dl class="py class">
-<dt class="sig sig-object py" id="PyLTSpice.sim_batch.SimCommander">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">PyLTSpice.sim_batch.</span></span><span class="sig-name descname"><span class="pre">SimCommander</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">circuit_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parallel_sims</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'autodetect'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/sim_batch.html#SimCommander"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#PyLTSpice.sim_batch.SimCommander" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="SpiceEditor.html#PyLTSpice.SpiceEditor.SpiceEditor" title="PyLTSpice.SpiceEditor.SpiceEditor"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpiceEditor</span></code></a></p>
+<dt id="PyLTSpice.sim_batch.SimCommander">
+<em class="property">class </em><code class="sig-prename descclassname">PyLTSpice.sim_batch.</code><code class="sig-name descname">SimCommander</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">circuit_file</span><span class="p">:</span> <span class="n">str</span></em>, <em class="sig-param"><span class="n">parallel_sims</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">4</span></em>, <em class="sig-param"><span class="n">timeout</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">encoding</span><span class="o">=</span><span class="default_value">'autodetect'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/sim_batch.html#SimCommander"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.sim_batch.SimCommander" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="SpiceEditor.html#PyLTSpice.SpiceEditor.SpiceEditor" title="PyLTSpice.SpiceEditor.SpiceEditor"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyLTSpice.SpiceEditor.SpiceEditor</span></code></a></p>
 <p>The SimCommander class implements all the methods required for launching batches of LTSpice simulations.
 It takes a parameter the path to the LTSpice .asc file to be simulated, or directly the .net file.
 If an .asc file is given, the class will try to generate the respective .net file by calling LTspice with
 the –netlist option</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>circuit_file</strong> (<em>str</em>) – Path to the circuit to simulate. It can be either a .asc or a .net file</p></li>
 <li><p><strong>parallel_sims</strong> (<em>int</em><em>, </em><em>optional</em>) – Defines the number of parallel simulations that can be executed at the same time. Ideally this
@@ -121,36 +158,36 @@ proof.</p></li>
 </dd>
 </dl>
 <dl class="py method">
-<dt class="sig sig-object py" id="PyLTSpice.sim_batch.SimCommander.add_LTspiceRunCmdLineSwitches">
-<span class="sig-name descname"><span class="pre">add_LTspiceRunCmdLineSwitches</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/PyLTSpice/sim_batch.html#SimCommander.add_LTspiceRunCmdLineSwitches"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#PyLTSpice.sim_batch.SimCommander.add_LTspiceRunCmdLineSwitches" title="Permalink to this definition">¶</a></dt>
+<dt id="PyLTSpice.sim_batch.SimCommander.add_LTspiceRunCmdLineSwitches">
+<code class="sig-name descname">add_LTspiceRunCmdLineSwitches</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/PyLTSpice/sim_batch.html#SimCommander.add_LTspiceRunCmdLineSwitches"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.sim_batch.SimCommander.add_LTspiceRunCmdLineSwitches" title="Permalink to this definition">¶</a></dt>
 <dd><p>Used to add an extra command line argument such as -I&lt;path&gt; to add symbol search path or -FastAccess
 to convert the raw file into Fast Access.
 The arguments is a list of strings as is defined in the LTSpice command line documentation.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>args</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – list of strings
 A list of command line switches such as “-ascii” for generating a raw file in text format or “-alt” for
 setting the solver to alternate. See Command Line Switches information on LTSpice help file.</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Nothing</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="PyLTSpice.sim_batch.SimCommander.kill_all_ltspice">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">kill_all_ltspice</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/sim_batch.html#SimCommander.kill_all_ltspice"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#PyLTSpice.sim_batch.SimCommander.kill_all_ltspice" title="Permalink to this definition">¶</a></dt>
+<dt id="PyLTSpice.sim_batch.SimCommander.kill_all_ltspice">
+<em class="property">static </em><code class="sig-name descname">kill_all_ltspice</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/sim_batch.html#SimCommander.kill_all_ltspice"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.sim_batch.SimCommander.kill_all_ltspice" title="Permalink to this definition">¶</a></dt>
 <dd><p>Function to terminate LTSpice in windows</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="PyLTSpice.sim_batch.SimCommander.run">
-<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wait_resource</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callback</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">600</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">RunTask</span></span></span><a class="reference internal" href="_modules/PyLTSpice/sim_batch.html#SimCommander.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#PyLTSpice.sim_batch.SimCommander.run" title="Permalink to this definition">¶</a></dt>
+<dt id="PyLTSpice.sim_batch.SimCommander.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">run_filename</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">wait_resource</span><span class="p">:</span> <span class="n">bool</span> <span class="o">=</span> <span class="default_value">True</span></em>, <em class="sig-param"><span class="n">callback</span><span class="p">:</span> <span class="n">Callable<span class="p">[</span><span class="p">[</span>str<span class="p">, </span>str<span class="p">]</span><span class="p">, </span>Any<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">timeout</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">600</span></em><span class="sig-paren">)</span> &#x2192; PyLTSpice.sim_batch.RunTask<a class="reference internal" href="_modules/PyLTSpice/sim_batch.html#SimCommander.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.sim_batch.SimCommander.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Executes a simulation run with the conditions set by the user.
 Conditions are set by the set_parameter, set_component_value or add_instruction functions.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>run_filename</strong> (<em>str</em><em>, </em><em>optional</em>) – The name of the netlist can be optionally overridden if the user wants to have a better control of how the
 simulations files are generated.</p></li>
@@ -165,49 +202,49 @@ be done immediately.</p></li>
 <li><p><strong>timeout</strong> (<em>float</em><em>, </em><em>optional</em>) – Timeout to be used in waiting for resources. Default time is 600 seconds, i.e. 10 minutes.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Type<span class="colon">:</span></dt>
+<dt class="field-even">Type</dt>
 <dd class="field-even"><p>callback: function(raw_file, log_file), optional</p>
 </dd>
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>The task object of type RunTask</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="PyLTSpice.sim_batch.SimCommander.setLTspiceRunCommand">
-<span class="sig-name descname"><span class="pre">setLTspiceRunCommand</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_command</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/PyLTSpice/sim_batch.html#SimCommander.setLTspiceRunCommand"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#PyLTSpice.sim_batch.SimCommander.setLTspiceRunCommand" title="Permalink to this definition">¶</a></dt>
+<dt id="PyLTSpice.sim_batch.SimCommander.setLTspiceRunCommand">
+<code class="sig-name descname">setLTspiceRunCommand</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">run_command</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>str<span class="p">, </span>list<span class="p">]</span></span></em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/PyLTSpice/sim_batch.html#SimCommander.setLTspiceRunCommand"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.sim_batch.SimCommander.setLTspiceRunCommand" title="Permalink to this definition">¶</a></dt>
 <dd><p>Manually setting the LTSpice run command</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>path</strong> (<em>str</em><em> or </em><em>list</em>) – String containing the command to be invoked to run LTSpice</p>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Nothing</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="PyLTSpice.sim_batch.SimCommander.updated_stats">
-<span class="sig-name descname"><span class="pre">updated_stats</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/sim_batch.html#SimCommander.updated_stats"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#PyLTSpice.sim_batch.SimCommander.updated_stats" title="Permalink to this definition">¶</a></dt>
+<dt id="PyLTSpice.sim_batch.SimCommander.updated_stats">
+<code class="sig-name descname">updated_stats</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/PyLTSpice/sim_batch.html#SimCommander.updated_stats"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.sim_batch.SimCommander.updated_stats" title="Permalink to this definition">¶</a></dt>
 <dd><p>This function updates the OK/Fail statistics and releases finished RunTask objects from memory.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>Nothing</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="PyLTSpice.sim_batch.SimCommander.wait_completion">
-<span class="sig-name descname"><span class="pre">wait_completion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abort_all_on_timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/PyLTSpice/sim_batch.html#SimCommander.wait_completion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#PyLTSpice.sim_batch.SimCommander.wait_completion" title="Permalink to this definition">¶</a></dt>
+<dt id="PyLTSpice.sim_batch.SimCommander.wait_completion">
+<code class="sig-name descname">wait_completion</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">timeout</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">abort_all_on_timeout</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/PyLTSpice/sim_batch.html#SimCommander.wait_completion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#PyLTSpice.sim_batch.SimCommander.wait_completion" title="Permalink to this definition">¶</a></dt>
 <dd><p>This function will wait for the execution of all scheduled simulations to complete.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>timeout</strong> (<em>int</em>) – Cancels the wait after the number of seconds specified by the timeout.
 This timeout is reset everytime that a simulation is completed. The difference between this timeout and the
@@ -216,10 +253,10 @@ this timeout just cancels the wait.</p></li>
 <li><p><strong>abort_all_on_timeout</strong> (<em>bool</em>) – attempts to stop all LTSpice processes if timeout is expired.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dt class="field-even">Returns</dt>
 <dd class="field-even"><p>True if all simulations were executed successfully</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -227,88 +264,49 @@ this timeout just cancels the wait.</p></li>
 
 </dd></dl>
 
-</section>
+</div>
+</div>
 
 
+            <div class="clearer"></div>
           </div>
+        </div>
+      </div>
+        </div>
+        <div class="clearer"></div>
+      </div>
+    </div>
+
+    <div class="footer-wrapper">
+      <div class="footer">
+        <div class="left">
+          <div role="navigation" aria-label="related navigaton">
+            <a href="modules.html" title="&lt;no title&gt;"
+              >previous</a> |
+            <a href="SpiceEditor.html" title="SpiceEditor.py"
+              >next</a> |
+            <a href="py-modindex.html" title="Python Module Index"
+              >modules</a> |
+            <a href="genindex.html" title="General Index"
+              >index</a>
+          </div>
+          <div role="note" aria-label="source link">
+              <br/>
+              <a href="_sources/sim_batch.rst.txt"
+                rel="nofollow">Show Source</a>
+          </div>
+        </div>
+
+        <div class="right">
           
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2023, Nuno Brum.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
+    </div>
         </div>
+        <div class="clearer"></div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="index.html">PyLTSpice</a></h1>
-
-
-
-
-
-
-
-
-<h3>Navigation</h3>
-<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">sim_batch.py</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#multiprocessing">Multiprocessing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#callbacks">Callbacks</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#PyLTSpice.sim_batch.SimCommander"><code class="docutils literal notranslate"><span class="pre">SimCommander</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="SpiceEditor.html">SpiceEditor.py</a></li>
-<li class="toctree-l1"><a class="reference internal" href="raw_read.html">raw_read.py</a></li>
-<li class="toctree-l1"><a class="reference internal" href="raw_write.html">raw_write.py</a></li>
-<li class="toctree-l1"><a class="reference internal" href="LTSteps.html">LTSteps.py</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Histogram.html">Histogram.py</a></li>
-<li class="toctree-l1"><a class="reference internal" href="SemiOpLogReader.html">LTSpice_SemiDevOpReader.py</a></li>
-</ul>
-
-<div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="index.html">Documentation overview</a><ul>
-  <li><a href="modules.html">&lt;no title&gt;</a><ul>
-      <li>Previous: <a href="modules.html" title="previous chapter">&lt;no title&gt;</a></li>
-      <li>Next: <a href="SpiceEditor.html" title="next chapter">SpiceEditor.py</a></li>
-  </ul></li>
-  </ul></li>
-</ul>
-</div>
-<div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
-      <input type="submit" value="Go" />
-    </form>
-    </div>
-</div>
-<script>document.getElementById('searchbox').style.display = "block"</script>
-
-
-
-
-
-
-
-
-        </div>
-      </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="footer">
-      &copy;2023, Nuno Brum.
-      
-      |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 6.0.0</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
-      
-      |
-      <a href="_sources/sim_batch.rst.txt"
-          rel="nofollow">Page source</a>
     </div>
 
-    
-
-    
   </body>
 </html>

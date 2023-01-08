@@ -1,19 +1,22 @@
 # -*- coding: utf-8 -*-
-"""
-@author:        Nuno Brum; Andreas Kaeberlein
-@copyright:     Copyright 2020
+# -------------------------------------------------------------------------------
+#    ____        _   _____ ____        _
+#   |  _ \ _   _| | |_   _/ ___| _ __ (_) ___ ___
+#   | |_) | | | | |   | | \___ \| '_ \| |/ __/ _ \
+#   |  __/| |_| | |___| |  ___) | |_) | | (_|  __/
+#   |_|    \__, |_____|_| |____/| .__/|_|\___\___|
+#          |___/                |_|
+#
+# Name:        sweep_iterators.py
+# Purpose:     Iterators to use for sweeping values
+#
+# Author:      Nuno Brum (nuno.brum@gmail.com)
+#
+# Created:     24-07-2020
+# Licence:     refer to the LICENSE file
+#
+# -------------------------------------------------------------------------------
 
-@license:       GPLv3
-@maintainer:    Nuno Brum
-@email:         me@nunobrum.com
-
-@file:          sweep_iterators.py
-@date:          2020-07-24
-
-@brief          Iterator Helper
-
-                relaxed parameter sweeps
-"""
 import math
 from typing import Union, Optional, Iterable
 

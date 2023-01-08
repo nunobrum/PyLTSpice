@@ -1,32 +1,63 @@
 
 <!DOCTYPE html>
 
-<html lang="en">
+<html>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PyLTSpice.raw_write &#8212; PyLTSpice 3.0 documentation</title>
-    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css" />
-    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <link rel="stylesheet" href="../../_static/agogo.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
     <script src="../../_static/doctools.js"></script>
-    <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
-    <link rel="search" title="Search" href="../../search.html" />
-   
-  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
-  
-  
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
-
+    <link rel="search" title="Search" href="../../search.html" /> 
   </head><body>
-  
+    <div class="header-wrapper" role="banner">
+      <div class="header">
+        <div class="headertitle"><a
+          href="../../index.html">PyLTSpice 3.0 documentation</a></div>
+        <div class="rel" role="navigation" aria-label="related navigation">
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a>
+        </div>
+       </div>
+    </div>
 
-    <div class="document">
+    <div class="content-wrapper">
+      <div class="content">
+        <div class="sidebar">
+          
+          <h3>Table of Contents</h3>
+          <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../sim_batch.html">sim_batch.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../SpiceEditor.html">SpiceEditor.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../raw_read.html">raw_read.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../raw_write.html">raw_write.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../LTSteps.html">LTSteps.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Histogram.html">Histogram.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../SemiOpLogReader.html">LTSpice_SemiDevOpReader.py</a></li>
+</ul>
+
+          <div role="search">
+            <h3 style="margin-top: 1.5em;">Search</h3>
+            <form class="search" action="../../search.html" method="get">
+                <input type="text" name="q" />
+                <input type="submit" value="Go" />
+            </form>
+          </div>
+
+        </div>
+        <div class="document">
+            
       <div class="documentwrapper">
         <div class="bodywrapper">
-          
-
           <div class="body" role="main">
             
   <h1>Source code for PyLTSpice.raw_write</h1><div class="highlight"><pre>
@@ -56,7 +87,7 @@
 
 
 <div class="viewcode-block" id="Trace"><a class="viewcode-back" href="../../raw_write.html#PyLTSpice.raw_write.Trace">[docs]</a><span class="k">class</span> <span class="nc">Trace</span><span class="p">(</span><span class="n">DataSet</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Helper class representing a trace. This class is based on DataSet, therefore, it doesn&#39;t support STEPPED data.</span>
+    <span class="sd">&quot;&quot;&quot;Helper class representing a trace. This class is based on DataSet, therefore, it doesn&#39;t support STEPPED data.</span>
 <span class="sd">    :param name: name of the trace being created</span>
 <span class="sd">    :type name: str</span>
 <span class="sd">    :param whattype: time, frequency, voltage or current</span>
@@ -92,7 +123,7 @@
 
 
 <div class="viewcode-block" id="RawWrite"><a class="viewcode-back" href="../../raw_write.html#PyLTSpice.raw_write.RawWrite">[docs]</a><span class="k">class</span> <span class="nc">RawWrite</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This class represents the RAW data file being generated. Contrary to the RawRead this class doesn&#39;t support stepped</span>
 <span class="sd">    data.</span>
 
@@ -124,7 +155,7 @@
         <span class="k">return</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">flags</span><span class="p">)</span>
 
 <div class="viewcode-block" id="RawWrite.add_trace"><a class="viewcode-back" href="../../raw_write.html#PyLTSpice.raw_write.RawWrite.add_trace">[docs]</a>    <span class="k">def</span> <span class="nf">add_trace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trace</span><span class="p">:</span> <span class="n">Trace</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Adds a trace to the RAW file. The trace needs to have the same size as trace 0 (&#39;time&#39;, &#39;frequency&#39;, etc..)</span>
 <span class="sd">        The first trace added defines the X-Axis and therefore the type of RAW file being generated. If no plot name</span>
 <span class="sd">        was defined, it will automatically assign a name.</span>
@@ -155,7 +186,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_traces</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">trace</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="RawWrite.save"><a class="viewcode-back" href="../../raw_write.html#PyLTSpice.raw_write.RawWrite.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Saves the RAW file into a file. The file format is always binary. Text based RAW output format is not supported</span>
 <span class="sd">        in this version.</span>
 <span class="sd">        :param filename: filename to where the RAW file is going to be written. Make sure that the extension of the</span>
@@ -195,7 +226,7 @@
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_rename_netlabel</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Renames a trace name making sure that the V() or I() containers are left intact.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Renames a trace name making sure that the V() or I() containers are left intact.&quot;&quot;&quot;</span>
         <span class="c1"># Make the rename as requested</span>
         <span class="k">if</span> <span class="s1">&#39;rename_format&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;)&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;V(&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;I(&#39;</span><span class="p">):</span>
@@ -214,7 +245,7 @@
         <span class="k">return</span> <span class="kc">False</span>
 
 <div class="viewcode-block" id="RawWrite.add_traces_from_raw"><a class="viewcode-back" href="../../raw_write.html#PyLTSpice.raw_write.RawWrite.add_traces_from_raw">[docs]</a>    <span class="k">def</span> <span class="nf">add_traces_from_raw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">RawRead</span><span class="p">,</span> <span class="n">trace_filter</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot; *(Not fully implemented)*</span>
+        <span class="sd">&quot;&quot;&quot; *(Not fully implemented)*</span>
 
 <span class="sd">        Merge two RawWrite classes together resulting in a new instance</span>
 <span class="sd">        :param other: an instance of the RawRead class where the traces are going to be copied from.</span>
@@ -353,7 +384,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_imported_data</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
 
 <div class="viewcode-block" id="RawWrite.get_trace"><a class="viewcode-back" href="../../raw_write.html#PyLTSpice.raw_write.RawWrite.get_trace">[docs]</a>    <span class="k">def</span> <span class="nf">get_trace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trace_ref</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Retrieves the trace with the requested name (trace_ref).</span>
 
 <span class="sd">        :param trace_ref: Name of the trace</span>
@@ -367,12 +398,12 @@
                     <span class="c1"># assert isinstance(trace, DataSet)</span>
                     <span class="k">return</span> <span class="n">trace</span>
             <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="si">}</span><span class="s2"> doesn&#39;t contain trace </span><span class="se">\&quot;</span><span class="si">{</span><span class="n">trace_ref</span><span class="si">}</span><span class="se">\&quot;\n</span><span class="s2">&quot;</span>
-                             <span class="sa">f</span><span class="s2">&quot;Valid traces are </span><span class="si">{</span><span class="p">[</span><span class="n">trc</span><span class="o">.</span><span class="n">name</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">trc</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">_traces</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                             <span class="sa">f</span><span class="s2">&quot;Valid traces are </span><span class="si">{</span><span class="p">[</span><span class="n">trc</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">trc</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_traces</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_traces</span><span class="p">[</span><span class="n">trace_ref</span><span class="p">]</span></div>
 
     <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Helper function to access traces by using the [ ] operator.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Helper function to access traces by using the [ ] operator.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_trace</span><span class="p">(</span><span class="n">item</span><span class="p">)</span></div>
 
 
@@ -491,75 +522,38 @@
     <span class="n">test_combine_tran</span><span class="p">()</span>
 </pre></div>
 
+            <div class="clearer"></div>
           </div>
+        </div>
+      </div>
+        </div>
+        <div class="clearer"></div>
+      </div>
+    </div>
+
+    <div class="footer-wrapper">
+      <div class="footer">
+        <div class="left">
+          <div role="navigation" aria-label="related navigaton">
+            <a href="../../py-modindex.html" title="Python Module Index"
+              >modules</a> |
+            <a href="../../genindex.html" title="General Index"
+              >index</a>
+          </div>
+          <div role="note" aria-label="source link">
+          </div>
+        </div>
+
+        <div class="right">
           
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2023, Nuno Brum.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
+    </div>
         </div>
+        <div class="clearer"></div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="../../index.html">PyLTSpice</a></h1>
-
-
-
-
-
-
-
-
-<h3>Navigation</h3>
-<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../../sim_batch.html">LTSpiceBatch.py</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../SpiceEditor.html">SpiceEditor.py</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../raw_read.html">raw_read.py</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../raw_write.html">LTSpice_RawWrite.py</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../LTSteps.html">LTSteps.py</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../Histogram.html">Histogram.py</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../SemiOpLogReader.html">LTSpice_SemiDevOpReader.py</a></li>
-</ul>
-
-<div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="../../index.html">Documentation overview</a><ul>
-  <li><a href="../index.html">Module code</a><ul>
-  </ul></li>
-  </ul></li>
-</ul>
-</div>
-<div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="../../search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
-      <input type="submit" value="Go" />
-    </form>
-    </div>
-</div>
-<script>document.getElementById('searchbox').style.display = "block"</script>
-
-
-
-
-
-
-
-
-        </div>
-      </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="footer">
-      &copy;2023, Nuno Brum.
-      
-      |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 6.0.0</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
-      
     </div>
 
-    
-
-    
   </body>
 </html>

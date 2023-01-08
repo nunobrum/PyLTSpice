@@ -5,11 +5,11 @@ pushd %~dp0
 REM Command file for Sphinx documentation
 
 if "%SPHINXBUILD%" == "" (
-	set SPHINXBUILD=C:\Apps\Python39\Script\
+	set SPHINXBUILD=C:\Apps\Python38\Scripts\sphinx-build.exe
 )
 set SOURCEDIR=doc
 set BUILDDIR=doc_build
-set PYTHONPATH=C:\Apps\Python39\
+REM set PYTHONPATH=C:\Apps\Python38
 
 if "%1" == "" goto help
 
