@@ -155,12 +155,11 @@ else:
 class RunTask(threading.Thread):
     """This is an internal Class and should not be used directly by the User."""
 
-    def __init__(self, run_no, netlist_file: 'Path', callback: Callable[[str, str], Any], timeout=None, verbose=True,
-                 output_folder: str = None):
+    def __init__(self, run_no, netlist_file: 'Path', callback: Callable[['Path', 'Path'], Any], timeout=None,
+                 verbose=True):
         self.start_time = None
         self.verbose = verbose
         self.timeout = timeout  # Thanks to Daniel Phili for implementing this
-        self.output_folder = output_folder
 
         threading.Thread.__init__(self)
         self.setName("sim%d" % run_no)
@@ -201,9 +200,6 @@ class RunTask(threading.Thread):
             self.raw_file = self.netlist_file.with_suffix('.raw')
 
             if self.raw_file.exists() and self.log_file.exists():
-                if self.output_folder and self.log_file.parent != self.output_folder:    # In case is not in the proper directory
-                    self.raw_file = self.raw_file.replace(self.output_folder / self.raw_file.name)  # Move it to the output folder
-                    self.log_file = self.log_file.replace(self.output_folder / self.log_file.name)  # Mode it to the output folder
                 if self.callback:
                     if self.verbose:
                         print("Calling the callback function")
