@@ -1,3 +1,24 @@
+#!/usr/bin/env python
+# coding=utf-8
+
+# -------------------------------------------------------------------------------
+#    ____        _   _____ ____        _
+#   |  _ \ _   _| | |_   _/ ___| _ __ (_) ___ ___
+#   | |_) | | | | |   | | \___ \| '_ \| |/ __/ _ \
+#   |  __/| |_| | |___| |  ___) | |_) | | (_|  __/
+#   |_|    \__, |_____|_| |____/| .__/|_|\___\___|
+#          |___/                |_|
+#
+# Name:        sim_analysis.py
+# Purpose:     Classes to automate Monte-Carlo, FMEA or Worst Case Analysis
+#              be updated by user instructions
+#
+# Author:      Nuno Brum (nuno.brum@gmail.com)
+#
+# Created:     23-12-2016
+# Licence:     refer to the LICENSE file
+# -------------------------------------------------------------------------------
+
 from collections import OrderedDict
 from typing import Iterable
 from .sim_batch import SimCommander

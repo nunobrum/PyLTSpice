@@ -1,6 +1,13 @@
 #!/usr/bin/env python
 
 # -------------------------------------------------------------------------------
+#    ____        _   _____ ____        _
+#   |  _ \ _   _| | |_   _/ ___| _ __ (_) ___ ___
+#   | |_) | | | | |   | | \___ \| '_ \| |/ __/ _ \
+#   |  __/| |_| | |___| |  ___) | |_) | | (_|  __/
+#   |_|    \__, |_____|_| |____/| .__/|_|\___\___|
+#          |___/                |_|
+#
 # Name:        sim_stepping.py
 # Purpose:     Spice Simulation Library intended to automate the exploring of
 #              design corners, try different models and different parameter
