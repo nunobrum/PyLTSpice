@@ -18,6 +18,7 @@
 # Licence:     refer to the LICENSE file
 # -------------------------------------------------------------------------------
 import os
+import pathlib
 import traceback
 import re
 import logging
@@ -70,7 +71,6 @@ REPLACE_REGXES = {
     'B': r"^(?P<designator>B§?[VI]?\w+)(?P<nodes>(\s+\S+){2})\s+(?P<value>.*)$",  # Behavioral source
     'C': r"^(?P<designator>C§?\w+)(?P<nodes>(\s+\S+){2})(?P<model>\s+\w+)?\s+(?P<value>({)?(?(6).*}|([0-9\.E+-]+(Meg|[kmuµnpf])?F?))).*$",  # Capacitor
     'D': r"^(?P<designator>D§?\w+)(?P<nodes>(\s+\S+){2})\s+(?P<value>\w+).*$",  # Diode
-    'I': r"^(?P<designator>I§?\w+)(?P<nodes>(\s+\S+){2})\s+(?P<value>.*)$",  # Current Source
     'E': r"^(?P<designator>E§?\w+)(?P<nodes>(\s+\S+){2,4})\s+(?P<value>.*)$",  # Voltage Dependent Voltage Source
                                                         # this only supports changing gain values
     'F': r"^(?P<designator>F§?\w+)(?P<nodes>(\s+\S+){2})\s+(?P<value>.*)$",  # Current Dependent Current Source
@@ -803,14 +803,14 @@ class SpiceEditor(SpiceCircuit):
     itself. After implementing the modifications the user should call the "write_netlist" method to write a new
     netlist file.
     :param netlist_file: Name of the .NET file to parse
-    :type netlist_file: str
+    :type netlist_file: str or Path
     :param encoding: Forcing the encoding to be used on the circuit netlile read. Defaults to 'autodetect' which will
     call a function that tries to detect the encoding automatically. This however is not 100% fool proof.
     :type encoding: str, optional
     """
     def __init__(self, netlist_file, encoding='autodetect'):
         super().__init__()
-        self.netlist_file = netlist_file
+        self.netlist_file = pathlib.Path(netlist_file)
         self.modified_subcircuits = {}
         if encoding == 'autodetect':
             self.encoding = detect_encoding(netlist_file, '*')  # Normally the file will start with a '*'
@@ -884,7 +884,7 @@ class SpiceEditor(SpiceCircuit):
                 line = len(self.netlist) - 2  # This is where typically the .backanno instruction is
             self.netlist.insert(line, instruction)
 
-    def add_instructions(self, *instructions)->None:
+    def add_instructions(self, *instructions) -> None:
         """Adds a list of instructions to the SPICE NETLIST.
         Example:
         ::
@@ -895,7 +895,7 @@ class SpiceEditor(SpiceCircuit):
             )
 
         :param instructions: Argument list of instructions to add
-        :type instructions: list
+        :type instructions: argument list
         :returns: Nothing
         """
         for instruction in instructions:
@@ -907,7 +907,7 @@ class SpiceEditor(SpiceCircuit):
 
             LTC.remove_instruction(".STEP run -1 1023 1")
 
-        :param instructions The list of instructions to remove. Each instruction is of the type 'str'
+        :param instruction The list of instructions to remove. Each instruction is of the type 'str'
         :type instruction: str
         :returns: Nothing
         TODO: This only works with a full line instruction. Make it more inteligent so it recognizes .models, .param
@@ -920,14 +920,14 @@ class SpiceEditor(SpiceCircuit):
 
         self.netlist.remove(instruction)
 
-    def write_netlist(self, run_netlist_file: str)->None:
+    def write_netlist(self, run_netlist_file: 'Path') -> None:
         """
         Writes the netlist will all the requested updates into a file named <run_netlist_file>.
         :param run_netlist_file: File name of the netlist file.
-        :type run_netlist_file: str
+        :type run_netlist_file: Path
         :return Nothing
         """
-        f = open(run_netlist_file, 'w', encoding=self.encoding)
+        f = run_netlist_file.open('w', encoding=self.encoding)
         lines = iter(self.netlist)
         for line in lines:
             if isinstance(line, SpiceCircuit):
@@ -941,7 +941,7 @@ class SpiceEditor(SpiceCircuit):
                 f.write(line)
         f.close()
 
-    def reset_netlist(self)->None:
+    def reset_netlist(self) -> None:
         """
         Removes all previous edits done to the netlist, i.e. resets it to the original state.
 
@@ -949,8 +949,8 @@ class SpiceEditor(SpiceCircuit):
         """
         self.netlist.clear()
         self.modified_subcircuits.clear()
-        if os.path.exists(self.netlist_file):
-            with open(self.netlist_file, 'r', encoding=self.encoding, errors='replace') as f:
+        if self.netlist_file.exists():
+            with self.netlist_file.open('r', encoding=self.encoding, errors='replace') as f:
                 lines = iter(f)  # Creates an iterator object to consume the file
                 finished = self._add_lines(lines)
                 if not finished:
@@ -987,6 +987,7 @@ class SpiceEditor(SpiceCircuit):
                         return sub_circuit
         #  3. Return an instance of SpiceEditor
         return None
+
 
 if __name__ == '__main__':
     E = SpiceEditor(os.path.abspath('..\\tests\\PI_Filter_resampled.net'))

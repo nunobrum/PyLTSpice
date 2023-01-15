@@ -24,7 +24,7 @@ import unittest  # performs test
 #
 # Module libs
 
-sys.path.append(
+os.chdir(
     os.path.abspath((os.path.dirname(os.path.abspath(__file__)) + "/../../")))  # add project root to lib search path
 from PyLTSpice.LTSteps import LTSpiceLogReader
 from PyLTSpice.sim_batch import SimCommander
@@ -73,7 +73,7 @@ class test_pyltspice(unittest.TestCase):
                 LTC.set_component_value('V1', supply_voltage)
                 LTC.set_component_value('V2', -supply_voltage)
                 # overriding the automatic netlist naming
-                run_netlist_file = "{}_{}_{}.net".format(LTC.circuit_radic, opamp, supply_voltage)
+                run_netlist_file = "{}_{}_{}.net".format(LTC.circuit_file.name, opamp, supply_voltage)
                 LTC.run(run_filename=run_netlist_file, callback=processing_data)
 
         LTC.wait_completion()

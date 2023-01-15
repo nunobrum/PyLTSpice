@@ -17,13 +17,6 @@
 #
 # -------------------------------------------------------------------------------
 
-@file:          sweep_iterators.py
-@date:          2020-07-24
-
-@brief          Iterator Helper
-
-                relaxed parameter sweeps
-"""
 import math
 from typing import Union, Optional, Iterable
 

@@ -97,6 +97,8 @@ __copyright__ = "Copyright 2020, Fribourg Switzerland"
 
 import logging
 import os
+import shutil
+from pathlib import Path
 import subprocess
 import sys
 import threading
@@ -118,7 +120,7 @@ if sys.platform == "linux":
     if os.environ.get('LTSPICEFOLDER') is not None:
         LTspice_exe = ["wine", os.environ['LTSPICEFOLDER'] + "/XVIIx64.exe"]
     else:
-        LTspice_exe = ["wine", os.path.expanduser("~") + "/.wine/drive_c/Program Files/LTC/LTspiceXVII/XVIIx64.exe"]
+        LTspice_exe = ["wine", Path.home() / ".wine/drive_c/Program Files/LTC/LTspiceXVII/XVIIx64.exe"]
     LTspice_arg = {'netlist': ['-netlist'], 'run': ['-b', '-Run']}
     PROCNAME = "XVIIx64.exe"
 elif sys.platform == "darwin":
@@ -153,9 +155,12 @@ else:
 class RunTask(threading.Thread):
     """This is an internal Class and should not be used directly by the User."""
 
-    def __init__(self, run_no, netlist_file: str, callback: Callable[[str, str], Any], timeout=None, verbose=True):
+    def __init__(self, run_no, netlist_file: 'Path', callback: Callable[[str, str], Any], timeout=None, verbose=True,
+                 output_folder: str = None):
+        self.start_time = None
         self.verbose = verbose
         self.timeout = timeout  # Thanks to Daniel Phili for implementing this
+        self.output_folder = output_folder
 
         threading.Thread.__init__(self)
         self.setName("sim%d" % run_no)
@@ -172,7 +177,7 @@ class RunTask(threading.Thread):
         logger.setLevel(logging.INFO)
 
         # Running the Simulation
-        cmd_run = LTspice_exe + LTspice_arg.get('run', '') + [self.netlist_file] + cmdline_switches
+        cmd_run = LTspice_exe + LTspice_arg.get('run', '') + [self.netlist_file.as_posix()] + cmdline_switches
 
         # run the simulation
         self.start_time = clock_function()
@@ -184,8 +189,7 @@ class RunTask(threading.Thread):
 
         # print simulation time
         sim_time = time.strftime("%H:%M:%S", time.gmtime(clock_function() - self.start_time))
-        netlist_radic, extension = os.path.splitext(self.netlist_file)
-        self.log_file = netlist_radic + '.log'
+        self.log_file = self.netlist_file.with_suffix('.log')
 
         # Cleanup everything
         if self.retcode == 0:
@@ -194,9 +198,12 @@ class RunTask(threading.Thread):
             if self.verbose:
                 print(time.asctime() + ": Simulation Successful. Time elapsed %s:%s" % (sim_time, END_LINE_TERM))
 
-            self.raw_file = netlist_radic + '.raw'
+            self.raw_file = self.netlist_file.with_suffix('.raw')
 
-            if os.path.exists(self.raw_file) and os.path.exists(self.log_file):
+            if self.raw_file.exists() and self.log_file.exists():
+                if self.output_folder and self.log_file.parent != self.output_folder:    # In case is not in the proper directory
+                    self.raw_file = self.raw_file.replace(self.output_folder / self.raw_file.name)  # Move it to the output folder
+                    self.log_file = self.log_file.replace(self.output_folder / self.log_file.name)  # Mode it to the output folder
                 if self.callback:
                     if self.verbose:
                         print("Calling the callback function")
@@ -214,10 +221,8 @@ class RunTask(threading.Thread):
             # simulation failed
 
             logger.warning(time.asctime() + ": Simulation Failed. Time elapsed %s:%s" % (sim_time, END_LINE_TERM))
-            if os.path.exists(self.log_file):
-                old_log_file = self.log_file
-                self.log_file = netlist_radic + '.fail'
-                os.rename(old_log_file, self.log_file)
+            if self.log_file.exists():
+                self.log_file = self.log_file.replace(self.log_file.with_suffix('.fail'))
 
     def wait_results(self) -> Tuple[str, str]:
         """
@@ -239,9 +244,10 @@ class SimCommander(SpiceEditor):
     It takes a parameter the path to the LTSpice .asc file to be simulated, or directly the .net file.
     If an .asc file is given, the class will try to generate the respective .net file by calling LTspice with
     the --netlist option
+    :raises FileNotFoundError: When the file is not found
 
     :param circuit_file: Path to the circuit to simulate. It can be either a .asc or a .net file
-    :type circuit_file: str
+    :type circuit_file: str or Path
     :param parallel_sims: Defines the number of parallel simulations that can be executed at the same time. Ideally this
                           number should be aligned to the number of CPUs (processor cores) available on the machine.
     :type parallel_sims: int, optional
@@ -253,22 +259,33 @@ class SimCommander(SpiceEditor):
                      call a function that tries to detect the encoding automatically. This however is not 100% fool
                      proof.
     :type encoding: str, optional
+    :param output_folder: specifying which directory shall be used for simulation files (raw and log files).
+    :param output_folder: str
     """
 
-    def __init__(self, circuit_file: str, parallel_sims: int = 4, timeout=None, verbose=True, encoding='autodetect'):
+    def __init__(self, circuit_file: Union[str, 'Path'], parallel_sims: int = 4, timeout=None, verbose=True,
+                 encoding='autodetect', output_folder: str = None):
         """
         Class Constructor. It serves to start batches of simulations.
         See Class documentation for more information.
         """
-
+        self.workfiles = []
         self.verbose = verbose
         self.timeout = timeout
-
-        self.file_path = os.path.dirname(circuit_file)
-        if self.file_path == '':
-            self.file_path = os.path.abspath(os.curdir)
-        self.file_name, file_ext = os.path.splitext(os.path.basename(circuit_file))
-        self.circuit_radic = os.path.join(self.file_path, self.file_name)
+        self.circuit_file = Path(circuit_file)  # Obtains a Path version of the file
+        if not os.path.exists(self.circuit_file):
+            raise FileNotFoundError(f"Unable to find {circuit_file}")
+        if output_folder:
+            self.output_folder = Path(output_folder)  # If not None convert to Path() object
+            if not self.output_folder.exists():
+                self.output_folder.mkdir()
+            if self.circuit_file.parent != self.output_folder:
+                shutil.copy(self.circuit_file, self.output_folder)  # if in another directory, will copy the file to
+                                                                    # the working area
+                self.circuit_file = self.output_folder / self.circuit_file.name
+                self.workfiles.append(self.circuit_file)
+        else:
+            self.output_folder = None
 
         self.parallel_sims = parallel_sims
         self.threads = []
@@ -283,34 +300,29 @@ class SimCommander(SpiceEditor):
         self.okSim = 0  # number of succesfull completed simulations
         # self.failParam = []  # collects for later user investigation of failed parameter sets
 
-        if file_ext == '.asc':
-            netlist_file = self.circuit_radic + '.net'
+        if self.circuit_file.suffix == '.asc':
+            netlist_file = self.circuit_file.with_suffix('.net')
             # prepare instructions, two stages used to enable edits on the netlist w/o open GUI
             # see: https://www.mikrocontroller.net/topic/480647?goto=5965300#5965300
             assert 'netlist' in LTspice_arg, "In this platform LTSpice doesn't have netlist generation capabilities "
-            cmd_netlist = LTspice_exe + LTspice_arg.get('netlist') + [circuit_file]
+            cmd_netlist = LTspice_exe + LTspice_arg.get('netlist') + [self.circuit_file.as_posix()]
 
             if self.verbose:
                 print("Creating Netlist")
             retcode = run_function(cmd_netlist)
-            if retcode == 0 and os.path.exists(netlist_file):
+            if retcode == 0 and netlist_file.exists():
                 if self.verbose:
                     print("The Netlist was successfully created")
+                self.workfiles.append(netlist_file)
             else:
+                self.logger.error("Unable to create Netlist")
                 if self.verbose:
-                    print("Unable to create the Netlist from %s" % circuit_file)
+                    print("Unable to create the Netlist from %s" % self.circuit_file)
                 netlist_file = None
-        elif os.path.exists(circuit_file):
-            netlist_file = circuit_file
         else:
-            netlist_file = None
-            if self.verbose:
-                print("Unable to find the Netlist: %s" % circuit_file)
-
+            netlist_file = self.circuit_file
         super(SimCommander, self).__init__(netlist_file, encoding=encoding)
         self.reset_netlist()
-        if len(self.netlist) == 0:
-            self.logger.error("Unable to create Netlist")
 
     def __del__(self):
         """Class Destructor : Closes Everything"""
@@ -384,10 +396,15 @@ class SimCommander(SpiceEditor):
 
             # Write the new settings
             if run_filename is None:
-                run_netlist_file = "%s_%i.net" % (self.circuit_radic, self.runno)
-            else:
-                run_netlist_file = run_filename
+                run_filename = "%s_%i.net" % (self.circuit_file.stem, self.runno)
 
+            # Calculates the path where to store the new netlist.
+            if self.output_folder:
+                run_netlist_file = (self.output_folder / run_filename).with_suffix('.net')
+            else:
+                run_netlist_file = Path(run_filename)
+
+            self.workfiles.append(run_netlist_file)
             self.write_netlist(run_netlist_file)
             t0 = time.perf_counter()  # Store the time for timeout calculation
             while time.perf_counter() - t0 < timeout:
@@ -474,82 +491,35 @@ class SimCommander(SpiceEditor):
 
         return self.failSim == 0
 
-
-class LTCommander(SimCommander):
-    """
-    *(Deprecated)*
-
-    Class for launching batch LTSpice simulations. Please use the new SimCommander class instead of LTCommander which
-    supports multi-processing.
-    """
-
-    def __init__(self, circuit_file: str):
-        warn("Deprecated Class. Please use the new SimCommander class instead of LTCommander\n"
-             "For more information consult. https://www.nunobrum.com/pyspicer.html", DeprecationWarning)
-        SimCommander.__init__(self, circuit_file, 1)
-
-    def write_log(self, text: str):
-        mlog = open(self.circuit_radic + '.masterlog', 'a')
-        if text.endswith(END_LINE_TERM):
-            mlog.write(time.asctime() + ':' + text)
-        else:
-            mlog.write(time.asctime() + ':' + text + END_LINE_TERM)
-        mlog.close()
-
-    def run(self, run_id=None) -> Tuple[str, str]:
+    def file_cleanup(self):
         """
-        Executes a simulation run with the conditions set by the user. (See also set_parameter, set_component_value,
-        add_instruction)
-        :param run_id: The run_id parameter can be used to override the naming protocol of the log files.
-        :type run_id: int
-        :returns: (raw filename, log filename) if simulation is successful else (None, log file name)
+        Will delete all log and raw files that were created by the script. This should only be executed at the end
+        of data processing.
         """
-        # update number of simulation
-        self.runno += 1  # Using internal simulation number in case a run_id is not supplied
+        while len(self.workfiles):
+            workfile = self.workfiles.pop(0)
+            if workfile.suffix == '.net':
+                # Delete the log file if exists
+                logfile = workfile.with_suffix('.log')
+                if logfile.exists():
+                    print("Deleting", logfile)
+                    logfile.unlink()
+                # Delete the raw file if exists
+                rawfile = workfile.with_suffix('.raw')
+                if rawfile.exists():
+                    print("Deleting", rawfile)
+                    rawfile.unlink()
 
-        # decide sim required
-        if self.netlist is not None:
-            # Write the new settings
-            run_netlist_file = "%s_%i.net" % (self.circuit_radic, self.runno)
-            self.write_netlist(run_netlist_file)
-            cmd_run = LTspice_exe + LTspice_arg.get('run') + [run_netlist_file]
+                # Delete the op.raw file if exists
+                oprawfile = workfile.with_suffix('.op.raw')
+                if oprawfile.exists():
+                    print("Deleting", oprawfile)
+                    oprawfile.unlink()
 
-            # run the simulation
-            start_time = clock_function()
-            print(time.asctime(), ": Starting simulation %d" % self.runno)
+            # Delete the file
+            print("Deleting", workfile)
+            workfile.unlink()
 
-            # start execution
-            retcode = run_function(cmd_run)
-
-            # process the logfile, user can rename it
-            netlist_radic, extension = os.path.splitext(run_netlist_file)
-            raw_file = netlist_radic + '.raw'
-            log_file = netlist_radic + '.log'
-            # print simulation time
-            sim_time = time.strftime("%H:%M:%S", time.gmtime(clock_function() - start_time))
-            # handle simstate
-            if retcode == 0:
-                # simulation successful
-                print(time.asctime() + ": Simulation Successful. Time elapsed %s:%s" % (sim_time, END_LINE_TERM))
-                self.write_log("%d%s" % (self.runno, END_LINE_TERM))
-                self.okSim += 1
-            else:
-                # simulation failed
-                self.failSim += 1
-                # raise exception for try/except construct
-                # SRC: https://stackoverflow.com/questions/2052390/manually-raising-throwing-an-exception-in-python
-                # raise ValueError(time.asctime() + ': Simulation number ' + str(self.runno) + ' Failed !')
-                print(time.asctime() + ": Simulation Failed. Time elapsed %s:%s" % (sim_time, END_LINE_TERM))
-                # update failed parameters and counter
-                log_file += 'fail'
-
-            if retcode == 0:  # If simulation is successful
-                return raw_file, log_file  # Return rawfile and logfile if simulation was OK
-            else:
-                return None, log_file
-        else:
-            # no simulation required
-            raise UserWarning('skipping simulation ' + str(self.runno))
 
 
 if __name__ == "__main__":
@@ -557,7 +527,7 @@ if __name__ == "__main__":
     meAbsPath = os.path.dirname(os.path.realpath(__file__))
     meAbsPath, _ = os.path.split(meAbsPath)
     # select spice model
-    LTC = LTCommander(meAbsPath + "\\test_files\\testfile.asc")
+    LTC = SimCommander(meAbsPath + "\\test_files\\testfile.asc")
     # set default arguments
     LTC.set_parameters(res=0.001, cap=100e-6)
     # define simulation

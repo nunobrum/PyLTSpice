@@ -4,8 +4,9 @@ from PyLTSpice.sim_batch import SimCommander
 def processing_data(raw_file, log_file):
     print("Handling the simulation data of %s, log file %s" % (raw_file, log_file))
 
+
 # select spice model
-LTC = SimCommander("Batch_Test.asc")
+LTC = SimCommander("Batch_Test.asc", output_folder='./temp')
 # set default arguments
 LTC.set_parameters(res=0, cap=100e-6)
 LTC.set_component_value('R2', '2k')  # Modifying the value of a resistor
@@ -23,7 +24,7 @@ for opamp in ('AD712', 'AD820'):
         LTC.set_component_value('V1', supply_voltage)
         LTC.set_component_value('V2', -supply_voltage)
         # overriding he automatic netlist naming
-        run_netlist_file = "{}_{}_{}.net".format(LTC.circuit_radic, opamp, supply_voltage)
+        run_netlist_file = "{}_{}_{}.net".format(LTC.circuit_file.stem, opamp, supply_voltage)
         LTC.run(run_filename=run_netlist_file, callback=processing_data)
 
 
@@ -42,3 +43,7 @@ LTC.wait_completion()
 
 # Sim Statistics
 print('Successful/Total Simulations: ' + str(LTC.okSim) + '/' + str(LTC.runno))
+
+enter = input("Press enter to delete created files")
+if enter == '':
+    LTC.file_cleanup()
