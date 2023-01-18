@@ -941,7 +941,7 @@ class SpiceEditor(SpiceCircuit):
                 f.write(line)
         f.close()
 
-    def reset_netlist(self)->None:
+    def reset_netlist(self) -> None:
         """
         Removes all previous edits done to the netlist, i.e. resets it to the original state.
 

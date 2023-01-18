@@ -475,89 +475,12 @@ class SimCommander(SpiceEditor):
         return self.failSim == 0
 
 
-class LTCommander(SimCommander):
-    """
-    *(Deprecated)*
-
-    Class for launching batch LTSpice simulations. Please use the new SimCommander class instead of LTCommander which
-    supports multi-processing.
-    """
-
-    def __init__(self, circuit_file: str):
-        warn("Deprecated Class. Please use the new SimCommander class instead of LTCommander\n"
-             "For more information consult. https://www.nunobrum.com/pyspicer.html", DeprecationWarning)
-        SimCommander.__init__(self, circuit_file, 1)
-
-    def write_log(self, text: str):
-        mlog = open(self.circuit_radic + '.masterlog', 'a')
-        if text.endswith(END_LINE_TERM):
-            mlog.write(time.asctime() + ':' + text)
-        else:
-            mlog.write(time.asctime() + ':' + text + END_LINE_TERM)
-        mlog.close()
-
-    def run(self, run_id=None) -> Tuple[str, str]:
-        """
-        Executes a simulation run with the conditions set by the user. (See also set_parameter, set_component_value,
-        add_instruction)
-        :param run_id: The run_id parameter can be used to override the naming protocol of the log files.
-        :type run_id: int
-        :returns: (raw filename, log filename) if simulation is successful else (None, log file name)
-        """
-        # update number of simulation
-        self.runno += 1  # Using internal simulation number in case a run_id is not supplied
-
-        # decide sim required
-        if self.netlist is not None:
-            # Write the new settings
-            run_netlist_file = "%s_%i.net" % (self.circuit_radic, self.runno)
-            self.write_netlist(run_netlist_file)
-            cmd_run = LTspice_exe + LTspice_arg.get('run') + [run_netlist_file]
-
-            # run the simulation
-            start_time = clock_function()
-            print(time.asctime(), ": Starting simulation %d" % self.runno)
-
-            # start execution
-            retcode = run_function(cmd_run)
-
-            # process the logfile, user can rename it
-            netlist_radic, extension = os.path.splitext(run_netlist_file)
-            raw_file = netlist_radic + '.raw'
-            log_file = netlist_radic + '.log'
-            # print simulation time
-            sim_time = time.strftime("%H:%M:%S", time.gmtime(clock_function() - start_time))
-            # handle simstate
-            if retcode == 0:
-                # simulation successful
-                print(time.asctime() + ": Simulation Successful. Time elapsed %s:%s" % (sim_time, END_LINE_TERM))
-                self.write_log("%d%s" % (self.runno, END_LINE_TERM))
-                self.okSim += 1
-            else:
-                # simulation failed
-                self.failSim += 1
-                # raise exception for try/except construct
-                # SRC: https://stackoverflow.com/questions/2052390/manually-raising-throwing-an-exception-in-python
-                # raise ValueError(time.asctime() + ': Simulation number ' + str(self.runno) + ' Failed !')
-                print(time.asctime() + ": Simulation Failed. Time elapsed %s:%s" % (sim_time, END_LINE_TERM))
-                # update failed parameters and counter
-                log_file += 'fail'
-
-            if retcode == 0:  # If simulation is successful
-                return raw_file, log_file  # Return rawfile and logfile if simulation was OK
-            else:
-                return None, log_file
-        else:
-            # no simulation required
-            raise UserWarning('skipping simulation ' + str(self.runno))
-
-
 if __name__ == "__main__":
     # get script absolute path
     meAbsPath = os.path.dirname(os.path.realpath(__file__))
     meAbsPath, _ = os.path.split(meAbsPath)
     # select spice model
-    LTC = LTCommander(meAbsPath + "\\test_files\\testfile.asc")
+    LTC = SimCommander(meAbsPath + "\\test_files\\testfile.asc")
     # set default arguments
     LTC.set_parameters(res=0.001, cap=100e-6)
     # define simulation
