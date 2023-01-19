@@ -1,5 +1,5 @@
-Trace
-=====
+RawRead Trace
+=============
 
 .. autoclass:: PyLTSpice.raw_classes.Trace
    :members:
