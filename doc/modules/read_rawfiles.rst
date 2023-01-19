@@ -72,9 +72,13 @@ library to plot the results of two traces in a separate subplots.
 
     plt.xlim([0.9e-3, 1.2e-3])              # Limit the X axis to just a subrange
 
-    ydata = vin.get_wave()                  # Get all the values (= data points) for the 'vin' trace
-    xdata = raw.get_axis()                  # Get the X-axis data (time) for these data points
+    xdata = raw.get_axis()                  # Get the X-axis data (time)
+	
+    ydata = vin.get_wave()                  # Get all the values for the 'vin' trace
     ax1.plot(xdata, ydata)                  # Do an X/Y plot on first subplot
+	
+    ydata = vout.get_wave()                 # Get all the values for the 'vout' trace
+    ax1.plot(xdata, ydata)                  # Do an X/Y plot on first subplot as well
 
     for step in steps:                      # On the second plot, print all the STEPS of Vout
         ydata = vout.get_wave(step)         # Retrieve the values for this step
