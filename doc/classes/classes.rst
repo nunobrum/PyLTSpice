@@ -3,10 +3,13 @@ Python Classes
 ==============
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 1
 
+   logreader
+   sim_batch
    SpiceEditor
    SpiceCircuit
-   sim_batch
    raw_read
    raw_write
+   trace
+   write_trace
