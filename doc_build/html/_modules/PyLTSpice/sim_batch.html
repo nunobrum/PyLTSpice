@@ -36,13 +36,10 @@
           <h3>Table of Contents</h3>
           <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../sim_batch.html">sim_batch.py</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../SpiceEditor.html">SpiceEditor.py</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../raw_read.html">raw_read.py</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../raw_write.html">raw_write.py</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../LTSteps.html">LTSteps.py</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../Histogram.html">Histogram.py</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../SemiOpLogReader.html">LTSpice_SemiDevOpReader.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities/utilities.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/modules.html">Python Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../classes/classes.html">Python Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../varia/varia.html">Varia</a></li>
 </ul>
 
           <div role="search">
@@ -65,6 +62,13 @@
 <span class="c1"># coding=utf-8</span>
 
 <span class="c1"># -------------------------------------------------------------------------------</span>
+<span class="c1">#    ____        _   _____ ____        _</span>
+<span class="c1">#   |  _ \ _   _| | |_   _/ ___| _ __ (_) ___ ___</span>
+<span class="c1">#   | |_) | | | | |   | | \___ \| &#39;_ \| |/ __/ _ \</span>
+<span class="c1">#   |  __/| |_| | |___| |  ___) | |_) | | (_|  __/</span>
+<span class="c1">#   |_|    \__, |_____|_| |____/| .__/|_|\___\___|</span>
+<span class="c1">#          |___/                |_|</span>
+<span class="c1">#</span>
 <span class="c1"># Name:        sim_batch.py</span>
 <span class="c1"># Purpose:     Tool used to launch LTSpice simulation in batch mode. Netlsts can</span>
 <span class="c1">#              be updated by user instructions</span>
@@ -153,8 +157,7 @@
 
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">subprocess</span>
-<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">pathlib</span>
 <span class="kn">import</span> <span class="nn">threading</span>
 <span class="kn">import</span> <span class="nn">time</span>
 <span class="kn">import</span> <span class="nn">traceback</span>
@@ -163,58 +166,25 @@
 <span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
 
 <span class="kn">from</span> <span class="nn">.SpiceEditor</span> <span class="kn">import</span> <span class="n">SpiceEditor</span>
-
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;SimCommander&#39;</span><span class="p">,</span> <span class="s1">&#39;cmdline_switches&#39;</span><span class="p">,</span> <span class="s1">&#39;LTspice_exe&#39;</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.simulator</span> <span class="kn">import</span> <span class="n">clock_function</span><span class="p">,</span> <span class="n">Simulator</span>
 
 <span class="n">END_LINE_TERM</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
 
 <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s1">&#39;SpiceBatch.log&#39;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
 
-<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s2">&quot;linux&quot;</span><span class="p">:</span>
-    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;LTSPICEFOLDER&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">LTspice_exe</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;wine&quot;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;LTSPICEFOLDER&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;/XVIIx64.exe&quot;</span><span class="p">]</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">LTspice_exe</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;wine&quot;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s2">&quot;~&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;/.wine/drive_c/Program Files/LTC/LTspiceXVII/XVIIx64.exe&quot;</span><span class="p">]</span>
-    <span class="n">LTspice_arg</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;netlist&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;-netlist&#39;</span><span class="p">],</span> <span class="s1">&#39;run&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;-b&#39;</span><span class="p">,</span> <span class="s1">&#39;-Run&#39;</span><span class="p">]}</span>
-    <span class="n">PROCNAME</span> <span class="o">=</span> <span class="s2">&quot;XVIIx64.exe&quot;</span>
-<span class="k">elif</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s2">&quot;darwin&quot;</span><span class="p">:</span>
-    <span class="n">LTspice_exe</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;/Applications/LTspice.app/Contents/MacOS/LTspice&#39;</span><span class="p">]</span>
-    <span class="n">LTspice_arg</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;run&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;-b&#39;</span><span class="p">]}</span>
-    <span class="n">PROCNAME</span> <span class="o">=</span> <span class="s2">&quot;XVIIx64&quot;</span>
-<span class="k">else</span><span class="p">:</span>  <span class="c1"># Windows</span>
-    <span class="n">LTspice_exe</span> <span class="o">=</span> <span class="p">[</span><span class="sa">r</span><span class="s2">&quot;C:\Program Files\LTC\LTspiceXVII\XVIIx64.exe&quot;</span><span class="p">]</span>
-    <span class="n">LTspice_arg</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;netlist&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;-netlist&#39;</span><span class="p">],</span> <span class="s1">&#39;run&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;-b&#39;</span><span class="p">,</span> <span class="s1">&#39;-Run&#39;</span><span class="p">]}</span>
-    <span class="n">PROCNAME</span> <span class="o">=</span> <span class="s2">&quot;XVIIx64.exe&quot;</span>
 
-<span class="c1"># Legacy</span>
-<span class="n">LTspiceIV_exe</span> <span class="o">=</span> <span class="p">[</span><span class="sa">r</span><span class="s2">&quot;C:\Program Files (x86)\LTC\LTspiceIV\scad3.exe&quot;</span><span class="p">]</span>
-
-<span class="n">cmdline_switches</span> <span class="o">=</span> <span class="p">[]</span>
-
-<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="o">.</span><span class="n">major</span> <span class="o">&gt;=</span> <span class="mi">3</span> <span class="ow">and</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="o">.</span><span class="n">minor</span> <span class="o">&gt;=</span> <span class="mi">6</span><span class="p">:</span>
-    <span class="n">clock_function</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">process_time</span>
-
-
-    <span class="k">def</span> <span class="nf">run_function</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">returncode</span>
-<span class="k">else</span><span class="p">:</span>
-    <span class="n">clock_function</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">clock</span>
-
-
-    <span class="k">def</span> <span class="nf">run_function</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
 
 
 <span class="k">class</span> <span class="nc">RunTask</span><span class="p">(</span><span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;This is an internal Class and should not be used directly by the User.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_no</span><span class="p">,</span> <span class="n">netlist_file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">callback</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">Any</span><span class="p">],</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">simulator</span><span class="p">:</span> <span class="n">Simulator</span><span class="p">,</span>  <span class="n">run_no</span><span class="p">,</span> <span class="n">netlist_file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">callback</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">Any</span><span class="p">],</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">verbose</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">timeout</span> <span class="o">=</span> <span class="n">timeout</span>  <span class="c1"># Thanks to Daniel Phili for implementing this</span>
 
         <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">setName</span><span class="p">(</span><span class="s2">&quot;sim</span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">run_no</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span> <span class="o">=</span> <span class="n">simulator</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">run_no</span> <span class="o">=</span> <span class="n">run_no</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">netlist_file</span> <span class="o">=</span> <span class="n">netlist_file</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">callback</span> <span class="o">=</span> <span class="n">callback</span>
@@ -228,15 +198,13 @@
         <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
 
         <span class="c1"># Running the Simulation</span>
-        <span class="n">cmd_run</span> <span class="o">=</span> <span class="n">LTspice_exe</span> <span class="o">+</span> <span class="n">LTspice_arg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;run&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">netlist_file</span><span class="p">]</span> <span class="o">+</span> <span class="n">cmdline_switches</span>
 
-        <span class="c1"># run the simulation</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">clock_function</span><span class="p">()</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">asctime</span><span class="p">(),</span> <span class="s2">&quot;: Starting simulation </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_no</span><span class="p">)</span>
 
         <span class="c1"># start execution</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">retcode</span> <span class="o">=</span> <span class="n">run_function</span><span class="p">(</span><span class="n">cmd_run</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">retcode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">netlist_file</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">timeout</span><span class="p">)</span>
 
         <span class="c1"># print simulation time</span>
         <span class="n">sim_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%H:%M:%S&quot;</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">gmtime</span><span class="p">(</span><span class="n">clock_function</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span><span class="p">))</span>
@@ -289,7 +257,7 @@
             <span class="k">return</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span>
 
 
-<div class="viewcode-block" id="SimCommander"><a class="viewcode-back" href="../../sim_batch.html#PyLTSpice.sim_batch.SimCommander">[docs]</a><span class="k">class</span> <span class="nc">SimCommander</span><span class="p">(</span><span class="n">SpiceEditor</span><span class="p">):</span>
+<div class="viewcode-block" id="SimCommander"><a class="viewcode-back" href="../../classes/sim_batch.html#PyLTSpice.sim_batch.SimCommander">[docs]</a><span class="k">class</span> <span class="nc">SimCommander</span><span class="p">(</span><span class="n">SpiceEditor</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    The SimCommander class implements all the methods required for launching batches of LTSpice simulations.</span>
 <span class="sd">    It takes a parameter the path to the LTSpice .asc file to be simulated, or directly the .net file.</span>
@@ -309,9 +277,12 @@
 <span class="sd">                     call a function that tries to detect the encoding automatically. This however is not 100% fool</span>
 <span class="sd">                     proof.</span>
 <span class="sd">    :type encoding: str, optional</span>
+<span class="sd">    :param simulator: Forcing a given simulator executable.</span>
+<span class="sd">    :type simulator: str or Simulator, optional</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">circuit_file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">parallel_sims</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;autodetect&#39;</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">circuit_file</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">parallel_sims</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;autodetect&#39;</span><span class="p">,</span>
+                 <span class="n">simulator</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Class Constructor. It serves to start batches of simulations.</span>
 <span class="sd">        See Class documentation for more information.</span>
@@ -339,16 +310,21 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">okSim</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># number of succesfull completed simulations</span>
         <span class="c1"># self.failParam = []  # collects for later user investigation of failed parameter sets</span>
 
+        <span class="c1"># Gets a simulator.</span>
+        <span class="k">if</span> <span class="n">simulator</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span> <span class="o">=</span> <span class="n">Simulator</span><span class="o">.</span><span class="n">get_default_simulator</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">simulator</span><span class="p">,</span> <span class="n">Simulator</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span> <span class="o">=</span> <span class="n">simulator</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">simulator</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span> <span class="o">=</span> <span class="n">Simulator</span><span class="o">.</span><span class="n">create_from</span><span class="p">(</span><span class="n">simulator</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Invalid simulator type. Either use a string with the &quot;</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="n">file_ext</span> <span class="o">==</span> <span class="s1">&#39;.asc&#39;</span><span class="p">:</span>
             <span class="n">netlist_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">circuit_radic</span> <span class="o">+</span> <span class="s1">&#39;.net&#39;</span>
-            <span class="c1"># prepare instructions, two stages used to enable edits on the netlist w/o open GUI</span>
-            <span class="c1"># see: https://www.mikrocontroller.net/topic/480647?goto=5965300#5965300</span>
-            <span class="k">assert</span> <span class="s1">&#39;netlist&#39;</span> <span class="ow">in</span> <span class="n">LTspice_arg</span><span class="p">,</span> <span class="s2">&quot;In this platform LTSpice doesn&#39;t have netlist generation capabilities &quot;</span>
-            <span class="n">cmd_netlist</span> <span class="o">=</span> <span class="n">LTspice_exe</span> <span class="o">+</span> <span class="n">LTspice_arg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;netlist&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="n">circuit_file</span><span class="p">]</span>
-
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
                 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Creating Netlist&quot;</span><span class="p">)</span>
-            <span class="n">retcode</span> <span class="o">=</span> <span class="n">run_function</span><span class="p">(</span><span class="n">cmd_netlist</span><span class="p">)</span>
+            <span class="n">retcode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">create_netlist</span><span class="p">(</span><span class="n">circuit_file</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">retcode</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">netlist_file</span><span class="p">):</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
                     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The Netlist was successfully created&quot;</span><span class="p">)</span>
@@ -374,24 +350,24 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">wait_completion</span><span class="p">()</span>  <span class="c1"># TODO: Kill all pending simulations</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Exiting SimCommander&quot;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="SimCommander.setLTspiceRunCommand"><a class="viewcode-back" href="../../sim_batch.html#PyLTSpice.sim_batch.SimCommander.setLTspiceRunCommand">[docs]</a>    <span class="k">def</span> <span class="nf">setLTspiceRunCommand</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_command</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="SimCommander.setLTspiceRunCommand"><a class="viewcode-back" href="../../classes/sim_batch.html#PyLTSpice.sim_batch.SimCommander.setLTspiceRunCommand">[docs]</a>    <span class="k">def</span> <span class="nf">setLTspiceRunCommand</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spice_tool</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Simulator</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Manually setting the LTSpice run command</span>
 
-<span class="sd">        :param path: String containing the command to be invoked to run LTSpice</span>
-<span class="sd">        :type path: str or list</span>
+<span class="sd">        :param spice_tool: String containing the path to the spice tool to be used, or alternatively the Simulator</span>
+<span class="sd">                           object.</span>
+<span class="sd">        :type spice_tool: str or Simulator</span>
 <span class="sd">        :return: Nothing</span>
 <span class="sd">        :rtype: None</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">global</span> <span class="n">LTspice_exe</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">run_command</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="n">LTspice_exe</span> <span class="o">=</span> <span class="p">[</span><span class="n">run_command</span><span class="p">]</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">run_command</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-            <span class="n">LTspice_exe</span> <span class="o">=</span> <span class="n">run_command</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spice_tool</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span> <span class="o">=</span> <span class="n">Simulator</span><span class="o">.</span><span class="n">create_from</span><span class="p">(</span><span class="n">spice_tool</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spice_tool</span><span class="p">,</span> <span class="n">Simulator</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span> <span class="o">=</span> <span class="n">spice_tool</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Expecting str or list objects&quot;</span><span class="p">)</span></div>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Expecting str or Simulator objects&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="SimCommander.add_LTspiceRunCmdLineSwitches"><a class="viewcode-back" href="../../sim_batch.html#PyLTSpice.sim_batch.SimCommander.add_LTspiceRunCmdLineSwitches">[docs]</a>    <span class="k">def</span> <span class="nf">add_LTspiceRunCmdLineSwitches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="SimCommander.add_LTspiceRunCmdLineSwitches"><a class="viewcode-back" href="../../classes/sim_batch.html#PyLTSpice.sim_batch.SimCommander.add_LTspiceRunCmdLineSwitches">[docs]</a>    <span class="k">def</span> <span class="nf">add_LTspiceRunCmdLineSwitches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Used to add an extra command line argument such as -I&lt;path&gt; to add symbol search path or -FastAccess</span>
 <span class="sd">        to convert the raw file into Fast Access.</span>
@@ -403,10 +379,9 @@
 <span class="sd">        :type args: list[str]</span>
 <span class="sd">        :returns: Nothing</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">global</span> <span class="n">cmdline_switches</span>
-        <span class="n">cmdline_switches</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">args</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="o">.</span><span class="n">add_command_line_switche</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="SimCommander.run"><a class="viewcode-back" href="../../sim_batch.html#PyLTSpice.sim_batch.SimCommander.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">wait_resource</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<div class="viewcode-block" id="SimCommander.run"><a class="viewcode-back" href="../../classes/sim_batch.html#PyLTSpice.sim_batch.SimCommander.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">wait_resource</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
             <span class="n">callback</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">600</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RunTask</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Executes a simulation run with the conditions set by the user.</span>
@@ -450,7 +425,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">updated_stats</span><span class="p">()</span>  <span class="c1"># purge ended tasks</span>
 
                 <span class="k">if</span> <span class="p">(</span><span class="n">wait_resource</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">threads</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">parallel_sims</span><span class="p">):</span>
-                    <span class="n">t</span> <span class="o">=</span> <span class="n">RunTask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">runno</span><span class="p">,</span> <span class="n">run_netlist_file</span><span class="p">,</span> <span class="n">callback</span><span class="p">,</span>
+                    <span class="n">t</span> <span class="o">=</span> <span class="n">RunTask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">simulator</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">runno</span><span class="p">,</span> <span class="n">run_netlist_file</span><span class="p">,</span> <span class="n">callback</span><span class="p">,</span>
                                 <span class="n">timeout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">timeout</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">)</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">threads</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
                     <span class="n">t</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
@@ -466,7 +441,7 @@
             <span class="c1"># no simulation required</span>
             <span class="k">raise</span> <span class="ne">UserWarning</span><span class="p">(</span><span class="s1">&#39;skipping simulation &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">runno</span><span class="p">))</span></div>
 
-<div class="viewcode-block" id="SimCommander.updated_stats"><a class="viewcode-back" href="../../sim_batch.html#PyLTSpice.sim_batch.SimCommander.updated_stats">[docs]</a>    <span class="k">def</span> <span class="nf">updated_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="SimCommander.updated_stats"><a class="viewcode-back" href="../../classes/sim_batch.html#PyLTSpice.sim_batch.SimCommander.updated_stats">[docs]</a>    <span class="k">def</span> <span class="nf">updated_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        This function updates the OK/Fail statistics and releases finished RunTask objects from memory.</span>
 
@@ -484,18 +459,13 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">failSim</span> <span class="o">+=</span> <span class="mi">1</span>
                 <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">threads</span><span class="p">[</span><span class="n">i</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="SimCommander.kill_all_ltspice"><a class="viewcode-back" href="../../sim_batch.html#PyLTSpice.sim_batch.SimCommander.kill_all_ltspice">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="SimCommander.kill_all_ltspice"><a class="viewcode-back" href="../../classes/sim_batch.html#PyLTSpice.sim_batch.SimCommander.kill_all_ltspice">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">kill_all_ltspice</span><span class="p">():</span>
         <span class="sd">&quot;&quot;&quot;Function to terminate LTSpice in windows&quot;&quot;&quot;</span>
-        <span class="kn">import</span> <span class="nn">psutil</span>
-        <span class="k">for</span> <span class="n">proc</span> <span class="ow">in</span> <span class="n">psutil</span><span class="o">.</span><span class="n">process_iter</span><span class="p">():</span>
-            <span class="c1"># check whether the process name matches</span>
+        <span class="n">simulator</span> <span class="o">=</span> <span class="n">Simulator</span><span class="o">.</span><span class="n">get_default_simulator</span><span class="p">()</span>
+        <span class="n">simulator</span><span class="o">.</span><span class="n">kill_all</span><span class="p">()</span></div>
 
-            <span class="k">if</span> <span class="n">proc</span><span class="o">.</span><span class="n">name</span><span class="p">()</span> <span class="o">==</span> <span class="n">PROCNAME</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;killing ltspice&quot;</span><span class="p">,</span> <span class="n">proc</span><span class="o">.</span><span class="n">pid</span><span class="p">)</span>
-                <span class="n">proc</span><span class="o">.</span><span class="n">kill</span><span class="p">()</span></div>
-
-<div class="viewcode-block" id="SimCommander.wait_completion"><a class="viewcode-back" href="../../sim_batch.html#PyLTSpice.sim_batch.SimCommander.wait_completion">[docs]</a>    <span class="k">def</span> <span class="nf">wait_completion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">abort_all_on_timeout</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<div class="viewcode-block" id="SimCommander.wait_completion"><a class="viewcode-back" href="../../classes/sim_batch.html#PyLTSpice.sim_batch.SimCommander.wait_completion">[docs]</a>    <span class="k">def</span> <span class="nf">wait_completion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">abort_all_on_timeout</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        This function will wait for the execution of all scheduled simulations to complete.</span>
 
@@ -531,89 +501,12 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">failSim</span> <span class="o">==</span> <span class="mi">0</span></div></div>
 
 
-<span class="k">class</span> <span class="nc">LTCommander</span><span class="p">(</span><span class="n">SimCommander</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    *(Deprecated)*</span>
-
-<span class="sd">    Class for launching batch LTSpice simulations. Please use the new SimCommander class instead of LTCommander which</span>
-<span class="sd">    supports multi-processing.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">circuit_file</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Deprecated Class. Please use the new SimCommander class instead of LTCommander</span><span class="se">\n</span><span class="s2">&quot;</span>
-             <span class="s2">&quot;For more information consult. https://www.nunobrum.com/pyspicer.html&quot;</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">)</span>
-        <span class="n">SimCommander</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">circuit_file</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">write_log</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="n">mlog</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">circuit_radic</span> <span class="o">+</span> <span class="s1">&#39;.masterlog&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">text</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">END_LINE_TERM</span><span class="p">):</span>
-            <span class="n">mlog</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">asctime</span><span class="p">()</span> <span class="o">+</span> <span class="s1">&#39;:&#39;</span> <span class="o">+</span> <span class="n">text</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">mlog</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">asctime</span><span class="p">()</span> <span class="o">+</span> <span class="s1">&#39;:&#39;</span> <span class="o">+</span> <span class="n">text</span> <span class="o">+</span> <span class="n">END_LINE_TERM</span><span class="p">)</span>
-        <span class="n">mlog</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-
-    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_id</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Executes a simulation run with the conditions set by the user. (See also set_parameter, set_component_value,</span>
-<span class="sd">        add_instruction)</span>
-<span class="sd">        :param run_id: The run_id parameter can be used to override the naming protocol of the log files.</span>
-<span class="sd">        :type run_id: int</span>
-<span class="sd">        :returns: (raw filename, log filename) if simulation is successful else (None, log file name)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># update number of simulation</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">runno</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="c1"># Using internal simulation number in case a run_id is not supplied</span>
-
-        <span class="c1"># decide sim required</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">netlist</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># Write the new settings</span>
-            <span class="n">run_netlist_file</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">_</span><span class="si">%i</span><span class="s2">.net&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">circuit_radic</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">runno</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">write_netlist</span><span class="p">(</span><span class="n">run_netlist_file</span><span class="p">)</span>
-            <span class="n">cmd_run</span> <span class="o">=</span> <span class="n">LTspice_exe</span> <span class="o">+</span> <span class="n">LTspice_arg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;run&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="n">run_netlist_file</span><span class="p">]</span>
-
-            <span class="c1"># run the simulation</span>
-            <span class="n">start_time</span> <span class="o">=</span> <span class="n">clock_function</span><span class="p">()</span>
-            <span class="nb">print</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">asctime</span><span class="p">(),</span> <span class="s2">&quot;: Starting simulation </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">runno</span><span class="p">)</span>
-
-            <span class="c1"># start execution</span>
-            <span class="n">retcode</span> <span class="o">=</span> <span class="n">run_function</span><span class="p">(</span><span class="n">cmd_run</span><span class="p">)</span>
-
-            <span class="c1"># process the logfile, user can rename it</span>
-            <span class="n">netlist_radic</span><span class="p">,</span> <span class="n">extension</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">run_netlist_file</span><span class="p">)</span>
-            <span class="n">raw_file</span> <span class="o">=</span> <span class="n">netlist_radic</span> <span class="o">+</span> <span class="s1">&#39;.raw&#39;</span>
-            <span class="n">log_file</span> <span class="o">=</span> <span class="n">netlist_radic</span> <span class="o">+</span> <span class="s1">&#39;.log&#39;</span>
-            <span class="c1"># print simulation time</span>
-            <span class="n">sim_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%H:%M:%S&quot;</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">gmtime</span><span class="p">(</span><span class="n">clock_function</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">))</span>
-            <span class="c1"># handle simstate</span>
-            <span class="k">if</span> <span class="n">retcode</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="c1"># simulation successful</span>
-                <span class="nb">print</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">asctime</span><span class="p">()</span> <span class="o">+</span> <span class="s2">&quot;: Simulation Successful. Time elapsed </span><span class="si">%s</span><span class="s2">:</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sim_time</span><span class="p">,</span> <span class="n">END_LINE_TERM</span><span class="p">))</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">write_log</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%d%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">runno</span><span class="p">,</span> <span class="n">END_LINE_TERM</span><span class="p">))</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">okSim</span> <span class="o">+=</span> <span class="mi">1</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="c1"># simulation failed</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">failSim</span> <span class="o">+=</span> <span class="mi">1</span>
-                <span class="c1"># raise exception for try/except construct</span>
-                <span class="c1"># SRC: https://stackoverflow.com/questions/2052390/manually-raising-throwing-an-exception-in-python</span>
-                <span class="c1"># raise ValueError(time.asctime() + &#39;: Simulation number &#39; + str(self.runno) + &#39; Failed !&#39;)</span>
-                <span class="nb">print</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">asctime</span><span class="p">()</span> <span class="o">+</span> <span class="s2">&quot;: Simulation Failed. Time elapsed </span><span class="si">%s</span><span class="s2">:</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sim_time</span><span class="p">,</span> <span class="n">END_LINE_TERM</span><span class="p">))</span>
-                <span class="c1"># update failed parameters and counter</span>
-                <span class="n">log_file</span> <span class="o">+=</span> <span class="s1">&#39;fail&#39;</span>
-
-            <span class="k">if</span> <span class="n">retcode</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># If simulation is successful</span>
-                <span class="k">return</span> <span class="n">raw_file</span><span class="p">,</span> <span class="n">log_file</span>  <span class="c1"># Return rawfile and logfile if simulation was OK</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="n">log_file</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># no simulation required</span>
-            <span class="k">raise</span> <span class="ne">UserWarning</span><span class="p">(</span><span class="s1">&#39;skipping simulation &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">runno</span><span class="p">))</span>
-
-
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
     <span class="c1"># get script absolute path</span>
     <span class="n">meAbsPath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
     <span class="n">meAbsPath</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">meAbsPath</span><span class="p">)</span>
     <span class="c1"># select spice model</span>
-    <span class="n">LTC</span> <span class="o">=</span> <span class="n">LTCommander</span><span class="p">(</span><span class="n">meAbsPath</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">test_files</span><span class="se">\\</span><span class="s2">testfile.asc&quot;</span><span class="p">)</span>
+    <span class="n">LTC</span> <span class="o">=</span> <span class="n">SimCommander</span><span class="p">(</span><span class="n">meAbsPath</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\\</span><span class="s2">test_files</span><span class="se">\\</span><span class="s2">testfile.asc&quot;</span><span class="p">)</span>
     <span class="c1"># set default arguments</span>
     <span class="n">LTC</span><span class="o">.</span><span class="n">set_parameters</span><span class="p">(</span><span class="n">res</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span> <span class="n">cap</span><span class="o">=</span><span class="mf">100e-6</span><span class="p">)</span>
     <span class="c1"># define simulation</span>

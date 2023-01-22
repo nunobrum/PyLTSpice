@@ -36,13 +36,10 @@
           <h3>Table of Contents</h3>
           <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../sim_batch.html">sim_batch.py</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../SpiceEditor.html">SpiceEditor.py</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../raw_read.html">raw_read.py</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../raw_write.html">raw_write.py</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../LTSteps.html">LTSteps.py</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../Histogram.html">Histogram.py</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../SemiOpLogReader.html">LTSpice_SemiDevOpReader.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities/utilities.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/modules.html">Python Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../classes/classes.html">Python Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../varia/varia.html">Varia</a></li>
 </ul>
 
           <div role="search">
@@ -65,6 +62,13 @@
 <span class="c1"># coding=utf-8</span>
 
 <span class="c1"># -------------------------------------------------------------------------------</span>
+<span class="c1">#    ____        _   _____ ____        _</span>
+<span class="c1">#   |  _ \ _   _| | |_   _/ ___| _ __ (_) ___ ___</span>
+<span class="c1">#   | |_) | | | | |   | | \___ \| &#39;_ \| |/ __/ _ \</span>
+<span class="c1">#   |  __/| |_| | |___| |  ___) | |_) | | (_|  __/</span>
+<span class="c1">#   |_|    \__, |_____|_| |____/| .__/|_|\___\___|</span>
+<span class="c1">#          |___/                |_|</span>
+<span class="c1">#</span>
 <span class="c1"># Name:        SemiDevOpReader.py</span>
 <span class="c1"># Purpose:     Read Semiconductor Device Operating Points from a log file</span>
 <span class="c1">#</span>
@@ -82,7 +86,7 @@
 <span class="kn">from</span> <span class="nn">.detect_encoding</span> <span class="kn">import</span> <span class="n">detect_encoding</span>
 
 
-<div class="viewcode-block" id="opLogReader"><a class="viewcode-back" href="../../SemiOpLogReader.html#PyLTSpice.SemiDevOpReader.opLogReader">[docs]</a><span class="k">def</span> <span class="nf">opLogReader</span><span class="p">(</span><span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<div class="viewcode-block" id="opLogReader"><a class="viewcode-back" href="../../modules/SemiOpLogReader.html#PyLTSpice.SemiDevOpReader.opLogReader">[docs]</a><span class="k">def</span> <span class="nf">opLogReader</span><span class="p">(</span><span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This function is exclusively dedicated to retrieving operation point parameters of Semiconductor Devices. This is</span>
 <span class="sd">    handled separately from the main LogReader class because of its specialization and therefore not judged to be</span>

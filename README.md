@@ -1,6 +1,6 @@
 # README #
 
-PySpicer is a toolchain of python utilities design to interact with LTSpice and NGSpice Electronic Simulator.
+PyLTSpice is a toolchain of python utilities design to interact with LTSpice and NGSpice Electronic Simulator.
 
 ## What is contained in this repository ##
 
@@ -223,11 +223,15 @@ A more detailed documentation is directly included in the source file docstrings
 
 ## To whom do I talk to? ##
 
-* Tools website : [https://www.nunobrum.com/pyspicer.html](https://www.nunobrum.com/pyspicer.html)
+* Tools website : [https://www.nunobrum.com/pyltspice.html](https://www.nunobrum.com/pyltspice.html)
 * Repo owner : [me@nunobrum.com](me@nunobrum.com)
 * Alternative contact : nuno.brum@gmail.com
 
 ## History ##
+* Version 3.1\
+Supporting the new improved LTspice version from ADI
+Adding the get_wave() directly to the RawRead Class
+
 * Version 3.0\
 Eliminating the LTSpice prefixes from files and classes.\
 Adopting the lowercase convention for filenames.

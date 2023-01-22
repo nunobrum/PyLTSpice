@@ -1,4 +1,4 @@
-Circuit: * C:\sandbox\PySpice\tests\TRAN - STEP.asc
+Circuit: * C:\sandbox\PyLTSpice_GitHub_nunobrum\tests\TRAN - STEP.asc
 
 .OP point found by inspection.
 .step vin=1 r1=1000
@@ -43,8 +43,8 @@ Measurement: t5
      4	3.93469	0.005
 
 
-Date: Sun Dec 04 22:37:18 2022
-Total elapsed time: 0.074 seconds.
+Date: Sun Jan 22 23:03:30 2023
+Total elapsed time: 0.030 seconds.
 
 tnom = 27
 temp = 27
@@ -57,6 +57,7 @@ rejected = 1
 matrix size = 3
 fillins = 0
 solver = Normal
-Matrix Compiler1:       3 opcodes  0.0/[0.0]/0.0
-Matrix Compiler2: 175 bytes object code size  0.1/0.1/[0.0]
+Avg thread counts: 1.3/1.6/1.6/1.3
+Matrix Compiler1: off  [0.1]/0.1/0.1
+Matrix Compiler2: 175 bytes object code size  0.1/0.1/[0.1]
 

@@ -36,13 +36,10 @@
           <h3>Table of Contents</h3>
           <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../sim_batch.html">sim_batch.py</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../SpiceEditor.html">SpiceEditor.py</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../raw_read.html">raw_read.py</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../raw_write.html">raw_write.py</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../LTSteps.html">LTSteps.py</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../Histogram.html">Histogram.py</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../SemiOpLogReader.html">LTSpice_SemiDevOpReader.py</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities/utilities.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/modules.html">Python Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../classes/classes.html">Python Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../varia/varia.html">Varia</a></li>
 </ul>
 
           <div role="search">
@@ -65,6 +62,13 @@
 <span class="c1"># coding=utf-8</span>
 
 <span class="c1"># -------------------------------------------------------------------------------</span>
+<span class="c1">#    ____        _   _____ ____        _</span>
+<span class="c1">#   |  _ \ _   _| | |_   _/ ___| _ __ (_) ___ ___</span>
+<span class="c1">#   | |_) | | | | |   | | \___ \| &#39;_ \| |/ __/ _ \</span>
+<span class="c1">#   |  __/| |_| | |___| |  ___) | |_) | | (_|  __/</span>
+<span class="c1">#   |_|    \__, |_____|_| |____/| .__/|_|\___\___|</span>
+<span class="c1">#          |___/                |_|</span>
+<span class="c1">#</span>
 <span class="c1"># Name:        raw_read.py</span>
 <span class="c1"># Purpose:     Process LTSpice output files and align data for usage in a spread-</span>
 <span class="c1">#              sheet tool such as Excel, or Calc.</span>
@@ -278,7 +282,7 @@
 <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">zeros</span><span class="p">,</span> <span class="n">complex128</span><span class="p">,</span> <span class="n">float32</span><span class="p">,</span> <span class="n">float64</span><span class="p">,</span> <span class="n">frombuffer</span><span class="p">,</span> <span class="n">angle</span>
 
 
-<div class="viewcode-block" id="read_float64"><a class="viewcode-back" href="../../raw_read.html#PyLTSpice.raw_read.read_float64">[docs]</a><span class="k">def</span> <span class="nf">read_float64</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">read_float64</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Reads a 64 bit float value, normally associated with the plot X axis.</span>
 <span class="sd">    The codification is done as follows:</span>
@@ -312,10 +316,10 @@
 <span class="sd">    :rtype: float</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">s</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;d&quot;</span><span class="p">,</span> <span class="n">s</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span></div>
+    <span class="k">return</span> <span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;d&quot;</span><span class="p">,</span> <span class="n">s</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 
 
-<div class="viewcode-block" id="read_complex"><a class="viewcode-back" href="../../raw_read.html#PyLTSpice.raw_read.read_complex">[docs]</a><span class="k">def</span> <span class="nf">read_complex</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">read_complex</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Used to convert a 16 byte stream into a complex data point. Usually used for the .AC simulations.</span>
 <span class="sd">    The encoding is the same as for the set_pointB8() but two values are encoded. First one is the real part and</span>
@@ -328,10 +332,10 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">s</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span>
     <span class="p">(</span><span class="n">re</span><span class="p">,</span> <span class="n">im</span><span class="p">)</span> <span class="o">=</span> <span class="n">unpack</span><span class="p">(</span><span class="s1">&#39;dd&#39;</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
-    <span class="k">return</span> <span class="nb">complex</span><span class="p">(</span><span class="n">re</span><span class="p">,</span> <span class="n">im</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="nb">complex</span><span class="p">(</span><span class="n">re</span><span class="p">,</span> <span class="n">im</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="read_float32"><a class="viewcode-back" href="../../raw_read.html#PyLTSpice.raw_read.read_float32">[docs]</a><span class="k">def</span> <span class="nf">read_float32</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">read_float32</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Reads a 32bit float (single precision) from a stream. This is how most real values are stored in the RAW file.</span>
 <span class="sd">    This codification uses 4 bytes as follows:</span>
@@ -361,25 +365,25 @@
 <span class="sd">    :rtype: float</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">s</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;f&quot;</span><span class="p">,</span> <span class="n">s</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span></div>
+    <span class="k">return</span> <span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;f&quot;</span><span class="p">,</span> <span class="n">s</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 
 
-<div class="viewcode-block" id="consume4bytes"><a class="viewcode-back" href="../../raw_read.html#PyLTSpice.raw_read.consume4bytes">[docs]</a><span class="k">def</span> <span class="nf">consume4bytes</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">consume4bytes</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Used to advance the file pointer 4 bytes&quot;&quot;&quot;</span>
-    <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span></div>
+    <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="consume8bytes"><a class="viewcode-back" href="../../raw_read.html#PyLTSpice.raw_read.consume8bytes">[docs]</a><span class="k">def</span> <span class="nf">consume8bytes</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">consume8bytes</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Used to advance the file pointer 8 bytes&quot;&quot;&quot;</span>
-    <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span></div>
+    <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="consume16bytes"><a class="viewcode-back" href="../../raw_read.html#PyLTSpice.raw_read.consume16bytes">[docs]</a><span class="k">def</span> <span class="nf">consume16bytes</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">consume16bytes</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Used to advance the file pointer 16 bytes&quot;&quot;&quot;</span>
-    <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span></div>
+    <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="RawRead"><a class="viewcode-back" href="../../raw_read.html#PyLTSpice.raw_read.RawRead">[docs]</a><span class="k">class</span> <span class="nc">RawRead</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="RawRead"><a class="viewcode-back" href="../../classes/raw_read.html#PyLTSpice.raw_read.RawRead">[docs]</a><span class="k">class</span> <span class="nc">RawRead</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Class for reading LTSpice wave Files. It can read all types of Files. If stepped data is detected,</span>
 <span class="sd">    it will also try to read the corresponding LOG file so to retrieve the stepped data.</span>
 
@@ -629,7 +633,7 @@
                     <span class="c1"># which is always in position 0</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_traces</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">_set_steps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">)</span>
 
-<div class="viewcode-block" id="RawRead.get_raw_property"><a class="viewcode-back" href="../../raw_read.html#PyLTSpice.raw_read.RawRead.get_raw_property">[docs]</a>    <span class="k">def</span> <span class="nf">get_raw_property</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">property_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="RawRead.get_raw_property"><a class="viewcode-back" href="../../classes/raw_read.html#PyLTSpice.raw_read.RawRead.get_raw_property">[docs]</a>    <span class="k">def</span> <span class="nf">get_raw_property</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">property_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get a property. By default it returns all properties defined in the RAW file.</span>
 
@@ -646,7 +650,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid property. Use </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">raw_params</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span></div>
 
-<div class="viewcode-block" id="RawRead.get_trace_names"><a class="viewcode-back" href="../../raw_read.html#PyLTSpice.raw_read.RawRead.get_trace_names">[docs]</a>    <span class="k">def</span> <span class="nf">get_trace_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="RawRead.get_trace_names"><a class="viewcode-back" href="../../classes/raw_read.html#PyLTSpice.raw_read.RawRead.get_trace_names">[docs]</a>    <span class="k">def</span> <span class="nf">get_trace_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns a list of exiting trace names inside of the RAW file.</span>
 
@@ -655,7 +659,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">trace</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">trace</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_traces</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="RawRead.get_trace"><a class="viewcode-back" href="../../raw_read.html#PyLTSpice.raw_read.RawRead.get_trace">[docs]</a>    <span class="k">def</span> <span class="nf">get_trace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trace_ref</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]):</span>
+<div class="viewcode-block" id="RawRead.get_trace"><a class="viewcode-back" href="../../classes/raw_read.html#PyLTSpice.raw_read.RawRead.get_trace">[docs]</a>    <span class="k">def</span> <span class="nf">get_trace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trace_ref</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Retrieves the trace with the requested name (trace_ref).</span>
 
@@ -675,7 +679,21 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_traces</span><span class="p">[</span><span class="n">trace_ref</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="RawRead.get_time_axis"><a class="viewcode-back" href="../../raw_read.html#PyLTSpice.raw_read.RawRead.get_time_axis">[docs]</a>    <span class="k">def</span> <span class="nf">get_time_axis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
+<div class="viewcode-block" id="RawRead.get_wave"><a class="viewcode-back" href="../../classes/raw_read.html#PyLTSpice.raw_read.RawRead.get_wave">[docs]</a>    <span class="k">def</span> <span class="nf">get_wave</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trace_ref</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieves the trace data with the requested name (trace_ref), optionally providing the step number.</span>
+
+<span class="sd">        :param trace_ref: Name of the trace or the index of the trace</span>
+<span class="sd">        :type trace_ref: str or int</span>
+<span class="sd">        :param step: Optional parameter specifying which step to retrieve.</span>
+<span class="sd">        :type step: int</span>
+<span class="sd">        :return: A numpy array containing the requested waveform.</span>
+<span class="sd">        :rtype: numpy.array</span>
+<span class="sd">        :raises IndexError: When a trace is not found</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_trace</span><span class="p">(</span><span class="n">trace_ref</span><span class="p">)</span><span class="o">.</span><span class="n">get_wave</span><span class="p">(</span><span class="n">step</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RawRead.get_time_axis"><a class="viewcode-back" href="../../classes/raw_read.html#PyLTSpice.raw_read.RawRead.get_time_axis">[docs]</a>    <span class="k">def</span> <span class="nf">get_time_axis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        *(Deprecated)* Use get_axis method instead</span>
 
@@ -684,7 +702,7 @@
 <span class="sd">        the time trace have a negative value.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_trace</span><span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_time_axis</span><span class="p">(</span><span class="n">step</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="RawRead.get_axis"><a class="viewcode-back" href="../../raw_read.html#PyLTSpice.raw_read.RawRead.get_axis">[docs]</a>    <span class="k">def</span> <span class="nf">get_axis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
+<div class="viewcode-block" id="RawRead.get_axis"><a class="viewcode-back" href="../../classes/raw_read.html#PyLTSpice.raw_read.RawRead.get_axis">[docs]</a>    <span class="k">def</span> <span class="nf">get_axis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        This function is equivalent to get_trace(0).get_wave(step) instruction.</span>
 <span class="sd">        It also implements a workaround on a LTSpice issue when using 2nd Order compression, where some values on</span>
@@ -703,7 +721,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;This RAW file does not have an axis.&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="RawRead.get_len"><a class="viewcode-back" href="../../raw_read.html#PyLTSpice.raw_read.RawRead.get_len">[docs]</a>    <span class="k">def</span> <span class="nf">get_len</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<div class="viewcode-block" id="RawRead.get_len"><a class="viewcode-back" href="../../classes/raw_read.html#PyLTSpice.raw_read.RawRead.get_len">[docs]</a>    <span class="k">def</span> <span class="nf">get_len</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the length of the data at the give step index.</span>
 <span class="sd">        :param step: Optional parameter the step index.</span>
@@ -749,7 +767,7 @@
         <span class="sd">&quot;&quot;&quot;Helper function to access traces by using the [ ] operator.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_trace</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
 
-<div class="viewcode-block" id="RawRead.get_steps"><a class="viewcode-back" href="../../raw_read.html#PyLTSpice.raw_read.RawRead.get_steps">[docs]</a>    <span class="k">def</span> <span class="nf">get_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="RawRead.get_steps"><a class="viewcode-back" href="../../classes/raw_read.html#PyLTSpice.raw_read.RawRead.get_steps">[docs]</a>    <span class="k">def</span> <span class="nf">get_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns the steps that correspond to the query set in the * * kwargs parameters.</span>
 <span class="sd">        Example: ::</span>
 
@@ -790,112 +808,7 @@
 <span class="c1"># Backward compatibility naming</span>
 <span class="n">LTSpiceRawRead</span> <span class="o">=</span> <span class="n">RawRead</span>
 
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
-    <span class="kn">import</span> <span class="nn">sys</span>
-    <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-    <span class="kn">import</span> <span class="nn">os</span>
-    <span class="kn">from</span> <span class="nn">os.path</span> <span class="kn">import</span> <span class="n">split</span> <span class="k">as</span> <span class="n">pathsplit</span>
-    <span class="kn">from</span> <span class="nn">os.path</span> <span class="kn">import</span> <span class="n">join</span> <span class="k">as</span> <span class="n">pathjoin</span>
-    <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="nb">abs</span> <span class="k">as</span> <span class="n">mag</span>
-
-    <span class="k">def</span> <span class="nf">what_to_units</span><span class="p">(</span><span class="n">whattype</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Determines the unit to display on the plot Y axis&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="s1">&#39;voltage&#39;</span> <span class="ow">in</span> <span class="n">whattype</span><span class="p">:</span>
-            <span class="k">return</span> <span class="s1">&#39;V&#39;</span>
-        <span class="k">if</span> <span class="s1">&#39;current&#39;</span> <span class="ow">in</span> <span class="n">whattype</span><span class="p">:</span>
-            <span class="k">return</span> <span class="s1">&#39;A&#39;</span>
-
-    <span class="n">directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
-
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="n">raw_filename</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-        <span class="n">trace_names</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">trace_names</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">trace_names</span> <span class="o">=</span> <span class="s1">&#39;*&#39;</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">test_directory</span> <span class="o">=</span> <span class="n">pathjoin</span><span class="p">(</span><span class="n">pathsplit</span><span class="p">(</span><span class="n">directory</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;tests&#39;</span><span class="p">)</span>
-        <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;DC sweep.raw&#39;</span>
-        <span class="c1"># filename = &#39;tran.raw&#39;</span>
-        <span class="c1"># filename = &#39;tran - step.raw&#39;</span>
-        <span class="c1"># filename = &#39;ac.raw&#39;</span>
-        <span class="c1"># filename = &#39;AC - STEP.raw&#39;</span>
-        <span class="c1"># filename = &#39;PI_Filter_tf.raw&#39;</span>
-        <span class="c1"># filename = &#39;DC op point - STEP_1.raw&#39;</span>
-        <span class="c1"># filename = &#39;Noise.raw&#39;</span>
-        <span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;test2_gs_000.raw&quot;</span>
-        <span class="n">trace_names</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;run&quot;</span><span class="p">,</span> <span class="s2">&quot;V(out)&quot;</span><span class="p">,</span> <span class="s2">&quot;V(err)&quot;</span><span class="p">)</span>
-        <span class="c1"># trace_names = &#39;*&#39; # &#39;V(out)&#39;,</span>
-        <span class="n">raw_filename</span> <span class="o">=</span> <span class="n">pathjoin</span><span class="p">(</span><span class="n">test_directory</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
-
-    <span class="n">LTR</span> <span class="o">=</span> <span class="n">RawRead</span><span class="p">(</span><span class="n">raw_filename</span><span class="p">,</span> <span class="n">trace_names</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">param</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">LTR</span><span class="o">.</span><span class="n">raw_params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">: </span><span class="si">{}{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="o">*</span><span class="p">(</span><span class="mi">20</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">param</span><span class="p">)),</span> <span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()))</span>
-
-    <span class="k">if</span> <span class="n">trace_names</span> <span class="o">==</span> <span class="s1">&#39;*&#39;</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Reading all the traces in the raw file&quot;</span><span class="p">)</span>
-        <span class="n">trace_names</span> <span class="o">=</span> <span class="n">LTR</span><span class="o">.</span><span class="n">get_trace_names</span><span class="p">()</span>
-
-    <span class="n">traces</span> <span class="o">=</span> <span class="p">[</span><span class="n">LTR</span><span class="o">.</span><span class="n">get_trace</span><span class="p">(</span><span class="n">trace</span><span class="p">)</span> <span class="k">for</span> <span class="n">trace</span> <span class="ow">in</span> <span class="n">trace_names</span><span class="p">]</span>
-    <span class="k">if</span> <span class="n">LTR</span><span class="o">.</span><span class="n">axis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">steps_data</span> <span class="o">=</span> <span class="n">LTR</span><span class="o">.</span><span class="n">get_steps</span><span class="p">()</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">steps_data</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Steps read are :&quot;</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">steps_data</span><span class="p">))</span>
-
-    <span class="k">if</span> <span class="s1">&#39;complex&#39;</span> <span class="ow">in</span> <span class="n">LTR</span><span class="o">.</span><span class="n">flags</span><span class="p">:</span>
-        <span class="n">n_axis</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">traces</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">n_axis</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">traces</span><span class="p">)</span>
-
-    <span class="n">fig</span><span class="p">,</span> <span class="n">axis_set</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">n_axis</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">sharex</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
-    <span class="n">write_labels</span> <span class="o">=</span> <span class="kc">True</span>
-
-    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">trace</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">traces</span><span class="p">):</span>
-        <span class="k">if</span> <span class="s1">&#39;complex&#39;</span> <span class="ow">in</span> <span class="n">LTR</span><span class="o">.</span><span class="n">flags</span><span class="p">:</span>
-            <span class="n">axises</span> <span class="o">=</span> <span class="n">axis_set</span><span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="n">i</span><span class="p">:</span> <span class="mi">2</span><span class="o">*</span><span class="n">i</span> <span class="o">+</span> <span class="mi">2</span><span class="p">]</span>  <span class="c1"># Returns two axis</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">n_axis</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="n">axises</span> <span class="o">=</span> <span class="p">[</span><span class="n">axis_set</span><span class="p">]</span>  <span class="c1"># Needs to return a list</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">axises</span> <span class="o">=</span> <span class="n">axis_set</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># Returns just one axis but enclosed in a list</span>
-        <span class="n">magnitude</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">for</span> <span class="n">ax</span> <span class="ow">in</span> <span class="n">axises</span><span class="p">:</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
-            <span class="k">if</span> <span class="s1">&#39;log&#39;</span> <span class="ow">in</span> <span class="n">LTR</span><span class="o">.</span><span class="n">flags</span><span class="p">:</span>
-                <span class="n">ax</span><span class="o">.</span><span class="n">set_xscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">step_i</span> <span class="ow">in</span> <span class="n">steps_data</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">LTR</span><span class="o">.</span><span class="n">axis</span><span class="p">:</span>
-                    <span class="n">x</span> <span class="o">=</span> <span class="n">LTR</span><span class="o">.</span><span class="n">get_axis</span><span class="p">(</span><span class="n">step_i</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">LTR</span><span class="o">.</span><span class="n">nPoints</span><span class="p">)</span>
-                <span class="n">y</span> <span class="o">=</span> <span class="n">traces</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">get_wave</span><span class="p">(</span><span class="n">step_i</span><span class="p">)</span>
-                <span class="k">if</span> <span class="s1">&#39;complex&#39;</span> <span class="ow">in</span> <span class="n">LTR</span><span class="o">.</span><span class="n">flags</span><span class="p">:</span>
-                    <span class="n">x</span> <span class="o">=</span> <span class="n">mag</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="n">magnitude</span><span class="p">:</span>
-                        <span class="n">ax</span><span class="o">.</span><span class="n">set_yscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
-                        <span class="n">y</span> <span class="o">=</span> <span class="n">mag</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="n">y</span> <span class="o">=</span> <span class="n">angle</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">deg</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">write_labels</span><span class="p">:</span>
-                    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">steps_data</span><span class="p">[</span><span class="n">step_i</span><span class="p">]))</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-            <span class="n">write_labels</span> <span class="o">=</span> <span class="kc">False</span>
-
-            <span class="k">if</span> <span class="s1">&#39;complex&#39;</span> <span class="ow">in</span> <span class="n">LTR</span><span class="o">.</span><span class="n">flags</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">magnitude</span><span class="p">:</span>
-                    <span class="n">title</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">trace</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> Mag [db</span><span class="si">{</span><span class="n">what_to_units</span><span class="p">(</span><span class="n">trace</span><span class="o">.</span><span class="n">whattype</span><span class="p">)</span><span class="si">}</span><span class="s2">]&quot;</span>
-                    <span class="n">magnitude</span> <span class="o">=</span> <span class="kc">False</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">title</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">trace</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> Phase [deg]&quot;</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">title</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">trace</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> [</span><span class="si">{</span><span class="n">what_to_units</span><span class="p">(</span><span class="n">trace</span><span class="o">.</span><span class="n">whattype</span><span class="p">)</span><span class="si">}</span><span class="s2">]&quot;</span>
-            <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
-
-    <span class="n">plt</span><span class="o">.</span><span class="n">figlegend</span><span class="p">()</span>
-    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-<span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">&#39;&#39;&#39;</span>
+<span class="c1"># if __name__ == &quot;__main__&quot;:</span>
 <span class="c1"># out = open(&quot;RAW_TEST_out_test1.txt&quot;, &#39;w&#39;)</span>
 <span class="c1">#</span>
 <span class="c1"># for step in LTR.get_steps():</span>
