@@ -97,8 +97,7 @@ __copyright__ = "Copyright 2020, Fribourg Switzerland"
 
 import logging
 import os
-import subprocess
-import sys
+import pathlib
 import threading
 import time
 import traceback
@@ -107,58 +106,25 @@ from typing import Callable, Union, Any, Tuple
 from warnings import warn
 
 from .SpiceEditor import SpiceEditor
-
-__all__ = ('SimCommander', 'cmdline_switches', 'LTspice_exe')
+from .simulator import clock_function, Simulator
 
 END_LINE_TERM = '\n'
 
 logging.basicConfig(filename='SpiceBatch.log', level=logging.INFO)
 
-if sys.platform == "linux":
-    if os.environ.get('LTSPICEFOLDER') is not None:
-        LTspice_exe = ["wine", os.environ['LTSPICEFOLDER'] + "/XVIIx64.exe"]
-    else:
-        LTspice_exe = ["wine", os.path.expanduser("~") + "/.wine/drive_c/Program Files/LTC/LTspiceXVII/XVIIx64.exe"]
-    LTspice_arg = {'netlist': ['-netlist'], 'run': ['-b', '-Run']}
-    PROCNAME = "XVIIx64.exe"
-elif sys.platform == "darwin":
-    LTspice_exe = ['/Applications/LTspice.app/Contents/MacOS/LTspice']
-    LTspice_arg = {'run': ['-b']}
-    PROCNAME = "XVIIx64"
-else:  # Windows
-    LTspice_exe = [r"C:\Program Files\LTC\LTspiceXVII\XVIIx64.exe"]
-    LTspice_arg = {'netlist': ['-netlist'], 'run': ['-b', '-Run']}
-    PROCNAME = "XVIIx64.exe"
 
-# Legacy
-LTspiceIV_exe = [r"C:\Program Files (x86)\LTC\LTspiceIV\scad3.exe"]
-
-cmdline_switches = []
-
-if sys.version_info.major >= 3 and sys.version_info.minor >= 6:
-    clock_function = time.process_time
-
-
-    def run_function(command, timeout=None):
-        result = subprocess.run(command, timeout=timeout)
-        return result.returncode
-else:
-    clock_function = time.clock
-
-
-    def run_function(command, timeout=None):
-        return subprocess.call(command, timeout=timeout)
 
 
 class RunTask(threading.Thread):
     """This is an internal Class and should not be used directly by the User."""
 
-    def __init__(self, run_no, netlist_file: str, callback: Callable[[str, str], Any], timeout=None, verbose=True):
+    def __init__(self, simulator: Simulator,  run_no, netlist_file: str, callback: Callable[[str, str], Any], timeout=None, verbose=True):
         self.verbose = verbose
         self.timeout = timeout  # Thanks to Daniel Phili for implementing this
 
         threading.Thread.__init__(self)
         self.setName("sim%d" % run_no)
+        self.simulator = simulator
         self.run_no = run_no
         self.netlist_file = netlist_file
         self.callback = callback
@@ -172,15 +138,13 @@ class RunTask(threading.Thread):
         logger.setLevel(logging.INFO)
 
         # Running the Simulation
-        cmd_run = LTspice_exe + LTspice_arg.get('run', '') + [self.netlist_file] + cmdline_switches
 
-        # run the simulation
         self.start_time = clock_function()
         if self.verbose:
             print(time.asctime(), ": Starting simulation %d" % self.run_no)
 
         # start execution
-        self.retcode = run_function(cmd_run, timeout=self.timeout)
+        self.retcode = self.simulator.run(self.netlist_file, self.timeout)
 
         # print simulation time
         sim_time = time.strftime("%H:%M:%S", time.gmtime(clock_function() - self.start_time))
@@ -253,9 +217,12 @@ class SimCommander(SpiceEditor):
                      call a function that tries to detect the encoding automatically. This however is not 100% fool
                      proof.
     :type encoding: str, optional
+    :param simulator: Forcing a given simulator executable.
+    :type simulator: str or Simulator, optional
     """
 
-    def __init__(self, circuit_file: str, parallel_sims: int = 4, timeout=None, verbose=True, encoding='autodetect'):
+    def __init__(self, circuit_file: str, parallel_sims: int = 4, timeout=None, verbose=True, encoding='autodetect',
+                 simulator=None):
         """
         Class Constructor. It serves to start batches of simulations.
         See Class documentation for more information.
@@ -283,16 +250,21 @@ class SimCommander(SpiceEditor):
         self.okSim = 0  # number of succesfull completed simulations
         # self.failParam = []  # collects for later user investigation of failed parameter sets
 
+        # Gets a simulator.
+        if simulator is None:
+            self.simulator = Simulator.get_default_simulator()
+        elif isinstance(simulator, Simulator):
+            self.simulator = simulator
+        elif isinstance(simulator, (str, pathlib.Path)):
+            self.simulator = Simulator.create_from(simulator)
+        else:
+            raise TypeError("Invalid simulator type. Either use a string with the ")
+
         if file_ext == '.asc':
             netlist_file = self.circuit_radic + '.net'
-            # prepare instructions, two stages used to enable edits on the netlist w/o open GUI
-            # see: https://www.mikrocontroller.net/topic/480647?goto=5965300#5965300
-            assert 'netlist' in LTspice_arg, "In this platform LTSpice doesn't have netlist generation capabilities "
-            cmd_netlist = LTspice_exe + LTspice_arg.get('netlist') + [circuit_file]
-
             if self.verbose:
                 print("Creating Netlist")
-            retcode = run_function(cmd_netlist)
+            retcode = self.simulator.create_netlist(circuit_file)
             if retcode == 0 and os.path.exists(netlist_file):
                 if self.verbose:
                     print("The Netlist was successfully created")
@@ -318,22 +290,22 @@ class SimCommander(SpiceEditor):
         self.wait_completion()  # TODO: Kill all pending simulations
         self.logger.debug("Exiting SimCommander")
 
-    def setLTspiceRunCommand(self, run_command: Union[str, list]) -> None:
+    def setLTspiceRunCommand(self, spice_tool: Union[str, Simulator]) -> None:
         """
-        Manually setting the LTSpice run command
+        Manually setting the LTSpice run command.
 
-        :param path: String containing the command to be invoked to run LTSpice
-        :type path: str or list
+        :param spice_tool: String containing the path to the spice tool to be used, or alternatively the Simulator
+                           object.
+        :type spice_tool: str or Simulator
         :return: Nothing
         :rtype: None
         """
-        global LTspice_exe
-        if isinstance(run_command, str):
-            LTspice_exe = [run_command]
-        elif isinstance(run_command, list):
-            LTspice_exe = run_command
+        if isinstance(spice_tool, str):
+            self.simulator = Simulator.create_from(spice_tool)
+        elif isinstance(spice_tool, Simulator):
+            self.simulator = spice_tool
         else:
-            raise TypeError("Expecting str or list objects")
+            raise TypeError("Expecting str or Simulator objects")
 
     def add_LTspiceRunCmdLineSwitches(self, *args) -> None:
         """
@@ -347,8 +319,7 @@ class SimCommander(SpiceEditor):
         :type args: list[str]
         :returns: Nothing
         """
-        global cmdline_switches
-        cmdline_switches = list(args)
+        self.simulator.add_command_line_switche(*args)
 
     def run(self, run_filename: str = None, wait_resource: bool = True,
             callback: Callable[[str, str], Any] = None, timeout: float = 600) -> RunTask:
@@ -394,7 +365,7 @@ class SimCommander(SpiceEditor):
                 self.updated_stats()  # purge ended tasks
 
                 if (wait_resource is False) or (len(self.threads) < self.parallel_sims):
-                    t = RunTask(self.runno, run_netlist_file, callback,
+                    t = RunTask(self.simulator, self.runno, run_netlist_file, callback,
                                 timeout=self.timeout, verbose=self.verbose)
                     self.threads.append(t)
                     t.start()
@@ -431,13 +402,8 @@ class SimCommander(SpiceEditor):
     @staticmethod
     def kill_all_ltspice():
         """Function to terminate LTSpice in windows"""
-        import psutil
-        for proc in psutil.process_iter():
-            # check whether the process name matches
-
-            if proc.name() == PROCNAME:
-                print("killing ltspice", proc.pid)
-                proc.kill()
+        simulator = Simulator.get_default_simulator()
+        simulator.kill_all()
 
     def wait_completion(self, timeout=None, abort_all_on_timeout=False) -> bool:
         """
