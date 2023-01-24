@@ -31,9 +31,10 @@ else:
     # filename = 'ac.raw'
     # filename = 'AC - STEP.raw'
     # filename = 'PI_Filter_tf.raw'
-    filename = 'DC op point - STEP_1.raw'
+    # filename = 'DC op point - STEP_1.raw'
     # filename = 'Noise.raw'
     # filename = "test2_gs_000.raw"
+    filename = 'fra_eg1.fra_1.raw'
     # trace_names = ("run", "V(out)", "V(err)")
     trace_names = '*' # 'V(out)',
     raw_filename = pathjoin(test_directory, filename)
@@ -72,7 +73,7 @@ for i, trace in enumerate(traces):
     magnitude = True
     for ax in axises:
         ax.grid(True)
-        if 'log' in LTR.flags:
+        if True: # 'log' in LTR.flags:
             ax.set_xscale('log')
         for step_i in steps_data:
             if LTR.axis:

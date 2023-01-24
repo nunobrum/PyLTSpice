@@ -357,6 +357,7 @@ class RawRead(object):
         'Transient Analysis',
         'Transfer Function',
         'Noise Spectral Density',
+        'Frequency Response Analysis',
     )
 
     def __init__(self, raw_filename: str, traces_to_read: Union[str, List[str], Tuple[str], None] = '*', **kwargs):
