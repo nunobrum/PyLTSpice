@@ -8,7 +8,7 @@ def processing_data(raw_file, log_file):
 simulator = r"C:\Program Files\LTC\LTspiceXVII\XVIIx64.exe"
 
 # select spice model
-LTC = SimCommander("Batch_Test.asc", simulator=simulator)
+LTC = SimCommander("Batch_Test.asc")
 # set default arguments
 LTC.set_parameters(res=0, cap=100e-6)
 LTC.set_component_value('R2', '2k')  # Modifying the value of a resistor

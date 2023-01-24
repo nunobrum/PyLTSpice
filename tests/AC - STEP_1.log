@@ -4,7 +4,7 @@ Circuit: * C:\sandbox\PyLTSpice_GitHub_nunobrum\tests\AC - STEP.asc
 .step r1=1000
 .step r1=10000
 
-Date: Sun Jan 22 23:03:17 2023
+Date: Mon Jan 23 00:49:05 2023
 Total elapsed time: 0.006 seconds.
 
 tnom = 27
@@ -18,6 +18,6 @@ rejected = 0
 matrix size = 3
 fillins = 0
 solver = Normal
-Avg thread counts: 8.0/0.0/0.0/8.0
+Avg thread counts: 8.0/0.0/0.0/6.2
 Matrix Compiler1:       4 opcodes
 Matrix Compiler2:      15 opcodes

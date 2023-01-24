@@ -2,8 +2,8 @@ Circuit: * C:\sandbox\PyLTSpice_GitHub_nunobrum\tests\DC op point - STEP.asc
 
 Direct Newton iteration for .op point succeeded.
 
-Date: Sun Jan 22 23:03:26 2023
-Total elapsed time: 0.014 seconds.
+Date: Mon Jan 23 00:49:15 2023
+Total elapsed time: 0.020 seconds.
 
 tnom = 27
 temp = 27

@@ -229,8 +229,8 @@ A more detailed documentation is directly included in the source file docstrings
 
 ## History ##
 * Version 3.1\
-Supporting the new improved LTspice version from ADI
-Adding the get_wave() directly to the RawRead Class
+Supporting the new improved LTspice version from ADI. \
+Adding the get_wave() directly to the RawRead Class.
 
 * Version 3.0\
 Eliminating the LTSpice prefixes from files and classes.\

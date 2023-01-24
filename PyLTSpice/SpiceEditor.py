@@ -797,6 +797,7 @@ class SpiceCircuit(object):
                             circuit_nodes.append(node)
         return circuit_nodes
 
+
 class SpiceEditor(SpiceCircuit):
     """
     This class implements interfaces to manipulate SPICE netlist files. The class doesn't update the netlist file
