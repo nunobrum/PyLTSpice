@@ -1,4 +1,4 @@
-<mxfile host="app.diagrams.net" modified="2023-01-25T18:47:51.520Z" agent="5.0 (Windows)" etag="7jPOrrd6cU-_cxSZPm-6" version="20.8.11" type="github" pages="2">
+<mxfile host="app.diagrams.net" modified="2023-01-25T18:49:26.523Z" agent="5.0 (Windows)" etag="224rPzLWMzb-8UB_MSbv" version="20.8.11" type="github" pages="2">
   <diagram name="Page-1" id="6133507b-19e7-1e82-6fc7-422aa6c4b21f">
     <mxGraphModel dx="2074" dy="754" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" background="none" math="0" shadow="0">
       <root>
@@ -539,6 +539,9 @@
             <mxPoint x="700" y="290" as="sourcePoint" />
             <mxPoint x="910" y="310" as="targetPoint" />
           </mxGeometry>
+        </mxCell>
+        <mxCell id="4gp9IJeULpyUzOKr3maw-40" value="&lt;h1&gt;Stuff to simulate&lt;/h1&gt;&lt;p&gt;Can be schematics, can be totally different things.&lt;br&gt;Common thing :they must write a netlist file, and then call run().&lt;br&gt;&lt;/p&gt;" style="text;html=1;strokeColor=none;fillColor=none;spacing=5;spacingTop=-20;whiteSpace=wrap;overflow=hidden;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="45" y="20" width="215" height="120" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
