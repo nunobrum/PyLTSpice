@@ -619,6 +619,20 @@ class RawRead(object):
         else:
             return self._traces[trace_ref]
 
+    def get_wave(self, trace_ref: Union[str, int], step: int = 0):
+        """
+        Retrieves the trace data with the requested name (trace_ref), optionally providing the step number.
+
+        :param trace_ref: Name of the trace or the index of the trace
+        :type trace_ref: str or int
+        :param step: Optional parameter specifying which step to retrieve.
+        :type step: int
+        :return: A numpy array containing the requested waveform.
+        :rtype: numpy.array
+        :raises IndexError: When a trace is not found
+        """
+        return self.get_trace(trace_ref).get_wave(step)
+
     def get_time_axis(self, step: int = 0):
         """
         *(Deprecated)* Use get_axis method instead
