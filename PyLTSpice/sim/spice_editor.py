@@ -9,7 +9,7 @@
 #   |_|    \__, |_____|_| |____/| .__/|_|\___\___|
 #          |___/                |_|
 #
-# Name:        SpiceEditor.py
+# Name:        spice_editor.py
 # Purpose:     Class made to update Generic Spice Netlists
 #
 # Author:      Nuno Brum (nuno.brum@gmail.com)
@@ -24,7 +24,7 @@ import re
 import logging
 from math import log, floor
 from typing import Union, Optional, List
-from .detect_encoding import detect_encoding
+from PyLTSpice.detect_encoding import detect_encoding
 
 __author__ = "Nuno Canto Brum <nuno.brum@gmail.com>"
 __copyright__ = "Copyright 2021, Fribourg Switzerland"

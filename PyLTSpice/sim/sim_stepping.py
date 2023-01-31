@@ -24,7 +24,7 @@ __copyright__ = "Copyright 2017, Fribourg Switzerland"
 
 from typing import Callable, Any
 from typing import Iterable
-from .sim_batch import SimCommander
+from PyLTSpice.sim.sim_batch import SimCommander
 
 
 class StepInfo(object):
@@ -150,7 +150,7 @@ class SimStepper(SimCommander):
 if __name__ == "__main__":
     from PyLTSpice.sweep_iterators import *
 
-    test = SimStepper("..\\tests\\DC sweep.asc")
+    test = SimStepper("../../tests/DC sweep.asc")
     test.verbose = True
     test.add_param_sweep("res", [10, 11, 9])
     test.add_value_sweep("R1", sweep_log(0.1, 10))
