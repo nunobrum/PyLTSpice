@@ -97,12 +97,13 @@ __copyright__ = "Copyright 2020, Fribourg Switzerland"
 
 import logging
 import os
-from typing import Callable, Any
+from pathlib import Path
+from typing import Callable, Any, Union
 
-from .spice_editor import SpiceEditor
-from .simulator import Simulator
-from .sim_runner import SimRunner
-from .local_run_task import RunTask
+from ..sim.spice_editor import SpiceEditor
+from ..sim.simulator import Simulator
+from ..sim.local_run_task import RunTask
+from ..sim.sim_runner import SimRunner
 
 END_LINE_TERM = '\n'
 
@@ -114,25 +115,55 @@ class SimCommander(SpiceEditor):
     Backwards compatibility class
     """
 
-    def __init__(self, netlist_file, encoding='autodetect'):
+    def __init__(self, netlist_file: Union[str, Path], encoding='autodetect'):
+        simulator = Simulator.get_default_simulator()
+        netlist_file = Path(netlist_file)
+        if netlist_file.suffix == '.asc':
+            netlist_file = simulator.create_netlist(netlist_file)
         super().__init__(netlist_file, encoding)
-        self.runner = SimRunner(simulator=Simulator.get_default_simulator())
+        self.runner = SimRunner(simulator=simulator)
+
+    def setLTspiceRunCommand(self, spice_tool: Union[str, Simulator]) -> None:
+        """
+        Manually setting the LTSpice run command.
+
+        :param spice_tool: String containing the path to the spice tool to be used, or alternatively the Simulator
+                           object.
+        :type spice_tool: str or Simulator
+        :return: Nothing
+        :rtype: None
+        """
+        self.runner.setRunCommand(spice_tool)
+
+    def add_LTspiceRunCmdLineSwitches(self, *args) -> None:
+        """
+        Used to add an extra command line argument such as -I<path> to add symbol search path or -FastAccess
+        to convert the raw file into Fast Access.
+        The arguments is a list of strings as is defined in the LTSpice command line documentation.
+
+        :param args: list of strings
+            A list of command line switches such as "-ascii" for generating a raw file in text format or "-alt" for
+            setting the solver to alternate. See Command Line Switches information on LTSpice help file.
+        :type args: list[str]
+        :returns: Nothing
+        """
+        self.runner.addRunCmdLineSwitches(*args)
 
     def run(self, run_filename: str = None, wait_resource: bool = True,
             callback: Callable[[str, str], Any] = None, timeout: float = 600) -> RunTask:
-        return self.runner.run(self.netlist_file, wait_resource, callback, timeout)
+        return self.runner.run(self.netlist_file, wait_resource=wait_resource, callback=callback, timeout=timeout,
+                               run_filename=run_filename)
+
+    def updated_stats(self):
+        """
+        This function updates the OK/Fail statistics and releases finished RunTask objects from memory.
+
+        :returns: Nothing
+        """
+        return self.runner.updated_stats()
 
     def wait_completion(self, timeout=None, abort_all_on_timeout=False) -> bool:
         return self.runner.wait_completion(timeout, abort_all_on_timeout)
-
-    def file_cleanup(self):
-        self.runner.file_cleanup()
-
-    def setLTspiceRunCommand(self, *args):
-        self.runner.addRunCmdLineSwitches(*args)
-
-    def add_LTspiceRunCmdLineSwitches(self, *args):
-        self.runner.addRunCmdLineSwitches(*args)
 
 
 if __name__ == "__main__":
@@ -140,7 +171,7 @@ if __name__ == "__main__":
     meAbsPath = os.path.dirname(os.path.realpath(__file__))
     meAbsPath, _ = os.path.split(meAbsPath)
     # select spice model
-    LTC = SimCommander(meAbsPath + "\\test_files\\testfile.asc")
+    LTC = SimCommander('C:\\sandbox\\PySpice\\tests\\testfile.asc')
     # set default arguments
     LTC.set_parameters(res=0.001, cap=100e-6)
     # define simulation

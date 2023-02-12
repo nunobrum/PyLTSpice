@@ -17,11 +17,13 @@
 # Created:     23-12-2016
 # Licence:     refer to the LICENSE file
 # -------------------------------------------------------------------------------
+import logging
 import sys
 import os
 import subprocess
 import time
 from pathlib import Path
+from typing import Union
 
 if sys.version_info.major >= 3 and sys.version_info.minor >= 6:
     clock_function = time.process_time
@@ -196,14 +198,25 @@ class Simulator(object):
         # start execution
         return run_function(cmd_run, timeout=timeout)
 
-    def create_netlist(self, circuit_file):
+    def create_netlist(self, circuit_file: Union[str, Path]) -> Path:
         # prepare instructions, two stages used to enable edits on the netlist w/o open GUI
         # see: https://www.mikrocontroller.net/topic/480647?goto=5965300#5965300
-
+        circuit_file = Path(circuit_file)
         if sys.platform == 'darwin':
             NotImplementedError("In this platform LTSpice doesn't have netlist generation capabilities")
         cmd_netlist = self.spice_exe + ['-netlist'] + [circuit_file.as_posix()]
-        return run_function(cmd_netlist)
+        print(f"Creating netlist file from {circuit_file}", end='...')
+        error = run_function(cmd_netlist)
+
+        if error == 0:
+            netlist = circuit_file.with_suffix('.net')
+            if netlist.exists():
+                print("OK")
+                return netlist
+        msg = "Failed to create netlist"
+        print(msg)
+        logging.error(msg)
+        raise RuntimeError(msg)
 
     def kill_all(self):
         import psutil

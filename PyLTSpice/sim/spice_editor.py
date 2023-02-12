@@ -18,7 +18,7 @@
 # Licence:     refer to the LICENSE file
 # -------------------------------------------------------------------------------
 import os
-import pathlib
+from pathlib import Path
 import traceback
 import re
 import logging
@@ -808,9 +808,9 @@ class SpiceEditor(SpiceCircuit):
     call a function that tries to detect the encoding automatically. This however is not 100% fool proof.
     :type encoding: str, optional
     """
-    def __init__(self, netlist_file, encoding='autodetect'):
+    def __init__(self, netlist_file: Union[str, Path], encoding='autodetect'):
         super().__init__()
-        self.netlist_file = pathlib.Path(netlist_file)
+        self.netlist_file = Path(netlist_file)
         self.modified_subcircuits = {}
         if encoding == 'autodetect':
             self.encoding = detect_encoding(netlist_file, '*')  # Normally the file will start with a '*'

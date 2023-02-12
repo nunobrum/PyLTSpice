@@ -97,7 +97,8 @@ __copyright__ = "Copyright 2020, Fribourg Switzerland"
 
 import logging
 import os
-from pathlib import Path
+import shutil
+from pathlib import Path, PurePath
 import threading
 import time
 import traceback
@@ -105,8 +106,9 @@ from time import sleep
 from typing import Callable, Union, Any, Tuple
 from warnings import warn
 
-from .spice_editor import SpiceEditor
-from .simulator import clock_function, Simulator
+from ..sim.local_run_task import RunTask
+from ..sim.spice_editor import SpiceEditor
+from ..sim.simulator import clock_function, Simulator
 
 END_LINE_TERM = '\n'
 
@@ -213,38 +215,64 @@ class SimRunner(object):
         :type args: list[str]
         :returns: Nothing
         """
-        self.simulator.add_command_line_switche(*args)
+        self.simulator.add_command_line_switch(*args)
+
+    def _on_output_folder(self, afile):
+        if self.output_folder:
+            return self.output_folder / afile
+        else:
+            return PurePath(afile)
+
+    def _to_output_folder(self, afile: Path, *, copy: bool, new_name: str = ''):
+        if self.output_folder:
+            if new_name:
+                ddst = self.output_folder / new_name
+            else:
+                ddst = self.output_folder
+
+            if copy:
+                dest = shutil.copy(afile, ddst)
+            else:
+                dest = shutil.move(afile, ddst)
+            return Path(dest)
+        else:
+            return afile
+
+    def _run_file_name(self, netlist):
+        if not isinstance(netlist, Path):
+            netlist = Path(netlist)
+        return "%s_%i.net" % (netlist.stem, self.runno)
 
     def create_netlist(self, asc_file: Union[str, Path]):
-
-        if self.circuit_file.suffix == '.asc':
-            netlist_file = self.circuit_file.with_suffix('.net')
+        if not isinstance(asc_file, Path):
+            asc_file = Path(asc_file)
+        if asc_file.suffix == '.asc':
+            netlist_file = asc_file.with_suffix('.net')
             if self.verbose:
                 print("Creating Netlist")
             retcode = self.simulator.create_netlist(netlist_file)
             if retcode == 0 and netlist_file.exists():
                 if self.verbose:
                     print("The Netlist was successfully created")
+                netlist_file = self._to_output_folder(netlist_file, copy=False)
                 self.workfiles.append(netlist_file)
+                return netlist_file
             else:
                 self.logger.error("Unable to create Netlist")
                 if self.verbose:
-                    print("Unable to create the Netlist from %s" % self.circuit_file)
-                netlist_file = None
-        else:
-            netlist_file = self.circuit_file
-        self.reset_netlist()
+                    print("Unable to create the Netlist from %s" % asc_file)
+        return None
 
-    def run(self, run_filename: str = None, wait_resource: bool = True,
-            callback: Callable[[str, str], Any] = None, timeout: float = 600) -> RunTask:
+    def run(self, netlist: Union[str, Path, SpiceEditor], *,  wait_resource: bool = True,
+            callback: Callable[[str, str], Any] = None, timeout: float = 600, run_filename: str = None) -> RunTask:
         """
         Executes a simulation run with the conditions set by the user.
         Conditions are set by the set_parameter, set_component_value or add_instruction functions.
 
-        :param run_filename:
+        :param netlist:
             The name of the netlist can be optionally overridden if the user wants to have a better control of how the
             simulations files are generated.
-        :type run_filename: str, optional
+        :type netlist: SpiceEditor or a path to the file
         :param wait_resource:
             Setting this parameter to False will force the simulation to start immediately, irrespective of the number
             of simulations already active.
@@ -259,47 +287,46 @@ class SimRunner(object):
         :type: callback: function(raw_file, log_file), optional
         :param timeout: Timeout to be used in waiting for resources. Default time is 600 seconds, i.e. 10 minutes.
         :type timeout: float, optional
-
+        :param run_filename: Name to be used for the log and raw file.
+        :type run_filename: str or Path
         :returns: The task object of type RunTask
         """
-
-        # decide sim required
-        if self.netlist is not None:
-            # update number of simulation
-            self.runno += 1  # Using internal simulation number in case a run_id is not supplied
-
-            # Write the new settings
+        # update number of simulation
+        self.runno += 1  # Using internal simulation number in case a run_id is not supplied
+        # Harmonize the netlist into a Path object pointing to a netlist file on the right output folder
+        if isinstance(netlist, SpiceEditor):
             if run_filename is None:
-                run_filename = "%s_%i.net" % (self.circuit_file.stem, self.runno)
+                run_filename = self._run_file_name(netlist.netlist_file)
 
             # Calculates the path where to store the new netlist.
-            if self.output_folder:
-                run_netlist_file = (self.output_folder / run_filename).with_suffix('.net')
-            else:
-                run_netlist_file = Path(run_filename)
+            run_netlist_file = self._on_output_folder(run_filename).with_suffix('.net')
+            netlist.write_netlist(run_netlist_file)
 
-            self.workfiles.append(run_netlist_file)
-            self.write_netlist(run_netlist_file)
-            t0 = time.perf_counter()  # Store the time for timeout calculation
-            while time.perf_counter() - t0 < timeout:
-                self.updated_stats()  # purge ended tasks
-
-                if (wait_resource is False) or (len(self.threads) < self.parallel_sims):
-                    t = RunTask(self.simulator, self.runno, run_netlist_file, callback,
-                                timeout=self.timeout, verbose=self.verbose)
-                    self.threads.append(t)
-                    t.start()
-                    sleep(0.01)  # Give slack for the thread to start
-                    return t  # Returns the task number
-                sleep(0.1)  # Give Time for other simulations to end
-            else:
-                self.logger.error("Timeout waiting for resources for simulation %d" % self.runno)
-                if self.verbose:
-                    print("Timeout on launching simulation %d." % self.runno)
-
+        elif isinstance(netlist, (Path, str)):
+            if run_filename is None:
+                run_filename = self._run_file_name(netlist)
+            run_netlist_file = self._to_output_folder(netlist, copy=True, new_name=run_filename)
         else:
-            # no simulation required
-            raise UserWarning('skipping simulation ' + str(self.runno))
+            raise TypeError("'netlist' parameter shall be a SpiceEditor, pathlib.Path or a plain str")
+
+        self.workfiles.append(run_netlist_file)
+
+        t0 = time.perf_counter()  # Store the time for timeout calculation
+        while time.perf_counter() - t0 < timeout:
+            self.updated_stats()  # purge ended tasks
+
+            if (wait_resource is False) or (len(self.threads) < self.parallel_sims):
+                t = RunTask(self.simulator, self.runno, run_netlist_file, callback,
+                            timeout=self.timeout, verbose=self.verbose)
+                self.threads.append(t)
+                t.start()
+                sleep(0.01)  # Give slack for the thread to start
+                return t  # Returns the task number
+            sleep(0.1)  # Give Time for other simulations to end
+        else:
+            self.logger.error("Timeout waiting for resources for simulation %d" % self.runno)
+            if self.verbose:
+                print("Timeout on launching simulation %d." % self.runno)
 
     def updated_stats(self):
         """
@@ -409,7 +436,7 @@ if __name__ == "__main__":
     for res in range(5):
         # LTC.runs_to_do = range(2)
         netlist.set_parameters(ANA=res)
-        raw, log = LTC.run()
+        raw, log = netlist.run()
         print("Raw file '%s' | Log File '%s'" % (raw, log))
     # Sim Statistics
     print('Successful/Total Simulations: ' + str(LTC.okSim) + '/' + str(LTC.runno))

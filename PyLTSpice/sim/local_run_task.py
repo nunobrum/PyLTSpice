@@ -33,8 +33,7 @@ from time import sleep
 from typing import Callable, Union, Any, Tuple
 from warnings import warn
 
-from .spice_editor import SpiceEditor
-from .sim_runner import clock_function, Simulator
+from .simulator import clock_function, Simulator
 
 END_LINE_TERM = '\n'
 

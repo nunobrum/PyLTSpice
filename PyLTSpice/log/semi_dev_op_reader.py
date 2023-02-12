@@ -2,13 +2,6 @@
 # coding=utf-8
 
 # -------------------------------------------------------------------------------
-#    ____        _   _____ ____        _
-#   |  _ \ _   _| | |_   _/ ___| _ __ (_) ___ ___
-#   | |_) | | | | |   | | \___ \| '_ \| |/ __/ _ \
-#   |  __/| |_| | |___| |  ___) | |_) | | (_|  __/
-#   |_|    \__, |_____|_| |____/| .__/|_|\___\___|
-#          |___/                |_|
-#
 # Name:        SemiDevOpReader.py
 # Purpose:     Read Semiconductor Device Operating Points from a log file
 #
@@ -23,7 +16,7 @@ Implements a parser for extracting Semiconductor Devices Operating Points from a
 """
 
 import re
-from .detect_encoding import detect_encoding
+from ..utils.detect_encoding import detect_encoding
 
 
 def opLogReader(filename: str) -> dict:
