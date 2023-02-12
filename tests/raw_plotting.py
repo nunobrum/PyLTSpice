@@ -35,8 +35,9 @@ else:
     # filename = 'Noise.raw'
     # filename = "test2_gs_000.raw"
     filename = 'fra_eg1.fra_1.raw'
+    filename = 'LTC6241_Noise.raw'
     # trace_names = ("run", "V(out)", "V(err)")
-    trace_names = '*' # 'V(out)',
+    trace_names = 'V(onoise)', 'V(inoise)'
     raw_filename = pathjoin(test_directory, filename)
 
 LTR = RawRead(raw_filename, trace_names, verbose=True)
@@ -73,14 +74,14 @@ for i, trace in enumerate(traces):
     magnitude = True
     for ax in axises:
         ax.grid(True)
-        if True: # 'log' in LTR.flags:
+        if 'log' in LTR.flags:
             ax.set_xscale('log')
         for step_i in steps_data:
             if LTR.axis:
                 x = LTR.get_axis(step_i)
             else:
                 x = np.arange(LTR.nPoints)
-            y = LTR.get_wave(i, step_i)
+            y = LTR.get_wave(trace.name, step_i)
             if 'complex' in LTR.flags:
                 x = mag(x)
                 if magnitude:
