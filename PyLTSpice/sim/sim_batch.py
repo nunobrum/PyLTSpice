@@ -118,6 +118,7 @@ class SimCommander(SpiceEditor):
     def __init__(self, netlist_file: Union[str, Path], encoding='autodetect'):
         simulator = Simulator.get_default_simulator()
         netlist_file = Path(netlist_file)
+        self.circuit_file = netlist_file  # Legacy property
         if netlist_file.suffix == '.asc':
             netlist_file = simulator.create_netlist(netlist_file)
         super().__init__(netlist_file, encoding)
@@ -164,6 +165,21 @@ class SimCommander(SpiceEditor):
 
     def wait_completion(self, timeout=None, abort_all_on_timeout=False) -> bool:
         return self.runner.wait_completion(timeout, abort_all_on_timeout)
+
+    @property
+    def runno(self):
+        """Legacy property"""
+        return self.runner.runno
+
+    @property
+    def okSim(self):
+        """Legacy property"""
+        return self.runner.okSim
+
+    @property
+    def failSim(self):
+        """Legacy property"""
+        return self.runner.failSim
 
 
 if __name__ == "__main__":

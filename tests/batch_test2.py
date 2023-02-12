@@ -1,5 +1,5 @@
 import os
-from PyLTSpice.sim_stepping import SimStepper
+from PyLTSpice.sim.sim_stepping import SimStepper
 
 def processing_data(raw_file, log_file):
     print("Handling the simulation data of %s" % log_file )
