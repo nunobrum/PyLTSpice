@@ -422,7 +422,7 @@ class RawRead(object):
         i = header.index('Variables:')
         ivar = 0
         for line in header[i + 1:-1]:  # Parse the variable names
-            _, name, var_type = line.lstrip().split('\t')
+            idx, name, var_type = line.lstrip().split('\t')
             if has_axis and ivar == 0:  # If it has an axis, it should be always read
                 if numerical_type == 'real':
                     axis_numerical_type = 'double'
