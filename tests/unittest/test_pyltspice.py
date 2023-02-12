@@ -33,7 +33,7 @@ from PyLTSpice.raw_read import RawRead
 
 # ------------------------------------------------------------------------------
 debugging = False
-has_ltspice = True  # TODO: to evaluate this automatically. Example using the GIThub machine usual folder.
+has_ltspice = False  # TODO: to evaluate this automatically. Example using the GIThub machine usual folder.
 # ------------------------------------------------------------------------------
 
 if has_ltspice:
