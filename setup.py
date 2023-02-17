@@ -15,7 +15,7 @@ setuptools.setup(
              'PyLTSpice/sim_batch.py',
              'PyLTSpice/LTSteps.py',
              'PyLTSpice/sim_stepping.py',
-             'PyLTSpice/SpiceEditor.py',
+             'PyLTSpice/spice_editor.py',
              'PyLTSpice/sweep_iterators.py',
              ],
     # install_requires = [],

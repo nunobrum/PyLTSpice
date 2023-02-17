@@ -14,7 +14,6 @@
 #
 # Author:      Nuno Brum (nuno.brum@gmail.com)
 #
-# Created:     30-08-2020
 # Licence:     refer to the LICENSE file
 # -------------------------------------------------------------------------------
 import os

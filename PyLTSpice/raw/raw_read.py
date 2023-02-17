@@ -15,7 +15,6 @@
 #
 # Author:      Nuno Brum (nuno.brum@gmail.com)
 #
-# Created:     19-06-2022
 # Licence:     refer to the LICENSE file
 # -------------------------------------------------------------------------------
 

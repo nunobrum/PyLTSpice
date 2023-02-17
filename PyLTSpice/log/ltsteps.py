@@ -2,13 +2,12 @@
 # coding=utf-8
 
 # -------------------------------------------------------------------------------
-# Name:        LTSteps.py
+# Name:        ltsteps.py
 # Purpose:     Process LTSpice output files and align data for usage in a spread-
 #              sheet tool such as Excel, or Calc.
 #
 # Author:      Nuno Brum (nuno.brum@gmail.com)
 #
-# Created:     19-05-2014
 # Licence:     refer to the LICENSE file
 # -------------------------------------------------------------------------------
 
@@ -77,23 +76,13 @@ and use it.
 
 """
 __author__ = "Nuno Canto Brum <me@nunobrum.com>"
-__copyright__ = "Copyright 2017, Fribourg Switzerland"
+__copyright__ = "Copyright 2023, Fribourg Switzerland"
 
 import math
 import re
-import os
-import sys
 from collections import OrderedDict
 from typing import Union, Iterable, List
 from ..utils.detect_encoding import detect_encoding
-
-if __name__ == "__main__":
-    def message(*strs):
-        for string in strs:
-            print(string)
-else:
-    def message(*strs):
-        pass
 
 
 class LTComplex(object):
@@ -196,11 +185,11 @@ def reformat_LTSpice_export(export_file: str, tabular_file: str):
     for line in fin:
         if line.startswith("Step Information:"):
             match = regx.match(line)
-            # message(line, end="")
+            # print(line, end="")
             if match:
-                # message(match.groups())
+                # print(match.groups())
                 step, run_no = match.groups()
-                # message(step, line, end="")
+                # print(step, line, end="")
                 params = []
                 for param in step.split():
                     params.append(param.split('=')[1])
@@ -212,9 +201,9 @@ def reformat_LTSpice_export(export_file: str, tabular_file: str):
                         header_keys.append(param.split('=')[0])
                     param_header = "\t".join(header_keys)
                     fout.write("Run\t%s\t%s" % (param_header, headers))
-                    message("Run\t%s\t%s" % (param_header, headers))
+                    print("Run\t%s\t%s" % (param_header, headers))
                     go_header = False
-                    # message("%s\t%s"% (run_no, param_values))
+                    # print("%s\t%s"% (run_no, param_values))
         else:
             fout.write("%s\t%s\t%s" % (run_no, param_values, line))
 
@@ -260,11 +249,11 @@ class LTSpiceExport(object):
         for line in fin:
             if line.startswith("Step Information:"):
                 match = regx.match(line)
-                # message(line, end="")
+                # print(line, end="")
                 if match:
-                    # message(match.groups())
+                    # print(match.groups())
                     step, run_no = match.groups()
-                    # message(step, line, end="")
+                    # print(step, line, end="")
                     curr_dic['runno'] = run_no
                     for param in step.split():
                         key, value = param.split('=')
@@ -341,7 +330,7 @@ class LTSpiceLogReader(object):
                 r"^(?P<name>\w+)(:\s+.*)?=(?P<value>[\d\.E+\-\(\)dB,°]+)(( FROM (?P<from>[\d\.E+-]*) TO (?P<to>[\d\.E+-]*))|( at (?P<at>[\d\.E+-]*)))?",
                 re.IGNORECASE)
 
-        message("Processing LOG file", log_filename)
+        print("Processing LOG file", log_filename)
         with open(log_filename, 'r', encoding=self.encoding) as fin:
             line = fin.readline()
 
@@ -423,7 +412,7 @@ class LTSpiceLogReader(object):
                     waveform_list.append(data_dict)
 
                 if line.startswith(".step"):
-                    # message(line)
+                    # print(line)
                     self.step_count += 1
                     tokens = line.strip('\r\n').split(' ')
                     for tok in tokens[1:]:
@@ -464,7 +453,7 @@ class LTSpiceLogReader(object):
                                 try_convert_value(measurements[k])]  # need to be a list for compatibility
                 line = fin.readline()
 
-            # message("Reading Measurements")
+            # print("Reading Measurements")
             dataname = None
 
             headers = []  # Initializing an empty parameters
@@ -475,13 +464,13 @@ class LTSpiceLogReader(object):
                     if dataname:  # If previous measurement was saved
                         # store the info
                         if len(measurements):
-                            message("Storing Measurement %s (count %d)" % (dataname, len(measurements)))
+                            print("Storing Measurement %s (count %d)" % (dataname, len(measurements)))
                             for k, title in enumerate(headers):
                                 self.dataset[title] = [line[k] for line in measurements]
                         headers = []
                         measurements = []
                     dataname = line[13:]  # text which is after "Measurement: ". len("Measurement: ") -> 13
-                    message("Reading Measurement %s" % line[13:])
+                    print("Reading Measurement %s" % line[13:])
                 else:
                     tokens = line.split("\t")
                     if len(tokens) >= 2:
@@ -498,18 +487,18 @@ class LTSpiceLogReader(object):
                             headers = [dataname] + tokens[2:]
                             measurements = []
                     else:
-                        message("->", line)
+                        print("->", line)
 
                 line = fin.readline()  # advance to the next line
 
             # storing the last data into the dataset
-            message("Storing Measurement %s" % dataname)
+            print("Storing Measurement %s" % dataname)
             if len(measurements):
                 for k, title in enumerate(headers):
                     self.dataset[title] = [line[k] for line in measurements]
 
-            message("%d measurements" % len(self.dataset))
-            message("Identified %d steps, read %d measurements" % (self.step_count, self.measure_count))
+            print("%d measurements" % len(self.dataset))
+            print("Identified %d steps, read %d measurements" % (self.step_count, self.measure_count))
 
     def __getitem__(self, key):
         """
@@ -638,7 +627,7 @@ class LTSpiceLogReader(object):
         :type append_with_line_prefix: str
         :return: Nothing
         """
-        # message(tokens)
+        # print(tokens)
         if append_with_line_prefix is None:
             mode = 'w'  # rewrites the file
         else:
@@ -677,66 +666,3 @@ class LTSpiceLogReader(object):
             fout.write('\n')
 
         fout.close()
-
-
-if __name__ == "__main__":
-
-    def valid_extension(filename):
-        return filename.endswith('.txt') or filename.endswith('.log') or filename.endswith('.mout')
-
-
-    if len(sys.argv) > 1:
-        filename = sys.argv[1]
-        if not valid_extension(filename):
-            print("Invalid extension in filename '%s'" % filename)
-            print("This tool only supports the following extensions :'.txt','.log','.mout'")
-            exit(-1)
-    else:
-        filename = None
-        newer_date = 0
-        for f in os.listdir():
-            date = os.path.getmtime(f)
-            if date > newer_date and valid_extension(f):
-                newer_date = date
-                filename = f
-    if filename is None:
-        print("File not found")
-        print("This tool only supports the following extensions :'.txt','.log','.mout'")
-        exit(-1)
-
-    fname_out = None
-    if filename.endswith('.txt'):
-        fname_out = filename[:-len('txt')] + 'tsv'
-    elif filename.endswith('.log'):
-        fname_out = filename[:-len('log')] + 'tlog'
-    elif filename.endswith('.mout'):
-        fname_out = filename[:-len('mout')] + 'tmout'
-    else:
-        print("Error in file type")
-        print("This tool only supports the following extensions :'.txt','.log','.mout'")
-        exit(-1)
-
-    if fname_out is not None:
-        print("Processing File %s" % filename)
-        print("Creating File %s" % fname_out)
-        if filename.endswith('txt'):
-            print("Processing Data File")
-            reformat_LTSpice_export(filename, fname_out)
-        elif filename.endswith("log"):
-            data = LTSpiceLogReader(filename)
-            data.split_complex_values_on_datasets()
-            data.export_data(fname_out)
-        elif filename.endswith(".mout"):
-            log_file = filename[:len('mout')] + 'log'
-            if os.path.exists(log_file):
-                steps = LTSpiceLogReader(log_file, read_measures=False)
-                data = LTSpiceLogReader(filename, step_set=steps.stepset)
-                data.stepset = steps.stepset
-            else:
-                # just reformats
-                data = LTSpiceLogReader(filename)
-            data.split_complex_values_on_datasets()
-            data.export_data(fname_out)
-            data.export_data(fname_out)
-
-    # input("Press Enter to Continue")

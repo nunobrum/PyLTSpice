@@ -1,4 +1,22 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python
+# coding=utf-8
+
+# -------------------------------------------------------------------------------
+#    ____        _   _____ ____        _
+#   |  _ \ _   _| | |_   _/ ___| _ __ (_) ___ ___
+#   | |_) | | | | |   | | \___ \| '_ \| |/ __/ _ \
+#   |  __/| |_| | |___| |  ___) | |_) | | (_|  __/
+#   |_|    \__, |_____|_| |____/| .__/|_|\___\___|
+#          |___/                |_|
+#
+# Name:        test_pyltspice.py
+# Purpose:     Tool used to launch LTSpice simulation in batch mode. Netlsts can
+#              be updated by user instructions
+#
+# Author:      Nuno Brum (nuno.brum@gmail.com)
+#
+# Licence:     refer to the LICENSE file
+# -------------------------------------------------------------------------------
 """
 @author:        Nuno Brum
 @copyright:     Copyright 2022
@@ -26,14 +44,14 @@ import unittest  # performs test
 
 sys.path.append(
     os.path.abspath((os.path.dirname(os.path.abspath(__file__)) + "/../../")))  # add project root to lib search path
-from PyLTSpice.LTSteps import LTSpiceLogReader
-from PyLTSpice.sim_batch import SimCommander
-from PyLTSpice.raw_read import RawRead
+from PyLTSpice.log.ltsteps import LTSpiceLogReader
+from PyLTSpice.sim.sim_batch import SimCommander
+from PyLTSpice.raw.raw_read import RawRead
 
 
 # ------------------------------------------------------------------------------
 debugging = False
-has_ltspice = False  # TODO: to evaluate this automatically. Example using the GIThub machine usual folder.
+has_ltspice = True  # TODO: to evaluate this automatically. Example using the GIThub machine usual folder.
 # ------------------------------------------------------------------------------
 
 
