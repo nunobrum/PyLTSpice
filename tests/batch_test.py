@@ -7,8 +7,8 @@ def processing_data(raw_file, log_file):
 
 # select spice model
 LTC = SimRunner(output_folder='./temp')
-
-netlist = SpiceEditor('Batch_Test.asc",')
+LTC.create_netlist('Batch_Test.asc')
+netlist = SpiceEditor('Batch_Test.net')
 # set default arguments
 netlist.set_parameters(res=0, cap=100e-6)
 netlist.set_component_value('R2', '2k')  # Modifying the value of a resistor
@@ -26,8 +26,8 @@ for opamp in ('AD712', 'AD820'):
         netlist.set_component_value('V1', supply_voltage)
         netlist.set_component_value('V2', -supply_voltage)
         # overriding he automatic netlist naming
-        run_netlist_file = "{}_{}_{}.net".format(LTC.circuit_file.stem, opamp, supply_voltage)
-        netlist.run(run_filename=run_netlist_file, callback=processing_data)
+        run_netlist_file = "{}_{}_{}.net".format(netlist.netlist_file.stem, opamp, supply_voltage)
+        LTC.run(netlist, callback=processing_data, run_filename=run_netlist_file)
 
 
 netlist.reset_netlist()
@@ -38,10 +38,10 @@ netlist.add_instructions(
     ".meas AC Fcut TRIG mag(V(out))=Gain/sqrt(2) FALL=last"
 )
 
-raw, log = netlist.run(run_filename="no_callback.net").wait_results()
+raw, log = netlist.run("no_callback.net").wait_results()
 processing_data(raw, log)
 
-netlist.wait_completion()
+LTC.wait_completion()
 
 # Sim Statistics
 print('Successful/Total Simulations: ' + str(LTC.okSim) + '/' + str(LTC.runno))

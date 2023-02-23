@@ -9,9 +9,8 @@
 #   |_|    \__, |_____|_| |____/| .__/|_|\___\___|
 #          |___/                |_|
 #
-# Name:        sim_batch.py
-# Purpose:     Tool used to launch LTSpice simulation in batch mode. Netlsts can
-#              be updated by user instructions
+# Name:        sim_runner.py
+# Purpose:     Tool used to launch LTSpice simulation in batch mode.
 #
 # Author:      Nuno Brum (nuno.brum@gmail.com)
 #
@@ -307,6 +306,8 @@ class SimRunner(object):
         elif isinstance(netlist, (Path, str)):
             if run_filename is None:
                 run_filename = self._run_file_name(netlist)
+            if isinstance(netlist, str):
+                netlist = Path(netlist)
             run_netlist_file = self._to_output_folder(netlist, copy=True, new_name=run_filename)
         else:
             raise TypeError("'netlist' parameter shall be a SpiceEditor, pathlib.Path or a plain str")

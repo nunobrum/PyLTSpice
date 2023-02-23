@@ -32,6 +32,7 @@ else:
     def run_function(command, timeout=None):
         return subprocess.call(command, timeout=timeout)
 
+
 class Simulator(ABC):
 
     @classmethod
@@ -89,11 +90,17 @@ class Simulator(ABC):
         if path is not None:
             self.cmdline_switches.append(path)
 
-
+    @abstractmethod
     def run(self, netlist_file, timeout):
         """This method implements the call for the simulation of the netlist file. This should be overriden by its
         subclass"""
-        ...
+        raise NotImplementedError("This method must be overriden in a subclass")
 
+    def kill_all(self):
+        import psutil
+        for proc in psutil.process_iter():
+            # check whether the process name matches
 
-
+            if proc.name() == self.process_name:
+                print("killing ngspice", proc.pid)
+                proc.kill()

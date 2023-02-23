@@ -10,7 +10,7 @@
 #          |___/                |_|
 #
 # Name:        sim_batch.py
-# Purpose:     Tool used to launch LTSpice simulation in batch mode. Netlsts can
+# Purpose:     Tool used to launch LTSpice simulation in batch mode. Netlists can
 #              be updated by user instructions
 #
 # Author:      Nuno Brum (nuno.brum@gmail.com)

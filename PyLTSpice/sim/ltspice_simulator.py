@@ -88,8 +88,8 @@ class LTspiceSimulator(Simulator):
                     break
             else:
                 raise FileNotFoundError("A suitable exe file was not found. Please locate the spice simulator "
-                                        "executable and pass it to the SimCommander object by using the 'simulator'"
-                                        "parameter.")
+                                        "executable and pass it to the SimCommander object by using the "
+                                        "create_from() class method''.")
             process_name = "XVIIx64.exe"
         return cls(LTspice_exe, process_name)
 
@@ -131,7 +131,7 @@ class LTspiceSimulator(Simulator):
 
 
         :param switch: switch to be added. If the switch is not on the list above, it should be correctly formatted with
-        the preceeding '-' switch
+        the preceding '-' switch
         :type switch: str
         :param path: path to the file related to the switch being given.
         :type path: str, optional
@@ -140,7 +140,7 @@ class LTspiceSimulator(Simulator):
         """
         if switch in self.ltspice_args:
             switches = self.ltspice_args[switch]
-            switches = [switch.replace('{path}', path) for switch in switches]
+            switches = [switch.replace('<path>', path) for switch in switches]
             self.cmdline_switches.extend(switches)
         else:
             super().cmdline_switches(self, switch, path)
@@ -172,12 +172,3 @@ class LTspiceSimulator(Simulator):
         print(msg)
         logging.error(msg)
         raise RuntimeError(msg)
-
-    def kill_all(self):
-        import psutil
-        for proc in psutil.process_iter():
-            # check whether the process name matches
-
-            if proc.name() == self.process_name:
-                print("killing ltspice", proc.pid)
-                proc.kill()

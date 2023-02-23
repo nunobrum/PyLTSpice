@@ -22,7 +22,7 @@ import traceback
 import re
 import logging
 from math import log, floor
-from typing import Union, Optional, List
+from typing import Union, Optional, List, Callable, Any
 from ..utils.detect_encoding import detect_encoding
 
 __author__ = "Nuno Canto Brum <nuno.brum@gmail.com>"
@@ -989,11 +989,16 @@ class SpiceEditor(SpiceCircuit):
         #  3. Return an instance of SpiceCircuit
         return None
 
-    def run(self, circuit):
+    def run(self, circuit, wait_resource: bool = True,
+            callback: Callable[[str, str], Any] = None, timeout: float = 600, run_filename: str = None):
         from .ltspice_simulator import LTspiceSimulator
-        Sim = LTspiceSimulator.get_default_simulator()
-        RunTask = Sim.run(circuit)
-        RunTask
+        from .sim_runner import SimRunner
+        LT = LTspiceSimulator.get_default_simulator()
+        Sim = SimRunner(simulator=LT)
+        pcircuit = Path(circuit)
+        self.write_netlist(pcircuit)
+        return Sim.run(self, wait_resource=wait_resource, callback=callback, timeout=timeout,
+                       run_filename=run_filename)
 
 if __name__ == '__main__':
     E = SpiceEditor(os.path.abspath('..\\tests\\PI_Filter_resampled.net'))
