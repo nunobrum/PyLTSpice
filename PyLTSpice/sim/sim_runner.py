@@ -98,17 +98,14 @@ __copyright__ = "Copyright 2020, Fribourg Switzerland"
 import logging
 import os
 import shutil
-from pathlib import Path
-import threading
 import time
-import traceback
+from pathlib import Path
 from time import sleep
-from typing import Callable, Union, Any, Tuple
-from warnings import warn
+from typing import Callable, Union, Any
 
 from ..sim.local_run_task import RunTask
+from ..sim.simulator import Simulator
 from ..sim.spice_editor import SpiceEditor
-from ..sim.simulator import clock_function, Simulator
 
 END_LINE_TERM = '\n'
 
@@ -172,7 +169,8 @@ class SimRunner(object):
 
         # Gets a simulator.
         if simulator is None:
-            self.simulator = Simulator.get_default_simulator()
+            from ..sim.ltspice_simulator import LTspiceSimulator  # Used for defaults
+            self.simulator = LTspiceSimulator.get_default_simulator()
         elif isinstance(simulator, Simulator):
             self.simulator = simulator
         elif isinstance(simulator, (str, Path)):
@@ -254,7 +252,7 @@ class SimRunner(object):
             netlist_file = asc_file.with_suffix('.net')
             if self.verbose:
                 print("Creating Netlist")
-            retcode = self.simulator.create_netlist(netlist_file)
+            retcode = self.simulator.create_netlist(asc_file)
             if retcode == 0 and netlist_file.exists():
                 if self.verbose:
                     print("The Netlist was successfully created")
@@ -419,53 +417,3 @@ class SimRunner(object):
             # Delete the file
             print("Deleting", workfile)
             workfile.unlink()
-
-
-if __name__ == "__main__":
-    # get script absolute path
-    meAbsPath = os.path.dirname(os.path.realpath(__file__))
-    meAbsPath, _ = os.path.split(meAbsPath)
-    # select spice model
-    netlist = SpiceEditor(meAbsPath + "\\test_files\\testfile.asc")
-    # set default arguments
-    netlist.set_parameters(res=0.001, cap=100e-6)
-    # define simulation
-    netlist.add_instructions(
-            "; Simulation settings",
-            # [".STEP PARAM Rmotor LIST 21 28"],
-            ".TRAN 3m",
-            # ".step param run 1 2 1"
-    )
-    # do parameter sweep
-    for res in range(5):
-        # LTC.runs_to_do = range(2)
-        netlist.set_parameters(ANA=res)
-        raw, log = netlist.run()
-        print("Raw file '%s' | Log File '%s'" % (raw, log))
-    # Sim Statistics
-    print('Successful/Total Simulations: ' + str(LTC.okSim) + '/' + str(LTC.runno))
-
-
-    def callback_function(raw_file, log_file):
-        print("Handling the simulation data of %s, log file %s" % (raw_file, log_file))
-
-
-    LTC = SimCommander(meAbsPath + "\\test_files\\testfile.asc", parallel_sims=1)
-    tstart = 0
-    for tstop in (2, 5, 8, 10):
-        tduration = tstop - tstart
-        LTC.add_instruction(".tran {}".format(tduration), )
-        if tstart != 0:
-            LTC.add_instruction(".loadbias {}".format(bias_file))
-            # Put here your parameter modifications
-            # LTC.set_parameters(param1=1, param2=2, param3=3)
-        bias_file = "sim_loadbias_%d.txt" % tstop
-        LTC.add_instruction(".savebias {} internal time={}".format(bias_file, tduration))
-        tstart = tstop
-        LTC.run(callback=callback_function)
-
-    LTC.reset_netlist()
-    LTC.add_instruction('.ac dec 40 1m 1G')
-    LTC.set_component_value('V1', 'AC 1 0')
-    LTC.run(callback=callback_function)
-    LTC.wait_completion()

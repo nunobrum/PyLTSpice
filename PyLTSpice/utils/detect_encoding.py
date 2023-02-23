@@ -57,4 +57,7 @@ def detect_encoding(file_path, expected_str: Union[str, Path] = '') -> str:
                 continue
             return encoding
     else:
-        raise UnicodeError(f"Unable to detect log file encoding, or expected string ""{expected_str}"" not found")
+        if expected_str:
+            raise UnicodeError(f"Expected string ""{expected_str}"" not found")
+        else:
+            raise UnicodeError(f"Unable to detect log file encoding")

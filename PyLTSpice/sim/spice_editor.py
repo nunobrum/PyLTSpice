@@ -963,7 +963,7 @@ class SpiceEditor(SpiceCircuit):
             self.logger.error("Netlist file not found")
 
     @staticmethod
-    def find_subckt_in_lib(library, subckt_name) -> 'SpiceEditor':
+    def find_subckt_in_lib(library, subckt_name) -> Union['SpiceCircuit', None]:
         """
         Finds returns a Subckt from a library file
 
@@ -986,9 +986,14 @@ class SpiceEditor(SpiceCircuit):
                     finished = sub_circuit._add_lines(lib)
                     if finished:
                         return sub_circuit
-        #  3. Return an instance of SpiceEditor
+        #  3. Return an instance of SpiceCircuit
         return None
 
+    def run(self, circuit):
+        from .ltspice_simulator import LTspiceSimulator
+        Sim = LTspiceSimulator.get_default_simulator()
+        RunTask = Sim.run(circuit)
+        RunTask
 
 if __name__ == '__main__':
     E = SpiceEditor(os.path.abspath('..\\tests\\PI_Filter_resampled.net'))

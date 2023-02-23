@@ -43,8 +43,8 @@ Measurement: t5
      4	3.93469	0.005
 
 
-Date: Sun Dec 04 22:37:18 2022
-Total elapsed time: 0.074 seconds.
+Date: Thu Feb 23 23:18:38 2023
+Total elapsed time: 0.051 seconds.
 
 tnom = 27
 temp = 27
@@ -57,6 +57,7 @@ rejected = 1
 matrix size = 3
 fillins = 0
 solver = Normal
-Matrix Compiler1:       3 opcodes  0.0/[0.0]/0.0
-Matrix Compiler2: 175 bytes object code size  0.1/0.1/[0.0]
+Avg thread counts: 1.3/1.6/1.6/1.3
+Matrix Compiler1:       3 opcodes  0.2/0.1/[0.1]
+Matrix Compiler2: 175 bytes object code size  0.1/0.2/[0.1]
 

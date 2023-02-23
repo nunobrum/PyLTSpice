@@ -1,7 +1,7 @@
 SimCommander
 ============
 
-.. autoclass:: PyLTSpice.sim.simulator.Simulator
+.. autoclass:: PyLTSpice.sim.simulator.LTspiceSimulator
    :members:
    :undoc-members:
    :show-inheritance:

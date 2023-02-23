@@ -18,6 +18,9 @@
 # Licence:     refer to the LICENSE file
 # -------------------------------------------------------------------------------
 """
+** This class is still maintained for backward compatibility. The user is invited to use the SpiceEditor and SimRunner
+classes instead. These give more flexibility in the command of simulations.**
+
 Allows launching LTSpice simulations from a Python Script, thus allowing to overcome the 3 dimensions STEP limitation on
 LTSpice, update resistor values, or component models.
 
@@ -117,7 +120,8 @@ class SimCommander(SpiceEditor):
     def __init__(self, netlist_file: Union[str, Path], parallel_sims: int = 4, timeout=None, verbose=True,
                  encoding='autodetect', simulator=None):
         if simulator is None:
-            simulator = Simulator.get_default_simulator()
+            from ..sim.ltspice_simulator import LTspiceSimulator  # In case no simulator is given
+            simulator = LTspiceSimulator.get_default_simulator()
         netlist_file = Path(netlist_file)
         self.circuit_file = netlist_file  # Legacy property
         if netlist_file.suffix == '.asc':
@@ -203,7 +207,7 @@ if __name__ == "__main__":
     for res in range(5):
         # LTC.runs_to_do = range(2)
         LTC.set_parameters(ANA=res)
-        raw, log = LTC.run()
+        raw, log = LTC.run().wait_results()
         print("Raw file '%s' | Log File '%s'" % (raw, log))
     # Sim Statistics
     print('Successful/Total Simulations: ' + str(LTC.okSim) + '/' + str(LTC.runno))

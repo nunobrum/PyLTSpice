@@ -24,20 +24,25 @@ __author__ = "Nuno Canto Brum <nuno.brum@gmail.com>"
 __copyright__ = "Copyright 2023, Fribourg Switzerland"
 
 import logging
-import os
 from pathlib import Path
+import sys
 import threading
 import time
 import traceback
 from time import sleep
 from typing import Callable, Union, Any, Tuple
-from warnings import warn
 
-from .simulator import clock_function, Simulator
+
+from .simulator import Simulator
 
 END_LINE_TERM = '\n'
 
 logging.basicConfig(filename='SpiceBatch.log', level=logging.INFO)
+
+if sys.version_info.major >= 3 and sys.version_info.minor >= 6:
+    clock_function = time.process_time
+else:
+    clock_function = time.clock
 
 
 class RunTask(threading.Thread):

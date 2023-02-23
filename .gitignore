@@ -5,3 +5,5 @@ venv
 .venv
 .python-version
 *.bak
+*.log
+*.raw

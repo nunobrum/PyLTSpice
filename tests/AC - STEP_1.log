@@ -1,9 +1,10 @@
 Circuit: * C:\sandbox\PySpice\tests\AC - STEP.asc
 
+.OP point found by inspection.
 .step r1=1000
 .step r1=10000
 
-Date: Sun Dec 04 22:36:56 2022
+Date: Thu Feb 23 23:18:19 2023
 Total elapsed time: 0.008 seconds.
 
 tnom = 27
@@ -17,4 +18,6 @@ rejected = 0
 matrix size = 3
 fillins = 0
 solver = Normal
-
+Avg thread counts: 8.0/0.0/0.0/6.2
+Matrix Compiler1:       4 opcodes
+Matrix Compiler2:      15 opcodes
