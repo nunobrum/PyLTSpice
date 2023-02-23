@@ -244,10 +244,12 @@ def _is_unique_instruction(instruction):
 class ComponentNotFoundError(Exception):
     """Component Not Found Error"""
 
+
 class ParameterNotFoundError(Exception):
     """ParameterNotFound Error"""
     def __init__(self, parameter):
         super().__init__(f'Parameter "{parameter}" not found')
+
 
 class UnrecognizedSyntaxError(Exception):
     """Line doesn't match expected Spice syntax"""

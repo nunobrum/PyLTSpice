@@ -10,3 +10,13 @@ Python Classes
    sim_batch
    raw_read
    raw_write
+
+
+============
+Deprecations
+============
+
+.. toctree::
+   :maxdepth: 4
+
+   sim_simulator

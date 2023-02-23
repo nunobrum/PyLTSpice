@@ -49,9 +49,19 @@ from PyLTSpice.sim.sim_batch import SimCommander
 from PyLTSpice.raw.raw_read import RawRead
 
 
+def has_ltspice():
+    from PyLTSpice.sim.simulator import Simulator
+    try:
+        ltspice = Simulator.get_default_simulator()
+    except:
+        return False
+    else:
+        return isinstance(ltspice.spice_exe, list)
+
+
 # ------------------------------------------------------------------------------
 debugging = False
-has_ltspice = True  # TODO: to evaluate this automatically. Example using the GIThub machine usual folder.
+has_ltspice = has_ltspice()
 # ------------------------------------------------------------------------------
 
 
@@ -115,8 +125,13 @@ class test_pyltspice(unittest.TestCase):
         LTC.wait_completion()
         print("no_callback", raw_file, log_file)
         log = LTSpiceLogReader(log_file)
-        for measure in ('gainac', 'vout1m', 'fcutac'):
-            print(log.get_measure_value(measure))
+        for measure in log.get_measure_names():
+            print(measure, '=', log.get_measure_value(measure))
+        self.assertEqual(log.get_measure_value('fcutac'), 8479370.0)
+        self.assertEqual(str(log.get_measure_value('vout1m')), '6.02059dB,-5.37934e-08°')
+        self.assertEqual(log.get_measure_value('vout1m').mag, 6.02059)
+
+
 
     @unittest.skipIf(debugging is True, "While Debugging")
     def test_ltsteps_measures(self):

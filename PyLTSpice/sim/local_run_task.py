@@ -44,8 +44,7 @@ class RunTask(threading.Thread):
     """This is an internal Class and should not be used directly by the User."""
 
     def __init__(self, simulator: Simulator, run_no, netlist_file: 'Path', callback: Callable[['Path', 'Path'], Any],
-                 timeout=None,
-                 verbose=True):
+                 timeout=None, verbose=True):
         self.start_time = None
         self.verbose = verbose
         self.timeout = timeout  # Thanks to Daniel Phili for implementing this
@@ -90,7 +89,7 @@ class RunTask(threading.Thread):
             if self.raw_file.exists() and self.log_file.exists():
                 if self.callback:
                     if self.verbose:
-                        print("Calling the callback function")
+                        print("Simulation Finished. Calling...{}(rawfile, logfile)".format(self.callback.__name__))
                     try:
                         self.callback(self.raw_file, self.log_file)
                     except Exception as err:
@@ -98,7 +97,7 @@ class RunTask(threading.Thread):
                         logger.error(error)
                 else:
                     if self.verbose:
-                        print('No Callback')
+                        print('Simulation Finished. No Callback function given')
             else:
                 logger.error("Simulation Raw file or Log file were not found")
         else:

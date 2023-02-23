@@ -98,7 +98,7 @@ __copyright__ = "Copyright 2020, Fribourg Switzerland"
 import logging
 import os
 import shutil
-from pathlib import Path, PurePath
+from pathlib import Path
 import threading
 import time
 import traceback
@@ -221,7 +221,7 @@ class SimRunner(object):
         if self.output_folder:
             return self.output_folder / afile
         else:
-            return PurePath(afile)
+            return Path(afile)
 
     def _to_output_folder(self, afile: Path, *, copy: bool, new_name: str = ''):
         if self.output_folder:
@@ -236,7 +236,11 @@ class SimRunner(object):
                 dest = shutil.move(afile, ddst)
             return Path(dest)
         else:
-            return afile
+            if new_name:
+                dest = shutil.copy(afile, afile.parent / new_name)
+                return Path(dest)
+            else:
+                return afile
 
     def _run_file_name(self, netlist):
         if not isinstance(netlist, Path):

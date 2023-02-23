@@ -4,4 +4,4 @@ PyLTSpice.egg-info
 venv
 .venv
 .python-version
-*.log
+*.bak

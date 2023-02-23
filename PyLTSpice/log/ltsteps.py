@@ -96,15 +96,21 @@ class LTComplex(object):
         if a:
             self.mag = float(a.group('mag'))
             self.ph = float(a.group('ph'))
+            self.unit = 'dB' if len(a.groups()) == 3 else ''
         else:
             raise ValueError("Invalid complex value format")
 
     def to_complex(self):
         ph = self.ph / 180 * math.pi
-        return complex(self.mag * math.cos(ph), self.mag * math.sin(ph))
+        if self.unit == '':
+            mag = self.mag
+        else:
+            mag = 10**(self.mag/20)  # Typically, we are working in voltages
+
+        return complex(mag * math.cos(ph), mag * math.sin(ph))
 
     def __str__(self):
-        return f"{self.mag},{self.ph}"
+        return f"{self.mag}{self.unit},{self.ph}°"
 
 
 def try_convert_value(value: Union[str, int, float]) -> Union[int, float, str]:
@@ -447,7 +453,7 @@ class LTSpiceLogReader(object):
                         else:
                             headers = [dataname]
                             measurements = [match.group('value')]
-
+                        self.measure_count += 1
                         for k, title in enumerate(headers):
                             self.dataset[title] = [
                                 try_convert_value(measurements[k])]  # need to be a list for compatibility
@@ -465,6 +471,7 @@ class LTSpiceLogReader(object):
                         # store the info
                         if len(measurements):
                             print("Storing Measurement %s (count %d)" % (dataname, len(measurements)))
+                            self.measure_count += len(measurements)
                             for k, title in enumerate(headers):
                                 self.dataset[title] = [line[k] for line in measurements]
                         headers = []
@@ -492,8 +499,10 @@ class LTSpiceLogReader(object):
                 line = fin.readline()  # advance to the next line
 
             # storing the last data into the dataset
-            print("Storing Measurement %s" % dataname)
+            if dataname:
+                print("Storing Measurement %s (count %d)" % (dataname, len(measurements)))
             if len(measurements):
+                self.measure_count += len(measurements)
                 for k, title in enumerate(headers):
                     self.dataset[title] = [line[k] for line in measurements]
 
@@ -567,7 +576,7 @@ class LTSpiceLogReader(object):
         """
         return self.dataset.keys()
 
-    def get_measure_value(self, measure: str, step: int = None) -> Union[float, int, str, complex]:
+    def get_measure_value(self, measure: str, step: int = None) -> Union[float, int, str, LTComplex]:
         """
         Returns a measure value on a given step.
 

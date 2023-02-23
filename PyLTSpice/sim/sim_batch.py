@@ -114,14 +114,17 @@ class SimCommander(SpiceEditor):
     Backwards compatibility class
     """
 
-    def __init__(self, netlist_file: Union[str, Path], encoding='autodetect'):
-        simulator = Simulator.get_default_simulator()
+    def __init__(self, netlist_file: Union[str, Path], parallel_sims: int = 4, timeout=None, verbose=True,
+                 encoding='autodetect', simulator=None):
+        if simulator is None:
+            simulator = Simulator.get_default_simulator()
         netlist_file = Path(netlist_file)
         self.circuit_file = netlist_file  # Legacy property
         if netlist_file.suffix == '.asc':
             netlist_file = simulator.create_netlist(netlist_file)
         super().__init__(netlist_file, encoding)
-        self.runner = SimRunner(simulator=simulator)
+        self.runner = SimRunner(simulator=simulator, parallel_sims=parallel_sims, timeout=timeout, verbose=verbose,
+                                output_folder=netlist_file.parent)
 
     def setLTspiceRunCommand(self, spice_tool: Union[str, Simulator]) -> None:
         """
@@ -151,7 +154,7 @@ class SimCommander(SpiceEditor):
 
     def run(self, run_filename: str = None, wait_resource: bool = True,
             callback: Callable[[str, str], Any] = None, timeout: float = 600) -> RunTask:
-        return self.runner.run(self.netlist_file, wait_resource=wait_resource, callback=callback, timeout=timeout,
+        return self.runner.run(self, wait_resource=wait_resource, callback=callback, timeout=timeout,
                                run_filename=run_filename)
 
     def updated_stats(self):
