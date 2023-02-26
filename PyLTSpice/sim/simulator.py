@@ -61,9 +61,11 @@ class Simulator(ABC):
         else:
             raise FileNotFoundError(f"Provided exe file was not found '{path_to_exe}'")
 
-    def __init__(self, spice_exe, process_name):
-        """This is a generic initialization for this class. It may be overriden, but it should be always invoked by
-        the superclass."""
+    def __init__(self, spice_exe: list, process_name: str):
+        """
+        Abstract class that represent a simulator executable. It provides the interface that the subclass needs to
+        implement in order to
+        """
         if not isinstance(spice_exe, list):
             raise TypeError("spice_exe must be a list of strings that can be passed into the subprocess call")
 

@@ -4,7 +4,7 @@ Circuit: * C:\sandbox\PySpice\tests\AC - STEP.asc
 .step r1=1000
 .step r1=10000
 
-Date: Thu Feb 23 23:18:19 2023
+Date: Sat Feb 25 16:22:00 2023
 Total elapsed time: 0.008 seconds.
 
 tnom = 27

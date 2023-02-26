@@ -94,6 +94,8 @@ simulation is finished.
 __author__ = "Nuno Canto Brum <nuno.brum@gmail.com>"
 __copyright__ = "Copyright 2020, Fribourg Switzerland"
 
+__all__ = ['SimRunner']
+
 import logging
 import os
 import shutil
@@ -212,7 +214,8 @@ class SimRunner(object):
         :type args: list[str]
         :returns: Nothing
         """
-        self.simulator.add_command_line_switch(*args)
+        self.simulator.add_command_line_switch(*args)  # TODO: This class should store the command line switches and
+        # let the simulator be a pure class (no instances are required)
 
     def _on_output_folder(self, afile):
         if self.output_folder:

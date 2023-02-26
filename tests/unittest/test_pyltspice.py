@@ -58,7 +58,7 @@ def has_ltspice():
     except:
         return False
     else:
-        return isinstance(ltspice.spice_exe, list)
+        return isinstance(ltspice.spice_exe, list) and os.path.exists(ltspice.spice_exe[0])
 
 
 # ------------------------------------------------------------------------------
