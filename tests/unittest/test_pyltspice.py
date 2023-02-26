@@ -51,7 +51,7 @@ from PyLTSpice.sim.spice_editor import SpiceEditor
 from PyLTSpice.sim.sim_runner import SimRunner
 from PyLTSpice.sim.ltspice_simulator import LTspiceSimulator
 
-def has_ltspice():
+def has_ltspice_detect():
     from PyLTSpice.sim.ltspice_simulator import LTspiceSimulator
     try:
         ltspice = LTspiceSimulator.get_default_simulator()
@@ -62,7 +62,8 @@ def has_ltspice():
 
 
 # ------------------------------------------------------------------------------
-skip_ltspice_tests = not has_ltspice()
+has_ltspice = has_ltspice_detect()
+skip_ltspice_tests = not has_ltspice
 print("skip_ltspice_tests", skip_ltspice_tests)
 test_dir = '../' if os.path.abspath(os.curdir).endswith('unittest') else './tests/'
 print("test_dir", test_dir)
