@@ -48,9 +48,11 @@ else:
 class RunTask(threading.Thread):
     """This is an internal Class and should not be used directly by the User."""
 
-    def __init__(self, simulator: Simulator, run_no, netlist_file: 'Path', callback: Callable[['Path', 'Path'], Any],
+    def __init__(self, simulator: Simulator, run_no, netlist_file: Path, callback: Callable[[Path, Path], Any],
                  timeout=None, verbose=True):
+        super().__init__(name=f"RunTask#{run_no}")
         self.start_time = None
+        self.stop_time = None
         self.verbose = verbose
         self.timeout = timeout  # Thanks to Daniel Phili for implementing this
 
@@ -77,9 +79,9 @@ class RunTask(threading.Thread):
 
         # start execution
         self.retcode = self.simulator.run(self.netlist_file, self.timeout)
-
+        self.stop_time = clock_function()
         # print simulation time
-        sim_time = time.strftime("%H:%M:%S", time.gmtime(clock_function() - self.start_time))
+        sim_time = time.strftime("%H:%M:%S", time.gmtime(self.stop_time - self.start_time))
         self.log_file = self.netlist_file.with_suffix('.log')
 
         # Cleanup everything
@@ -98,7 +100,7 @@ class RunTask(threading.Thread):
                     try:
                         self.callback(self.raw_file, self.log_file)
                     except Exception as err:
-                        error = traceback.format_tb(err)
+                        error = traceback.format_tb()
                         logger.error(error)
                 else:
                     if self.verbose:

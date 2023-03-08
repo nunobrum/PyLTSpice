@@ -268,7 +268,8 @@ class SimRunner(object):
         return None
 
     def run(self, netlist: Union[str, Path, SpiceEditor], *,  wait_resource: bool = True,
-            callback: Callable[[str, str], Any] = None, timeout: float = 600, run_filename: str = None) -> RunTask:
+            callback: Callable[[Path, Path], Any] = None,
+            timeout: float = 600, run_filename: str = None) -> RunTask:
         """
         Executes a simulation run with the conditions set by the user.
         Conditions are set by the set_parameter, set_component_value or add_instruction functions.
@@ -287,8 +288,9 @@ class SimRunner(object):
         :type wait_resource: bool, optional
         :param callback:
             The user can optionally give a callback function for when the simulation finishes so that processing can
-            be done immediately.
-        :type: callback: function(raw_file, log_file), optional
+            be done immediately. The callback function must receive two input parameters that correspond the raw and
+            log files created by the simulation. The argument type is of the type pathlib.Path
+        :type: callback: function(raw_file: Path, log_file: Path), optional
         :param timeout: Timeout to be used in waiting for resources. Default time is 600 seconds, i.e. 10 minutes.
         :type timeout: float, optional
         :param run_filename: Name to be used for the log and raw file.
@@ -334,10 +336,12 @@ class SimRunner(object):
             if self.verbose:
                 print("Timeout on launching simulation %d." % self.runno)
 
-    def updated_stats(self):
+    def updated_stats(self, release_tasks: bool = True):
         """
         This function updates the OK/Fail statistics and releases finished RunTask objects from memory.
 
+        :param release_tasks: Boolean indicating whether the tasks are to be released.
+        :type release_tasks: bool
         :returns: Nothing
         """
         i = 0
@@ -350,7 +354,8 @@ class SimRunner(object):
                 else:
                     # simulation failed
                     self.failSim += 1
-                del self.threads[i]
+                if release_tasks:
+                    del self.threads[i]
 
     @staticmethod
     def kill_all_ltspice():
@@ -398,6 +403,7 @@ class SimRunner(object):
         Will delete all log and raw files that were created by the script. This should only be executed at the end
         of data processing.
         """
+        self.updated_stats()
         while len(self.workfiles):
             workfile = self.workfiles.pop(0)
             if workfile.suffix == '.net':
