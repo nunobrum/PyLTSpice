@@ -48,34 +48,39 @@ else:
 class RunTask(threading.Thread):
     """This is an internal Class and should not be used directly by the User."""
 
-    def __init__(self, simulator: Simulator, run_no, netlist_file: Path, callback: Callable[[Path, Path], Any],
+    def __init__(self, simulator: Simulator, runno, netlist_file: Path, callback: Callable[[Path, Path], Any],
                  timeout=None, verbose=True):
-        super().__init__(name=f"RunTask#{run_no}")
+        super().__init__(name=f"RunTask#{runno}")
         self.start_time = None
         self.stop_time = None
         self.verbose = verbose
         self.timeout = timeout  # Thanks to Daniel Phili for implementing this
 
         threading.Thread.__init__(self)
-        self.setName("sim%d" % run_no)
+        self.setName("sim%d" % runno)
         self.simulator = simulator
-        self.run_no = run_no
+        self.runno = runno
         self.netlist_file = netlist_file
         self.callback = callback
         self.retcode = -1  # Signals an error by default
         self.raw_file = None
         self.log_file = None
+        self.callback_return = None
+
+    def print_info(self, logger_fun, message):
+        logger_fun(message)
+        if self.verbose:
+            print(f"{time.asctime()} {logger_fun.__name__}: {message}", end=END_LINE_TERM)
 
     def run(self):
         # Setting up
-        logger = logging.getLogger("sim%d" % self.run_no)
+        logger = logging.getLogger("sim%d" % self.runno)
         logger.setLevel(logging.INFO)
 
         # Running the Simulation
 
         self.start_time = clock_function()
-        if self.verbose:
-            print(time.asctime(), ": Starting simulation %d" % self.run_no)
+        self.print_info(logger.info, ": Starting simulation %d" % self.runno)
 
         # start execution
         self.retcode = self.simulator.run(self.netlist_file, self.timeout)
@@ -87,30 +92,24 @@ class RunTask(threading.Thread):
         # Cleanup everything
         if self.retcode == 0:
             # simulation successful
-            logger.info("Simulation Successful. Time elapsed: %s" % sim_time)
-            if self.verbose:
-                print(time.asctime() + ": Simulation Successful. Time elapsed %s:%s" % (sim_time, END_LINE_TERM))
-
+            self.print_info(logger.info, "Simulation Successful. Time elapsed: %s" % sim_time)
             self.raw_file = self.netlist_file.with_suffix('.raw')
 
             if self.raw_file.exists() and self.log_file.exists():
                 if self.callback:
-                    if self.verbose:
-                        print("Simulation Finished. Calling...{}(rawfile, logfile)".format(self.callback.__name__))
+                    self.print_info(logger.info, "Simulation Finished. Calling...{}(rawfile, logfile)".format(self.callback.__name__))
                     try:
-                        self.callback(self.raw_file, self.log_file)
+                        self.callback_return = self.callback(self.raw_file, self.log_file)
                     except Exception as err:
                         error = traceback.format_tb()
-                        logger.error(error)
+                        self.print_info(logger.error, error)
                 else:
-                    if self.verbose:
-                        print('Simulation Finished. No Callback function given')
+                    self.print_info(logger.info, 'Simulation Finished. No Callback function given')
             else:
-                logger.error("Simulation Raw file or Log file were not found")
+                self.print_info(logger.error, "Simulation Raw file or Log file were not found")
         else:
             # simulation failed
-
-            logger.warning(time.asctime() + ": Simulation Failed. Time elapsed %s:%s" % (sim_time, END_LINE_TERM))
+            self.print_info(logger.warning, ": Simulation Failed. Time elapsed: %s" % sim_time)
             if self.log_file.exists():
                 self.log_file = self.log_file.replace(self.log_file.with_suffix('.fail'))
 
