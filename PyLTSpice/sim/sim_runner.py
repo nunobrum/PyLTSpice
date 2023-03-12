@@ -269,7 +269,7 @@ class SimRunner(object):
 
     def run(self, netlist: Union[str, Path, SpiceEditor], *,  wait_resource: bool = True,
             callback: Callable[[Path, Path], Any] = None,
-            timeout: float = 600, run_filename: str = None) -> RunTask:
+            timeout: float = 600, run_filename: str = None) -> Union[RunTask, None]:
         """
         Executes a simulation run with the conditions set by the user.
         Conditions are set by the set_parameter, set_component_value or add_instruction functions.
@@ -335,6 +335,7 @@ class SimRunner(object):
             self.logger.error("Timeout waiting for resources for simulation %d" % self.runno)
             if self.verbose:
                 print("Timeout on launching simulation %d." % self.runno)
+            return None
 
     def updated_stats(self, release_tasks: bool = True):
         """
