@@ -27,8 +27,10 @@ for opamp in ('AD712', 'AD820'):
         netlist.set_component_value('V2', -supply_voltage)
         # overriding he automatic netlist naming
         run_netlist_file = "{}_{}_{}.net".format(netlist.netlist_file.stem, opamp, supply_voltage)
+        print("simulating OpAmp", opamp, "Voltage", supply_voltage)
         LTC.run(netlist, callback=processing_data, run_filename=run_netlist_file)
 
+LTC.wait_completion()
 
 netlist.reset_netlist()
 netlist.add_instructions(
@@ -37,6 +39,7 @@ netlist.add_instructions(
     ".meas AC Gain MAX mag(V(out)) ; find the peak response and call it ""Gain""",
     ".meas AC Fcut TRIG mag(V(out))=Gain/sqrt(2) FALL=last"
 )
+
 
 raw, log = netlist.run("no_callback.net").wait_results()
 processing_data(raw, log)

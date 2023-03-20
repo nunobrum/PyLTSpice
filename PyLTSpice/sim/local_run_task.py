@@ -49,11 +49,12 @@ class RunTask(threading.Thread):
     """This is an internal Class and should not be used directly by the User."""
 
     def __init__(self, simulator: Simulator, runno, netlist_file: Path, callback: Callable[[Path, Path], Any],
-                 timeout=None, verbose=True):
+                 switches, timeout=None, verbose=True):
         super().__init__(name=f"RunTask#{runno}")
         self.start_time = None
         self.stop_time = None
         self.verbose = verbose
+        self.switches = switches
         self.timeout = timeout  # Thanks to Daniel Phili for implementing this
 
         threading.Thread.__init__(self)
@@ -83,7 +84,7 @@ class RunTask(threading.Thread):
         self.print_info(logger.info, ": Starting simulation %d" % self.runno)
 
         # start execution
-        self.retcode = self.simulator.run(self.netlist_file, self.timeout)
+        self.retcode = self.simulator.run(self.netlist_file, self.switches, self.timeout)
         self.stop_time = clock_function()
         # print simulation time
         sim_time = time.strftime("%H:%M:%S", time.gmtime(self.stop_time - self.start_time))

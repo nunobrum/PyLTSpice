@@ -31,6 +31,38 @@ class LTspiceSimulator(Simulator):
     """Stores the simulator location and command line options and is responsible for generating netlists and running
     simulations."""
 
+    """Searches on the any usual locations for a simulator"""
+    if sys.platform == "linux":
+        if os.environ.get('LTSPICEFOLDER') is not None:
+            spice_exe = ["wine", os.environ['LTSPICEFOLDER'] + "/XVIIx64.exe"]
+        else:
+            spice_exe = ["wine",
+                           os.path.expanduser("~") + "/.wine/drive_c/Program Files/LTC/LTspiceXVII/XVIIx64.exe"]
+        process_name = "XVIIx64.exe"
+    elif sys.platform == "darwin":
+        spice_exe = ['/Applications/LTspice.app/Contents/MacOS/LTspice']
+        process_name = "XVIIx64"
+    else:  # Windows
+        for exe in (  # Placed in order of preference. The first to be found will be used.
+                os.path.expanduser(r"~\AppData\Local\Programs\ADI\LTspice\LTspice.exe"),
+                r"C:\Program Files\ADI\LTspice\LTspice.exe",
+                r"C:\Program Files\LTC\LTspiceXVII\XVIIx64.exe",
+                r"C:\Program Files (x86)\LTC\LTspiceIV\scad3.exe",  # Legacy LTspice IV
+        ):
+            if os.path.exists(exe):
+                print(f"Using LTspice installed in : '{exe}' ")
+                spice_exe = [exe]
+                break
+        else:
+            spice_exe = []
+            print("================== ALERT! ====================")
+            print("Unable to find a LTSpice executable.")
+            print("A specific location of the LTSPICE can be set")
+            print("using the create_from(<location>) class method")
+            print("==============================================")
+
+        process_name = "XVIIx64.exe"
+
     ltspice_args = {
         'alt' : ['-alt'],  # Set solver to Alternate.
         'ascii'     : ['-ascii'],  # Use ASCII.raw files. Seriously degrades program performance.
@@ -63,39 +95,9 @@ class LTspiceSimulator(Simulator):
     }
 
     @classmethod
-    def get_default_simulator(cls):
-        """Searches on the any usual locations for a simulator"""
-        if sys.platform == "linux":
-            if os.environ.get('LTSPICEFOLDER') is not None:
-                LTspice_exe = ["wine", os.environ['LTSPICEFOLDER'] + "/XVIIx64.exe"]
-            else:
-                LTspice_exe = ["wine",
-                               os.path.expanduser("~") + "/.wine/drive_c/Program Files/LTC/LTspiceXVII/XVIIx64.exe"]
-            process_name = "XVIIx64.exe"
-        elif sys.platform == "darwin":
-            LTspice_exe = ['/Applications/LTspice.app/Contents/MacOS/LTspice']
-            process_name = "XVIIx64"
-        else:  # Windows
-            for exe in (  # Placed in order of preference. The first to be found will be used.
-                    os.path.expanduser(r"~\AppData\Local\Programs\ADI\LTspice\LTspice.exe"),
-                    r"C:\Program Files\ADI\LTspice\LTspice.exe",
-                    r"C:\Program Files\LTC\LTspiceXVII\XVIIx64.exe",
-                    r"C:\Program Files (x86)\LTC\LTspiceIV\scad3.exe",  # Legacy LTspice IV
-            ):
-                if os.path.exists(exe):
-                    print(f"Using LTspice installed in : '{exe}' ")
-                    LTspice_exe = [exe]
-                    break
-            else:
-                raise FileNotFoundError("A suitable exe file was not found. Please locate the spice simulator "
-                                        "executable and pass it to the SimCommander object by using the "
-                                        "create_from() class method''.")
-            process_name = "XVIIx64.exe"
-        return cls(LTspice_exe, process_name)
-
-    def add_command_line_switch(self, switch, path=''):
+    def valid_switch(cls, switch, path='') -> bool:
         """
-        Adds a command line switch to the spice tool command line call. The following options are available for LTSpice:
+        Validates a command line switch. The following options are available for LTSpice:
 
             * 'alt' : Set solver to Alternate.
 
@@ -138,28 +140,30 @@ class LTspiceSimulator(Simulator):
         :return: Nothing
         :rtype: None
         """
-        if switch in self.ltspice_args:
-            switches = self.ltspice_args[switch]
+        if switch in cls.ltspice_args:
+            switches = cls.ltspice_args[switch]
             switches = [switch.replace('<path>', path) for switch in switches]
-            self.cmdline_switches.extend(switches)
+            return switches
         else:
-            super().cmdline_switches(self, switch, path)
+            raise ValueError("Invalid swich for class ")
 
-    def run(self, netlist_file, timeout):
+    @classmethod
+    def run(cls, netlist_file, cmd_line_switches, timeout):
         if sys.platform == 'darwin':
-            cmd_run = self.spice_exe + ['-b'] + [netlist_file] + self.cmdline_switches
+            cmd_run = cls.spice_exe + ['-b'] + [netlist_file] + cmd_line_switches
         else:
-            cmd_run = self.spice_exe + ['-Run'] + ['-b'] + [netlist_file] + self.cmdline_switches
+            cmd_run = cls.spice_exe + ['-Run'] + ['-b'] + [netlist_file] + cmd_line_switches
         # start execution
         return run_function(cmd_run, timeout=timeout)
 
-    def create_netlist(self, circuit_file: Union[str, Path]) -> Path:
+    @classmethod
+    def create_netlist(cls, circuit_file: Union[str, Path]) -> Path:
         # prepare instructions, two stages used to enable edits on the netlist w/o open GUI
         # see: https://www.mikrocontroller.net/topic/480647?goto=5965300#5965300
         circuit_file = Path(circuit_file)
         if sys.platform == 'darwin':
             NotImplementedError("In this platform LTSpice doesn't have netlist generation capabilities")
-        cmd_netlist = self.spice_exe + ['-netlist'] + [circuit_file.as_posix()]
+        cmd_netlist = cls.spice_exe + ['-netlist'] + [circuit_file.as_posix()]
         print(f'Creating netlist file from "{circuit_file}"', end='...')
         error = run_function(cmd_netlist)
 

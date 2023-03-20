@@ -23,7 +23,7 @@ for opamp in ('AD712', 'AD820'):
         LTC.set_component_value('V1', supply_voltage)
         LTC.set_component_value('V2', -supply_voltage)
         # overriding he automatic netlist naming
-        run_netlist_file = "{}_{}_{}.net".format(LTC.circuit_radic, opamp, supply_voltage)
+        run_netlist_file = "{}_{}_{}.net".format(LTC.netlist_file.name, opamp, supply_voltage)
         LTC.run(run_filename=run_netlist_file, callback=processing_data)
 
 

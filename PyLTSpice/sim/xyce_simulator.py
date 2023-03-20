@@ -9,12 +9,12 @@
 #   |_|    \__, |_____|_| |____/| .__/|_|\___\___|
 #          |___/                |_|
 #
-# Name:        ngspice_simulator.py
+# Name:        xyce_simulator.py
 # Purpose:     Tool used to launch NGspice simulations in batch mode.
 #
 # Author:      Nuno Brum (nuno.brum@gmail.com)
 #
-# Created:     23-02-2023
+# Created:     14-03-2023
 # Licence:     refer to the LICENSE file
 # -------------------------------------------------------------------------------
 
@@ -28,11 +28,11 @@ from typing import Union
 from .simulator import Simulator, run_function
 
 
-class NGspiceSimulator(Simulator):
+class XyceSimulator(Simulator):
     """Stores the simulator location and command line options and runs simulations."""
 
-    ngspice_args = {
-        'raw_file'       : ['-r', '<path>'],
+    _args = {
+        # TODO: Complete this list
     }
 
     @classmethod
@@ -45,7 +45,7 @@ class NGspiceSimulator(Simulator):
     @classmethod
     def valid_switch(cls, switch, path='') -> bool:
         """
-        Validates a command line switch. The following options are available for NGSpice:
+        Validates a command line switch. The following options are available for Xyce:
 
             * 'raw' : Specifies a raw file
 
@@ -58,8 +58,8 @@ class NGspiceSimulator(Simulator):
         :return: Nothing
         :rtype: None
         """
-        if switch in cls.ngspice_args:
-            switches = cls.ngspice_args[switch]
+        if switch in cls._args:
+            switches = cls._args[switch]
             switches = [switch.replace('<path>', path) for switch in switches]
             return switches
         else:

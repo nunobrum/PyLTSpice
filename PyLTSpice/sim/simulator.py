@@ -34,13 +34,12 @@ else:
 
 
 class Simulator(ABC):
-
-    @classmethod
-    @abstractmethod
-    def get_default_simulator(cls):
-        """This method needs to be overriden by the sub-class. It should return a simulator executable that can be
-        passed into the subprocess run method"""
-        raise NotImplementedError("This method should be overriden by a subclass. And that class be used.")
+    """Pure static class template for Spice simulators. This class only defines the interface of the subclasses.
+    The variables below shall be overridden by the subclasses. Instantiating this class will raise a TypeError
+    exception.
+    """
+    spice_exe = []
+    process_name = ""
 
     @classmethod
     def create_from(cls, path_to_exe):
@@ -54,55 +53,26 @@ class Simulator(ABC):
         plib_path_to_exe = Path(path_to_exe)
         if plib_path_to_exe.exists():
             if sys.platform == 'darwin':
-                process_name = plib_path_to_exe.stem
+                cls.process_name = plib_path_to_exe.stem
             else:
-                process_name = plib_path_to_exe.name
-            return cls([plib_path_to_exe.as_posix()], process_name)
+                cls.process_name = plib_path_to_exe.name
+            cls.spice_exe = [plib_path_to_exe.as_posix()]
+            return cls
         else:
             raise FileNotFoundError(f"Provided exe file was not found '{path_to_exe}'")
 
     def __init__(self, spice_exe: list, process_name: str):
-        """
-        Abstract class that represent a simulator executable. It provides the interface that the subclass needs to
-        implement in order to
-        """
-        if not isinstance(spice_exe, list):
-            raise TypeError("spice_exe must be a list of strings that can be passed into the subprocess call")
+        raise TypeError("This is a pure abstract class merely for the purposes of giving the programmer a guideline.")
 
-        self.spice_exe = spice_exe
-        self.cmdline_switches = []
-        self.process_name = process_name
-
-    def clear_command_line_switches(self):
-        """Clear all the command line switches added previously"""
-        self.cmdline_switches.clear()
-
-    def add_command_line_switch(self, switch, path=''):
-        """
-        Adds a command line switch to the spice tool command line call.
-
-        :param switch: switch to be added.
-        :type switch: str
-        :param path: path to the file related to the switch being given.
-        :type path: str, optional
-        :return: Nothing
-        :rtype: None
-        """
-        self.cmdline_switches.append(switch)
-        if path is not None:
-            self.cmdline_switches.append(path)
-
+    @classmethod
     @abstractmethod
-    def run(self, netlist_file, timeout):
+    def run(cls, netlist_file, cmd_line_switches, timeout):
         """This method implements the call for the simulation of the netlist file. This should be overriden by its
         subclass"""
         raise NotImplementedError("This method must be overriden in a subclass")
 
-    def kill_all(self):
-        import psutil
-        for proc in psutil.process_iter():
-            # check whether the process name matches
-
-            if proc.name() == self.process_name:
-                print("killing ngspice", proc.pid)
-                proc.kill()
+    @classmethod
+    @abstractmethod
+    def valid_switch(cls, switch, switch_param) -> bool:
+        """This method validates that a switch exist and is valid. This should be overriden by its subclass."""
+        raise NotImplementedError("This method must be overriden in a subclass")

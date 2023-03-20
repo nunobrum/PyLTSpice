@@ -121,7 +121,7 @@ class SimCommander(SpiceEditor):
                  encoding='autodetect', simulator=None):
         if simulator is None:
             from ..sim.ltspice_simulator import LTspiceSimulator  # In case no simulator is given
-            simulator = LTspiceSimulator.get_default_simulator()
+            simulator = LTspiceSimulator
         netlist_file = Path(netlist_file)
         self.circuit_file = netlist_file  # Legacy property
         if netlist_file.suffix == '.asc':

@@ -22,7 +22,7 @@ import traceback
 import re
 import logging
 from math import log, floor
-from typing import Union, Optional, List, Callable, Any
+from typing import Union, List, Callable, Any
 from ..utils.detect_encoding import detect_encoding
 
 __author__ = "Nuno Canto Brum <nuno.brum@gmail.com>"
@@ -341,7 +341,7 @@ class SpiceCircuit(object):
             line_no += 1
         return -1, None  # If it fails, it returns an invalid line number and No match
 
-    def _get_subcircuit(self, instance_name: str) -> 'SubCircuit':
+    def _get_subcircuit(self, instance_name: str) -> 'SpiceCircuit':
         """Internal function. Do not use."""
         global LibSearchPaths
         if SUBCIRCUIT_DIVIDER in instance_name:
@@ -800,6 +800,7 @@ class SpiceCircuit(object):
                             circuit_nodes.append(node)
         return circuit_nodes
 
+
 class SpiceEditor(SpiceCircuit):
     """
     This class implements interfaces to manipulate SPICE netlist files. The class doesn't update the netlist file
@@ -814,9 +815,13 @@ class SpiceEditor(SpiceCircuit):
     def __init__(self, netlist_file: Union[str, Path], encoding='autodetect'):
         super().__init__()
         self.netlist_file = Path(netlist_file)
+        if self.netlist_file.suffix == '.asc':
+            from .ltspice_simulator import LTspiceSimulator
+
+            self.netlist_file = LTspiceSimulator.create_netlist(self.netlist_file)
         self.modified_subcircuits = {}
         if encoding == 'autodetect':
-            self.encoding = detect_encoding(netlist_file, '*')  # Normally the file will start with a '*'
+            self.encoding = detect_encoding(self.netlist_file, '*')  # Normally the file will start with a '*'
         else:
             self.encoding = encoding
         self.reset_netlist()
@@ -991,16 +996,12 @@ class SpiceEditor(SpiceCircuit):
         #  3. Return an instance of SpiceCircuit
         return None
 
-    def run(self, circuit, wait_resource: bool = True,
-            callback: Callable[[str, str], Any] = None, timeout: float = 600, run_filename: str = None):
-        from .ltspice_simulator import LTspiceSimulator
+    def run(self, wait_resource: bool = True,
+            callback: Callable[[str, str], Any] = None, timeout: float = 600, run_filename: str = None, simulator=None):
         from .sim_runner import SimRunner
-        LT = LTspiceSimulator.get_default_simulator()
-        Sim = SimRunner(simulator=LT)
-        pcircuit = Path(circuit)
-        self.write_netlist(pcircuit)
-        return Sim.run(self, wait_resource=wait_resource, callback=callback, timeout=timeout,
-                       run_filename=run_filename)
+        Sim = SimRunner()
+        return Sim.run(self, wait_resource=wait_resource, callback=callback, timeout=timeout, run_filename=run_filename)
+
 
 if __name__ == '__main__':
     E = SpiceEditor(os.path.abspath('..\\tests\\PI_Filter_resampled.net'))

@@ -128,10 +128,6 @@ class SimRunner(object):
     :type timeout: float, optional
     :param verbose: If True, it enables a richer printout of the program execution.
     :type verbose: bool, optional
-    :param encoding: Forcing the encoding to be used on the circuit netlile read. Defaults to 'autodetect' which will
-                     call a function that tries to detect the encoding automatically. This however is not 100% fool
-                     proof.
-    :type encoding: str, optional
     :param output_folder: specifying which directory shall be used for simulation files (raw and log files).
     :param output_folder: str
     :param simulator: Forcing a given simulator executable.
@@ -147,6 +143,7 @@ class SimRunner(object):
         self.workfiles = []
         self.verbose = verbose
         self.timeout = timeout
+        self.cmdline_switches = []
 
         if output_folder:
             self.output_folder = Path(output_folder)  # If not None convert to Path() object
@@ -171,13 +168,13 @@ class SimRunner(object):
         # Gets a simulator.
         if simulator is None:
             from ..sim.ltspice_simulator import LTspiceSimulator  # Used for defaults
-            self.simulator = LTspiceSimulator.get_default_simulator()
-        elif isinstance(simulator, Simulator):
+            self.simulator = LTspiceSimulator
+        elif issubclass(simulator, Simulator):
             self.simulator = simulator
         elif isinstance(simulator, (str, Path)):
             self.simulator = Simulator.create_from(simulator)
         else:
-            raise TypeError("Invalid simulator type. Either use a string with the ")
+            raise TypeError("Invalid simulator type.")
 
     def __del__(self):
         """Class Destructor : Closes Everything"""
@@ -202,20 +199,26 @@ class SimRunner(object):
         else:
             raise TypeError("Expecting str or Simulator objects")
 
-    def addRunCmdLineSwitches(self, *args) -> None:
+    def clear_command_line_switches(self):
+        """Clear all the command line switches added previously"""
+        self.cmdline_switches.clear()
+
+    def add_command_line_switch(self, switch, path=''):
         """
         Used to add an extra command line argument such as -I<path> to add symbol search path or -FastAccess
         to convert the raw file into Fast Access.
         The arguments is a list of strings as is defined in the LTSpice command line documentation.
 
-        :param args: list of strings
-            A list of command line switches such as "-ascii" for generating a raw file in text format or "-alt" for
-            setting the solver to alternate. See Command Line Switches information on LTSpice help file.
-        :type args: list[str]
+        :param switch: switch to be added.
+        :type switch: str:  A command line switch such as "-ascii" for generating a raw file in text format or
+        "-alt" for setting the solver to alternate. See Command Line Switches information on LTSpice help file.
+        :param path: path to the file related to the switch being given.
+        :type path: str, optional
         :returns: Nothing
         """
-        self.simulator.add_command_line_switch(*args)  # TODO: This class should store the command line switches and
-        # let the simulator be a pure class (no instances are required)
+        self.cmdline_switches.append(switch)
+        if path is not None:
+            self.cmdline_switches.append(path)
 
     def _on_output_folder(self, afile):
         if self.output_folder:
@@ -268,7 +271,7 @@ class SimRunner(object):
         return None
 
     def run(self, netlist: Union[str, Path, SpiceEditor], *,  wait_resource: bool = True,
-            callback: Callable[[Path, Path], Any] = None,
+            callback: Callable[[Path, Path], Any] = None, switches: list = [],
             timeout: float = 600, run_filename: str = None) -> Union[RunTask, None]:
         """
         Executes a simulation run with the conditions set by the user.
@@ -291,6 +294,8 @@ class SimRunner(object):
             be done immediately. The callback function must receive two input parameters that correspond the raw and
             log files created by the simulation. The argument type is of the type pathlib.Path
         :type: callback: function(raw_file: Path, log_file: Path), optional
+        :param switches: Command line switches override
+        :type switches: list
         :param timeout: Timeout to be used in waiting for resources. Default time is 600 seconds, i.e. 10 minutes.
         :type timeout: float, optional
         :param run_filename: Name to be used for the log and raw file.
@@ -321,10 +326,11 @@ class SimRunner(object):
 
         t0 = time.perf_counter()  # Store the time for timeout calculation
         while time.perf_counter() - t0 < timeout:
-            self.updated_stats()  # purge ended tasks
+            cmdline_switches = switches or self.cmdline_switches  # If switches are passed, they override the ones
+            # inside the class.
 
-            if (wait_resource is False) or (len(self.threads) < self.parallel_sims):
-                t = RunTask(self.simulator, self.runno, run_netlist_file, callback,
+            if (wait_resource is False) or (self.acive_threads() < self.parallel_sims):
+                t = RunTask(self.simulator, self.runno, run_netlist_file, callback, cmdline_switches,
                             timeout=self.timeout, verbose=self.verbose)
                 self.threads.append(t)
                 t.start()
@@ -336,6 +342,14 @@ class SimRunner(object):
             if self.verbose:
                 print("Timeout on launching simulation %d." % self.runno)
             return None
+
+    def acive_threads(self):
+        """Returns the number of active threads"""
+        count = 0
+        for t in self.threads:
+            if t.is_alive():
+                count += 1
+        return count
 
     def updated_stats(self, release_tasks: bool = True):
         """
@@ -361,8 +375,15 @@ class SimRunner(object):
     @staticmethod
     def kill_all_ltspice():
         """Function to terminate LTSpice in windows"""
-        simulator = Simulator.get_default_simulator()
-        simulator.kill_all()
+        simulator = Simulator
+        process_name = simulator.process_name
+        import psutil
+        for proc in psutil.process_iter():
+            # check whether the process name matches
+
+            if proc.name() == process_name:
+                print("killing ngspice", proc.pid)
+                proc.kill()
 
     def wait_completion(self, timeout=None, abort_all_on_timeout=False) -> bool:
         """
