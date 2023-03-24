@@ -259,6 +259,11 @@ class UnrecognizedSyntaxError(Exception):
         super().__init__(f'Line: "{line}" doesn\'t match regular expression "{regex}"')
 
 
+class MissingExpectedClauseError(Exception):
+    """Missing expected clause in Spice netlist"""
+
+
+
 class SpiceCircuit(object):
     """
     The Spice Circuit represents subcircuits within a SPICE circuit and since subcircuits can have subcircuits inside
@@ -484,7 +489,7 @@ class SpiceCircuit(object):
                     break
                 line_no += 1
             else:
-                raise UnrecognizedSyntaxError("Unable to find .SUBCKT clause in subcircuit")
+                raise MissingExpectedClauseError("Unable to find .SUBCKT clause in subcircuit")
 
             # This second loop finds the .ENDS clause
             while line_no < lines:
@@ -494,7 +499,7 @@ class SpiceCircuit(object):
                     break
                 line_no += 1
             else:
-                raise UnrecognizedSyntaxError("Unable to find .SUBCKT clause in subcircuit")
+                raise MissingExpectedClauseError("Unable to find .SUBCKT clause in subcircuit")
         else:
             # Avoiding exception by creating an empty subcircuit
             self.netlist.app("* SpiceEditor Created this subcircuit")
@@ -526,7 +531,7 @@ class SpiceCircuit(object):
         if m is None:
             error_msg = 'Unsupported line "{}"\nExpected format is "{}"'.format(line, REPLACE_REGXES[prefix])
             self.logger.error(error_msg)
-            raise UnrecognizedSyntaxError(error_msg)
+            raise UnrecognizedSyntaxError(line, REPLACE_REGXES[prefix])
 
         info = m.groupdict()
         info['line'] = line_no  # adding the line number to the component information
