@@ -53,12 +53,8 @@ from PyLTSpice.sim.ltspice_simulator import LTspiceSimulator
 
 def has_ltspice_detect():
     from PyLTSpice.sim.ltspice_simulator import LTspiceSimulator
-    try:
-        ltspice = LTspiceSimulator.get_default_simulator()
-    except:
-        return False
-    else:
-        return isinstance(ltspice.spice_exe, list) and os.path.exists(ltspice.spice_exe[0])
+    ltspice = LTspiceSimulator
+    return isinstance(ltspice.spice_exe, list) and os.path.exists(ltspice.spice_exe[0])
 
 
 # ------------------------------------------------------------------------------
