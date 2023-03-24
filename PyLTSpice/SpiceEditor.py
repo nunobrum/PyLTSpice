@@ -110,6 +110,7 @@ lib_inc_regex = re.compile(r"^\.(LIB|INC)\s+(.*)$", re.IGNORECASE)
 
 LibSearchPaths = []
 
+
 def format_eng(value) -> str:
     """
     Helper function for formating value with the SI qualifiers.  That is, it will use
@@ -245,15 +246,21 @@ def _is_unique_instruction(instruction):
 class ComponentNotFoundError(Exception):
     """Component Not Found Error"""
 
+
 class ParameterNotFoundError(Exception):
     """ParameterNotFound Error"""
     def __init__(self, parameter):
         super().__init__(f'Parameter "{parameter}" not found')
 
+
 class UnrecognizedSyntaxError(Exception):
     """Line doesn't match expected Spice syntax"""
     def __init__(self, line, regex):
         super().__init__(f'Line: "{line}" doesn\'t match regular expression "{regex}"')
+
+
+class MissingExpectedClauseError(Exception):
+    """Missing expected clause in Spice netlist"""
 
 
 class SpiceCircuit(object):
@@ -481,7 +488,7 @@ class SpiceCircuit(object):
                     break
                 line_no += 1
             else:
-                raise UnrecognizedSyntaxError("Unable to find .SUBCKT clause in subcircuit")
+                raise MissingExpectedClauseError("Unable to find .SUBCKT clause in subcircuit")
 
             # This second loop finds the .ENDS clause
             while line_no < lines:
@@ -491,7 +498,7 @@ class SpiceCircuit(object):
                     break
                 line_no += 1
             else:
-                raise UnrecognizedSyntaxError("Unable to find .SUBCKT clause in subcircuit")
+                raise MissingExpectedClauseError("Unable to find .SUBCKT clause in subcircuit")
         else:
             # Avoiding exception by creating an empty subcircuit
             self.netlist.app("* SpiceEditor Created this subcircuit")
@@ -523,7 +530,7 @@ class SpiceCircuit(object):
         if m is None:
             error_msg = 'Unsupported line "{}"\nExpected format is "{}"'.format(line, REPLACE_REGXES[prefix])
             self.logger.error(error_msg)
-            raise UnrecognizedSyntaxError(error_msg)
+            raise UnrecognizedSyntaxError(REPLACE_REGXES[prefix], line)
 
         info = m.groupdict()
         info['line'] = line_no  # adding the line number to the component information
