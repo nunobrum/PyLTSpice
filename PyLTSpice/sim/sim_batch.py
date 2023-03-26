@@ -114,7 +114,13 @@ logging.basicConfig(filename='SpiceBatch.log', level=logging.INFO)
 
 class SimCommander(SpiceEditor):
     """
-    Backwards compatibility class
+    *(Deprecated)*
+    Backwards compatibility class.
+
+    This class will be soon deprecated. For a better control of the simulation environment, supporting other simulators
+    and allowing to simulate directly the .ASC files, the SpiceEditor class is now separated from the Simulator Running
+    class.
+    Please check the SimRunner class for more information.
     """
 
     def __init__(self, netlist_file: Union[str, Path], parallel_sims: int = 4, timeout=None, verbose=True,
@@ -128,7 +134,7 @@ class SimCommander(SpiceEditor):
             netlist_file = simulator.create_netlist(netlist_file)
         super().__init__(netlist_file, encoding)
         self.runner = SimRunner(simulator=simulator, parallel_sims=parallel_sims, timeout=timeout, verbose=verbose,
-                                output_folder=netlist_file.parent)
+                                output_folder=netlist_file.parent.as_posix())
 
     def setLTspiceRunCommand(self, spice_tool: Union[str, Simulator]) -> None:
         """
@@ -154,7 +160,9 @@ class SimCommander(SpiceEditor):
         :type args: list[str]
         :returns: Nothing
         """
-        self.runner.addRunCmdLineSwitches(*args)
+        self.runner.clear_command_line_switches()
+        for option in args:
+            self.runner.add_command_line_switch(option)
 
     def run(self, run_filename: str = None, wait_resource: bool = True,
             callback: Callable[[str, str], Any] = None, timeout: float = 600) -> RunTask:

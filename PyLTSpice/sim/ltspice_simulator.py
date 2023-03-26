@@ -95,7 +95,7 @@ class LTspiceSimulator(Simulator):
     }
 
     @classmethod
-    def valid_switch(cls, switch, path='') -> bool:
+    def valid_switch(cls, switch, path='') -> list:
         """
         Validates a command line switch. The following options are available for LTSpice:
 

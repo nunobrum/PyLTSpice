@@ -30,44 +30,73 @@ from .simulator import Simulator, run_function
 
 class NGspiceSimulator(Simulator):
     """Stores the simulator location and command line options and runs simulations."""
-
+    spice_exe = ["C:/Apps/NGSpice64/bin/ngspice.exe"]
+    process_name = "ngspice.exe"
     ngspice_args = {
-        'raw_file'       : ['-r', '<path>'],
+        '-a'            : ['-a'],
+        '--autorun'     : ['--autorun'],  # run the loaded netlist
+        '-b'            : ['-b'],
+        '--batch'       : ['--batch'],  # process FILE in batch mode
+        # '-c'            : ['-c', '<FILE>'],  #
+        # '--circuitfile' : ['--circuitfile', '<FILE>'],  # set the circuitfile
+        '-D'            : ['-D', 'var_value'],  #
+        '--define'      : ['--define', 'var_value'],  # define variable to true/[value]
+        '-i'            : ['-i'],  #
+        '--interactive' : ['--interactive'],  # run in interactive mode
+        '-n'            : ['-n'],  #
+        '--no-spiceinit': ['--no-spiceinit'],  # don't load the local or user's config file
+        '-o'            : ['-o', '<FILE>'],  #
+        '--output'      : ['--output', '<FILE>'],  # set the outputfile
+        '-p'            : ['-p'],  #
+        '--pipe'        : ['--pipe'],  # run in I/O pipe mode
+        '-q'            : ['-q'],  #
+        '--completion'  : ['--completion'],  # activate command completion
+        '-r'            : ['-r'],  #
+        '--rawfile'     : ['--rawfile', '<FILE>'],  # set the rawfile output
+        '--soa-log'     : ['--soa-log', '<FILE>'],  # set the outputfile for SOA warnings
+        '-s'            : ['-s'],  #
+        '--server'      : ['--server'],  # run spice as a server process
+        '-t'            : ['-t', '<TERM>'],  #
+        '--term'        : ['--term', '<TERM>'],  # set the terminal type
+        # '-h'            : ['-h'],  #
+        # '--help'        : ['--help'],  # display this help and exit
+        '-v'            : ['-v'],  #
+        '--version'     : ['--version'],  # output version information and exit
     }
 
     @classmethod
-    def get_default_simulator(cls):
-        """Searches on the any usual locations for a simulator"""
-        raise FileNotFoundError("A suitable exe file was not found. Please locate the spice simulator "
-                                "executable and pass it to the SimCommander object by using the 'create_from()'"
-                                " class method.")
-
-    @classmethod
-    def valid_switch(cls, switch, path='') -> bool:
+    def valid_switch(cls, switch, parameter='') -> list:
         """
         Validates a command line switch. The following options are available for NGSpice:
-
-            * 'raw' : Specifies a raw file
-
 
         :param switch: switch to be added. If the switch is not on the list above, it should be correctly formatted with
         the preceding '-' switch
         :type switch: str
-        :param path: path to the file related to the switch being given.
-        :type path: str, optional
-        :return: Nothing
-        :rtype: None
+        :param parameter: parameter for the switch
+        :type parameter: str, optional
+        :return: the correct formatting for the switch
+        :rtype: list
         """
+        ret = []  # This is an empty switch
         if switch in cls.ngspice_args:
-            switches = cls.ngspice_args[switch]
-            switches = [switch.replace('<path>', path) for switch in switches]
-            return switches
+            switch_list = cls.ngspice_args[switch]
+            if len(switch_list) == 2:
+                param_token = switch_list[1]
+                if param_token == '<FILE>':
+                    ret = [switch_list[0], parameter]
+                elif param_token == '<TERM>':
+                    ret = [switch_list[0], parameter]
+                else:
+                    print(f"Invalid parameter {parameter} for switch '{switch}'")
+            else:
+                ret = switch_list
         else:
-            raise ValueError("Invalid swich for class ")
+            print(f"Invalid Switch {switch}")
+        return ret
 
     @classmethod
     def run(cls, netlist_file, cmd_line_switches, timeout):
-        cmd_run = cls.spice_exe + ['-b'] + [netlist_file] + cmd_line_switches
+        cmd_run = cls.spice_exe + cmd_line_switches + ['-c'] + [netlist_file]
         # start execution
         return run_function(cmd_run, timeout=timeout)
 

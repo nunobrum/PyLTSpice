@@ -25,6 +25,7 @@ import subprocess
 
 if sys.version_info.major >= 3 and sys.version_info.minor >= 6:
     def run_function(command, timeout=None):
+        """Normalizing OS subprocess function calls between different platforms."""
         result = subprocess.run(command, timeout=timeout)
         return result.returncode
 
@@ -37,6 +38,38 @@ class Simulator(ABC):
     """Pure static class template for Spice simulators. This class only defines the interface of the subclasses.
     The variables below shall be overridden by the subclasses. Instantiating this class will raise a TypeError
     exception.
+
+    A typical subclass for a windows installation is
+
+    .. code-block:: python
+
+        class MySpiceWindowsInstallation(Simulator):
+            spice_exe = ['<path to your own ltspice installation>']
+            process_name = "<name of the process on Windows Task Manager>"
+
+
+    or on a linux distribution
+
+    .. code-block:: python
+
+        class MySpiceLinuxInstallation(Simulator):
+            spice_exe = ['<wine_command', '<path to your own ltspice installation>']
+            process_name = "<name of the process>"
+
+
+    The subclasses should then implement at least the run() function as a classmethod.
+    
+    .. code-block:: python
+        
+        @classmethod
+        def run(cls, netlist_file, cmd_line_switches, timeout):
+            '''This method implements the call for the simulation of the netlist file. '''
+            cmd_run = cls.spice_exe + ['-Run'] + ['-b'] + [netlist_file] + cmd_line_switches
+            return run_function(cmd_run, timeout=timeout)
+
+
+    The `run_function()` can be imported from the simulator.py with `from PyLTSpice.sim.simulator import run_function`
+    instruction.
     """
     spice_exe = []
     process_name = ""
@@ -73,6 +106,6 @@ class Simulator(ABC):
 
     @classmethod
     @abstractmethod
-    def valid_switch(cls, switch, switch_param) -> bool:
+    def valid_switch(cls, switch, switch_param) -> list:
         """This method validates that a switch exist and is valid. This should be overriden by its subclass."""
         raise NotImplementedError("This method must be overriden in a subclass")
