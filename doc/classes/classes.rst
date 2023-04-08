@@ -5,9 +5,10 @@ Python Classes
 .. toctree::
    :maxdepth: 4
 
-   sim_editor
+   spice_editor
+   spice_circuit
    sim_runner
-   sim_batch
+   sim_simulator
    raw_read
    raw_write
 
@@ -19,4 +20,4 @@ Deprecations
 .. toctree::
    :maxdepth: 4
 
-   sim_simulator
+   sim_batch
