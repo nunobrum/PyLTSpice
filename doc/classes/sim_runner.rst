@@ -7,5 +7,5 @@ SimRunner
    :show-inheritance:
 
 
-.. autoclass:: PyLTSpice.sim.local_run_task.RunTask
+.. autoclass:: PyLTSpice.sim.run_task.RunTask
    :members:

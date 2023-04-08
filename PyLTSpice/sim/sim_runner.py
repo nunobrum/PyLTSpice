@@ -187,7 +187,7 @@ class SimRunner(object):
         Manually setting the LTSpice run command
 
         :param spice_tool: String containing the path to the spice tool to be used, or alternatively the Simulator
-        object.
+            object.
         :type spice_tool: str or Simulator
         :return: Nothing
         :rtype: None
@@ -211,7 +211,7 @@ class SimRunner(object):
 
         :param switch: switch to be added.
         :type switch: str:  A command line switch such as "-ascii" for generating a raw file in text format or
-        "-alt" for setting the solver to alternate. See Command Line Switches information on LTSpice help file.
+            "-alt" for setting the solver to alternate. See Command Line Switches information on LTSpice help file.
         :param path: path to the file related to the switch being given.
         :type path: str, optional
         :returns: Nothing
