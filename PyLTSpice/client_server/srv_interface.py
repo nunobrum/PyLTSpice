@@ -24,7 +24,7 @@ from xmlrpc.server import SimpleXMLRPCServer
 import threading
 import zipfile
 import io
-from .srv_sim_runner import ServerSimRunner
+from PyLTSpice.client_server.srv_sim_runner import ServerSimRunner
 import uuid
 
 
@@ -40,7 +40,7 @@ class SimServer():
         )
         self.server.register_introspection_functions()
         self.server.register_instance(self)
-        self.sessions = {}  # this will contain the session_id ids hashing their respective list of threads
+        self.sessions = {}  # this will contain the session_id ids hashing their respective list of sim_taks
         self.simulation_manager.start()
         self.server_thread = threading.Thread(target=self.server.serve_forever, name="ServerThread")
         self.server_thread.start()
@@ -64,7 +64,7 @@ class SimServer():
         return runno
 
     def start_session(self):
-        """Returns an unique key that represents the session. It will be later used to sort the threads belonging
+        """Returns an unique key that represents the session. It will be later used to sort the sim_taks belonging
         to the session."""
         session_id = str(uuid.uuid4())  # Needs to be a string, otherwise the rpc client can't handle it
         print("Starting session ", session_id)
@@ -94,26 +94,26 @@ class SimServer():
         print("returning status", ret)
         return ret
 
-    def get_files(self, session_id, job_id) -> Tuple[str, Binary]:
-        if job_id in self.sessions[session_id]:
+    def get_files(self, session_id, runno) -> Tuple[str, Binary]:
+        if runno in self.sessions[session_id]:
 
             for task_info in self.simulation_manager.completed_tasks:
-                if job_id == task_info['runno']:
+                if runno == task_info['runno']:
                     # Create a buffer to store the zip file in memory
                     zip_file = task_info['zipfile']
                     zip = zip_file.open('rb')
                     # Read the zip file from the buffer and send it to the server
                     zip_data = zip.read()
                     zip.close()
-                    self.simulation_manager.vacuum_files_of_runno(job_id)
+                    self.simulation_manager.erase_files_of_runno(runno)
                     return zip_file.name, Binary(zip_data)
 
         return "", Binary(b'')  # Returns and empty data
 
     def close_session(self, session_id):
-        """Cleans all the pending threads with """
+        """Cleans all the pending sim_taks with """
         for runno in self.sessions[session_id]:
-            self.simulation_manager.vacuum_files_of_runno(runno)
+            self.simulation_manager.erase_files_of_runno(runno)
         return True  # Needs to return always something. None is not supported
 
     def stop_server(self):

@@ -9,7 +9,7 @@
 #   |_|    \__, |_____|_| |____/| .__/|_|\___\___|
 #          |___/                |_|
 #
-# Name:        local_run_task.py
+# Name:        run_task.py
 # Purpose:     Class used for a spice tool using a process call
 #
 # Author:      Nuno Brum (nuno.brum@gmail.com)
@@ -56,9 +56,6 @@ class RunTask(threading.Thread):
         self.verbose = verbose
         self.switches = switches
         self.timeout = timeout  # Thanks to Daniel Phili for implementing this
-
-        threading.Thread.__init__(self)
-        self.setName("sim%d" % runno)
         self.simulator = simulator
         self.runno = runno
         self.netlist_file = netlist_file

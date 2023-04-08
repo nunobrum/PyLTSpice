@@ -10,7 +10,7 @@
 #          |___/                |_|
 #
 # Name:        srv_sim_runner.py
-# Purpose:     Manager of the simulation threads on the server side
+# Purpose:     Manager of the simulation sim_taks on the server side
 #
 # Author:      Nuno Brum (nuno.brum@gmail.com)
 #
@@ -23,8 +23,8 @@ from typing import Any, Callable, Union
 from pathlib import Path
 import zipfile
 
-from .sim_runner import SimRunner
-from .spice_editor import SpiceEditor
+from PyLTSpice.sim.sim_runner import SimRunner
+from PyLTSpice.sim.spice_editor import SpiceEditor
 
 
 def zip_files(raw_filename: Path, log_filename:Path):
@@ -56,8 +56,8 @@ class ServerSimRunner(threading.Thread):
         """This function makes a direct manipulation of the structures of SimRunner. This option is """
         while True:
             i = 0
-            while i < len(self.runner.threads):
-                task = self.runner.threads[i]
+            while i < len(self.runner.sim_taks):
+                task = self.runner.sim_taks[i]
                 if task.is_alive():
                     i += 1
                 else:
@@ -72,7 +72,7 @@ class ServerSimRunner(threading.Thread):
                         'stop': task.stop_time,
                     })
                     print(task, "is finished")
-                    del self.runner.threads[i]
+                    del self.runner.sim_taks[i]
                     print(self.completed_tasks[-1])
                     print(len(self.completed_tasks))
 
@@ -101,7 +101,7 @@ class ServerSimRunner(threading.Thread):
                 f.unlink()
         del self.completed_tasks[pos]
 
-    def vacuum_files_of_runno(self, runno):
+    def erase_files_of_runno(self, runno):
         """Will delete all files related with a completed task. Will also delete information on the completed_tasks
         attribute."""
         for i, task_info in enumerate(self.completed_tasks):

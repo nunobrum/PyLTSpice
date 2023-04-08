@@ -49,11 +49,11 @@ from PyLTSpice.sim.sim_batch import SimCommander
 from PyLTSpice.raw.raw_read import RawRead
 from PyLTSpice.sim.spice_editor import SpiceEditor
 from PyLTSpice.sim.sim_runner import SimRunner
-from PyLTSpice.sim.ltspice_simulator import LTspiceSimulator
+from PyLTSpice.sim.ltspice_simulator import LTspice
 
 def has_ltspice_detect():
-    from PyLTSpice.sim.ltspice_simulator import LTspiceSimulator
-    ltspice = LTspiceSimulator
+    from PyLTSpice.sim.ltspice_simulator import LTspice
+    ltspice = LTspice
     return isinstance(ltspice.spice_exe, list) and os.path.exists(ltspice.spice_exe[0])
 
 

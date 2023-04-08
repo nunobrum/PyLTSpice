@@ -341,3 +341,4 @@ class DummyTrace(object):
 
 class SpiceReadException(Exception):
     """Custom class for exception handling"""
+    ...

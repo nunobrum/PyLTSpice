@@ -70,7 +70,7 @@ class NGspiceSimulator(Simulator):
         Validates a command line switch. The following options are available for NGSpice:
 
         :param switch: switch to be added. If the switch is not on the list above, it should be correctly formatted with
-        the preceding '-' switch
+                    the preceding '-' switch
         :type switch: str
         :param parameter: parameter for the switch
         :type parameter: str, optional

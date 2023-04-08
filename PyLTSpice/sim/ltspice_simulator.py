@@ -10,7 +10,7 @@
 #          |___/                |_|
 #
 # Name:        ltspice_simulator.py
-# Purpose:     Represents a LTspiceSimulator tool and it's command line options
+# Purpose:     Represents a LTspice tool and it's command line options
 #
 # Author:      Nuno Brum (nuno.brum@gmail.com)
 #
@@ -27,7 +27,7 @@ from typing import Union
 from .simulator import Simulator, run_function
 
 
-class LTspiceSimulator(Simulator):
+class LTspice(Simulator):
     """Stores the simulator location and command line options and is responsible for generating netlists and running
     simulations."""
 
@@ -104,20 +104,20 @@ class LTspiceSimulator(Simulator):
             * 'ascii'     : Use ASCII.raw files. Seriously degrades program performance.
 
             * 'encrypt'   : Encrypt a model library.For 3rd parties wishing to allow people to use libraries without
-            revealing implementation details. Not used by AnalogDevices models.
+                            revealing implementation details. Not used by AnalogDevices models.
 
             * 'fastaccess': Batch conversion of a binary.rawfile to Fast Access format.
 
-            * 'FixUpSchematicFonts'  : Convert the font size field of very old user - authored schematic text to the
-            modern default.
+            * 'FixUpSchematicFonts' : Convert the font size field of very old user - authored schematic text to the
+                                    modern default.
 
             * 'FixUpSymbolFonts' : Convert the font size field of very old user - authored symbols to the modern
-            default. See Changelog.txt for application hints.
+                default. See Changelog.txt for application hints.
 
             * 'ini <path>' : Specify an .ini file to use other than %APPDATA%\LTspice.ini
 
             * 'I<path>' : Specify a path to insert in the symbol and file search paths. Must be the last specified
-            option.
+                option.
 
             * 'netlist'   :  Batch conversion of a schematic to a netlist.
 
@@ -133,7 +133,7 @@ class LTspiceSimulator(Simulator):
 
 
         :param switch: switch to be added. If the switch is not on the list above, it should be correctly formatted with
-        the preceding '-' switch
+                       the preceding '-' switch
         :type switch: str
         :param path: path to the file related to the switch being given.
         :type path: str, optional
@@ -145,7 +145,7 @@ class LTspiceSimulator(Simulator):
             switches = [switch.replace('<path>', path) for switch in switches]
             return switches
         else:
-            raise ValueError("Invalid swich for class ")
+            raise ValueError("Invalid switch for class ")
 
     @classmethod
     def run(cls, netlist_file, cmd_line_switches, timeout):

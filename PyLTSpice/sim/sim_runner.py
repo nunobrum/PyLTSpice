@@ -104,7 +104,7 @@ from pathlib import Path
 from time import sleep
 from typing import Callable, Union, Any
 
-from ..sim.local_run_task import RunTask
+from ..sim.run_task import RunTask
 from ..sim.simulator import Simulator
 from ..sim.spice_editor import SpiceEditor
 
@@ -153,7 +153,7 @@ class SimRunner(object):
             self.output_folder = None
 
         self.parallel_sims = parallel_sims
-        self.threads = []
+        self.sim_taks = []
 
         # master_log_filename = self.circuit_radic + '.masterlog' TODO: create the JSON or YAML file
         self.logger = logging.getLogger("SimCommander")
@@ -162,13 +162,13 @@ class SimRunner(object):
 
         self.runno = 0  # number of total runs
         self.failSim = 0  # number of failed simulations
-        self.okSim = 0  # number of succesfull completed simulations
+        self.okSim = 0  # number of successful completed simulations
         # self.failParam = []  # collects for later user investigation of failed parameter sets
 
         # Gets a simulator.
         if simulator is None:
-            from ..sim.ltspice_simulator import LTspiceSimulator  # Used for defaults
-            self.simulator = LTspiceSimulator
+            from ..sim.ltspice_simulator import LTspice  # Used for defaults
+            self.simulator = LTspice
         elif issubclass(simulator, Simulator):
             self.simulator = simulator
         elif isinstance(simulator, (str, Path)):
@@ -178,7 +178,7 @@ class SimRunner(object):
 
     def __del__(self):
         """Class Destructor : Closes Everything"""
-        self.logger.debug("Waiting for all spawned threads to finish.")
+        self.logger.debug("Waiting for all spawned sim_taks to finish.")
         self.wait_completion()  # TODO: Kill all pending simulations
         self.logger.debug("Exiting SimCommander")
 
@@ -270,6 +270,31 @@ class SimRunner(object):
                     print("Unable to create the Netlist from %s" % asc_file)
         return None
 
+    def _prepare_sim(self, netlist: Union[str, Path, SpiceEditor], run_filename: str):
+        """Internal function"""
+        # update number of simulation
+        self.runno += 1  # Incrementing internal simulation number
+        # Harmonize the netlist into a Path object pointing to a netlist file on the right output folder
+        if isinstance(netlist, SpiceEditor):
+            if run_filename is None:
+                run_filename = self._run_file_name(netlist.netlist_file)
+
+            # Calculates the path where to store the new netlist.
+            run_netlist_file = self._on_output_folder(run_filename).with_suffix('.net')
+            netlist.write_netlist(run_netlist_file)
+
+        elif isinstance(netlist, (Path, str)):
+            if run_filename is None:
+                run_filename = self._run_file_name(netlist)
+            if isinstance(netlist, str):
+                netlist = Path(netlist)
+            run_netlist_file = self._to_output_folder(netlist, copy=True, new_name=run_filename)
+        else:
+            raise TypeError("'netlist' parameter shall be a SpiceEditor, pathlib.Path or a plain str")
+
+        self.workfiles.append(run_netlist_file)
+        return run_netlist_file
+
     def run(self, netlist: Union[str, Path, SpiceEditor], *,  wait_resource: bool = True,
             callback: Callable[[Path, Path], Any] = None, switches: list = [],
             timeout: float = 600, run_filename: str = None) -> Union[RunTask, None]:
@@ -302,37 +327,17 @@ class SimRunner(object):
         :type run_filename: str or Path
         :returns: The task object of type RunTask
         """
-        # update number of simulation
-        self.runno += 1  # Using internal simulation number in case a run_id is not supplied
-        # Harmonize the netlist into a Path object pointing to a netlist file on the right output folder
-        if isinstance(netlist, SpiceEditor):
-            if run_filename is None:
-                run_filename = self._run_file_name(netlist.netlist_file)
-
-            # Calculates the path where to store the new netlist.
-            run_netlist_file = self._on_output_folder(run_filename).with_suffix('.net')
-            netlist.write_netlist(run_netlist_file)
-
-        elif isinstance(netlist, (Path, str)):
-            if run_filename is None:
-                run_filename = self._run_file_name(netlist)
-            if isinstance(netlist, str):
-                netlist = Path(netlist)
-            run_netlist_file = self._to_output_folder(netlist, copy=True, new_name=run_filename)
-        else:
-            raise TypeError("'netlist' parameter shall be a SpiceEditor, pathlib.Path or a plain str")
-
-        self.workfiles.append(run_netlist_file)
+        run_netlist_file = self._prepare_sim(netlist, run_filename)
 
         t0 = time.perf_counter()  # Store the time for timeout calculation
         while time.perf_counter() - t0 < timeout:
             cmdline_switches = switches or self.cmdline_switches  # If switches are passed, they override the ones
             # inside the class.
 
-            if (wait_resource is False) or (self.acive_threads() < self.parallel_sims):
+            if (wait_resource is False) or (self.active_threads() < self.parallel_sims):
                 t = RunTask(self.simulator, self.runno, run_netlist_file, callback, cmdline_switches,
                             timeout=self.timeout, verbose=self.verbose)
-                self.threads.append(t)
+                self.sim_taks.append(t)
                 t.start()
                 sleep(0.01)  # Give slack for the thread to start
                 return t  # Returns the task number
@@ -343,10 +348,43 @@ class SimRunner(object):
                 print("Timeout on launching simulation %d." % self.runno)
             return None
 
-    def acive_threads(self):
-        """Returns the number of active threads"""
+    def run_now(self, netlist: Union[str, Path, SpiceEditor], *, switches: list = [], run_filename: str = None) -> (str, str):
+        """
+        Executes a simulation run with the conditions set by the user.
+        Conditions are set by the set_parameter, set_component_value or add_instruction functions.
+
+        :param netlist:
+            The name of the netlist can be optionally overridden if the user wants to have a better control of how the
+            simulations files are generated.
+        :type netlist: SpiceEditor or a path to the file
+        :param switches: Command line switches override
+        :type switches: list
+        :param run_filename: Name to be used for the log and raw file.
+        :type run_filename: str or Path
+        :returns: the raw and log filenames
+        """
+        run_netlist_file = self._prepare_sim(netlist, run_filename)
+
+        cmdline_switches = switches or self.cmdline_switches  # If switches are passed, they override the ones inside
+        # the class.
+
+        def dummmy_callback(raw, log):
+            """Dummy call back that does nothing"""
+            return None
+
+        t = RunTask(self.simulator, self.runno, run_netlist_file, dummmy_callback, cmdline_switches,
+                    timeout=self.timeout, verbose=self.verbose)
+        t.start()
+        sleep(0.01)  # Give slack for the thread to start
+        while t.is_alive():
+            sleep(0.1)  # Waits for the task to terminate
+
+        return t.raw_file, t.log_file  # Returns the raw and log file
+
+    def active_threads(self):
+        """Returns the number of active sim_taks"""
         count = 0
-        for t in self.threads:
+        for t in self.sim_taks:
             if t.is_alive():
                 count += 1
         return count
@@ -360,17 +398,17 @@ class SimRunner(object):
         :returns: Nothing
         """
         i = 0
-        while i < len(self.threads):
-            if self.threads[i].is_alive():
+        while i < len(self.sim_taks):
+            if self.sim_taks[i].is_alive():
                 i += 1
             else:
-                if self.threads[i].retcode == 0:
+                if self.sim_taks[i].retcode == 0:
                     self.okSim += 1
                 else:
                     # simulation failed
                     self.failSim += 1
                 if release_tasks:
-                    del self.threads[i]
+                    del self.sim_taks[i]
 
     @staticmethod
     def kill_all_ltspice():
@@ -403,7 +441,7 @@ class SimRunner(object):
         timeout_counter = 0
         sim_counters = (self.okSim, self.failSim)
 
-        while len(self.threads) > 0:
+        while len(self.sim_taks) > 0:
             sleep(1)
             self.updated_stats()
             if timeout is not None:

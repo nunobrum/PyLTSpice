@@ -104,7 +104,7 @@ from typing import Callable, Any, Union
 
 from ..sim.spice_editor import SpiceEditor
 from ..sim.simulator import Simulator
-from ..sim.local_run_task import RunTask
+from ..sim.run_task import RunTask
 from ..sim.sim_runner import SimRunner
 
 END_LINE_TERM = '\n'
@@ -126,8 +126,8 @@ class SimCommander(SpiceEditor):
     def __init__(self, netlist_file: Union[str, Path], parallel_sims: int = 4, timeout=None, verbose=True,
                  encoding='autodetect', simulator=None):
         if simulator is None:
-            from ..sim.ltspice_simulator import LTspiceSimulator  # In case no simulator is given
-            simulator = LTspiceSimulator
+            from ..sim.ltspice_simulator import LTspice  # In case no simulator is given
+            simulator = LTspice
         netlist_file = Path(netlist_file)
         self.circuit_file = netlist_file  # Legacy property
         if netlist_file.suffix == '.asc':
