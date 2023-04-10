@@ -17,6 +17,7 @@ requires-python = ">=3.7"
 dependencies = [
     "numpy",
     "psutil",
+    "clipboard",
 ]
 classifiers=[
     "Programming Language :: Python :: 3",

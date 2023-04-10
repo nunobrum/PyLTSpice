@@ -11,6 +11,8 @@ Python Classes
    sim_simulator
    raw_read
    raw_write
+   sim_client
+   sim_server
 
 
 ============

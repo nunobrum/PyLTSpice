@@ -9,7 +9,7 @@
 #   |_|    \__, |_____|_| |____/| .__/|_|\___\___|
 #          |___/                |_|
 #
-# Name:        srv_interface.py
+# Name:        sim_server.py
 # Purpose:     Tool used to launch LTSpice simulation in batch mode.
 #
 # Author:      Nuno Brum (nuno.brum@gmail.com)
