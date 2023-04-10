@@ -319,7 +319,7 @@ class SimCommander(SpiceEditor):
         :type args: list[str]
         :returns: Nothing
         """
-        self.simulator.add_command_line_switche(*args)
+        self.simulator.add_command_line_switch(*args)
 
     def run(self, run_filename: str = None, wait_resource: bool = True,
             callback: Callable[[str, str], Any] = None, timeout: float = 600) -> RunTask:
