@@ -1,4 +1,4 @@
-Reading Step Information
+Reading Log Information
 ========================
 
 This module defines a class that can be used to parse LTSpice log files where the information about .STEP
@@ -7,7 +7,7 @@ information is written.
 There are two possible usages of this module, either programmatically by running the utility
 :doc:`../utilities/LTSteps`, or by accessing data through the class as exemplified here:
 
-.. code-block::
+.. code-block:: python
 
 	from PyLTSpice.LTSteps import LTSpiceLogReader
 

@@ -1,7 +1,10 @@
 Running Simulations
 ===================
 
-The class :py:class:`PyLTSpice.SimRunner` allows launching LTSpice simulations from a Python script, thus allowing to overcome the 3 dimensions STEP limitation on LTSpice, update resistor values, or component models.
+The class :py:class:`PyLTSpice.SimRunner` allows launching LTSpice simulations from a Python script, thus allowing to
+overcome the 3 dimensions STEP limitation on LTSpice, update resistor values, or component models.
+It also allows to simulate several simulations in parallel, thus speeding up the time
+a set of simulations would take.
 
 The class :py:class:`PyLTSpice.SpiceEditor` described in :doc:`read_netlist` allows to modify the netlist.
 
@@ -37,18 +40,19 @@ temperature to 80 degrees, and update the values of R1 and R2 to 3.3k.
             run_netlist_file = "{}_{}_{}.net".format(netlist.netlist_file.name, opamp, supply_voltage)
             raw, log = runner.run_now(netlist, run_filename=run_netlist_file)
             # Process here the simulation results
-        
 
 In this example we are are using the SpiceEditor instantiation 'netlist' by passing an .asc file. 
 When receiving an .asc file, it will use LTSpice to create the corresponding .net file and read it into memory.
 
-Follows a series of function calls to 'netlist' that update the netlist in memory. The method ``set_parameters(<param_name>, <param_value>)``
-updates the values of .PARAM definitions, the method ``set_component_value(<element_id>, <element_value>)`` will update 
-values of R, L and C elements, in this example we are updating only resistors. The method ``set_element_model()`` sets the 
-values of a voltage source 'V3' and so on.
+Follows a series of function calls to 'netlist' that update the netlist in memory.
+The method ``set_parameters(<param_name>, <param_value>)`` updates the values of
+``.PARAM definitions``, the method ``set_component_value(<element_id>, <element_value>)`` will update
+values of R, L and C elements, in this example we are updating only resistors. The method ``set_element_model()``
+sets the values of a voltage source 'V3' and so on.
 
-Then we pass the object to the ``runner.run_now()`` method. By doing so, it will first write the netlist to the path indicated by
-the output folder indicated as parameter in the SimRunner instantiation, then will launch LTSpice to execute the simulation.
+Then we pass the object to the ``runner.run_now()`` method. By doing so, it will first write the netlist to the path
+indicated by the output folder indicated as parameter in the SimRunner instantiation, then will launch LTSpice to
+execute the simulation.
 
 Although this works well, it is not very efficient on the processor usage. A simulation is ended before another one is started.
 An alternative method to this is presented in the next section.
@@ -64,11 +68,9 @@ each executing in parallel a simulation. This is exemplified in the modified exa
 
     from PyLTSpice import SimRunner, SpiceEditor, LTspice
 
-
     def processing_data(raw_file, log_file):
         """This is the function that will process the data from simulations"""
         print("Handling the simulation data of %s, log file %s" % (raw_file, log_file))
-
 
     # Configures the simulator to use and output folder. Also defines the number of parallel simulations
     runner = SimRunner(output_folder='./temp_batch3', simulator=LTspice, parallel_sims=4)  
@@ -103,7 +105,6 @@ each executing in parallel a simulation. This is exemplified in the modified exa
     # Sim Statistics
     print('Successful/Total Simulations: ' + str(runner.okSim) + '/' + str(runner.runno))
 
-
 If the ``parallel_sims`` parallel simulations is not given, it defaults to 4. This means that a fifth simulation
 will only start when one of the other 4 is finished. If ``parallel_sims`` needs to be adjusted according to the
 computer capabilities. If resources are abundant, this number can be set to a higher number. If set for example
@@ -127,7 +128,9 @@ simulations are still running. For this purpose, the user can use a call back fu
 
 The callback function is called when the simulation has finished directly by the thread/process that has handling the
 simulation. A function callback receives two arguments.
-The RAW file and the LOG file names. Below is an example of a callback function::
+The RAW file and the LOG file names. Below is an example of a callback function
+
+.. code-block:: python
 
     def processing_data(raw_filename, log_filename):
         '''This is a call back function that just prints the filenames'''
@@ -139,3 +142,12 @@ The RAW file and the LOG file names. Below is an example of a callback function:
 
 The callback function is optional. If  no callback function is given, the thread is terminated just after the
 simulation is finished.
+
+================================
+Processing of simulation outputs
+================================
+
+The previous sections described the way to launch simulations. The way to parse the
+simulation results contained in the RAW files are described in :doc:`read_rawfiles`.
+For parsing information contained in the LOG files, which contain information about
+measurements done with .MEAS primitives, is implemented by the class :py:class:`PyLTSpice.SpiceEditor`
