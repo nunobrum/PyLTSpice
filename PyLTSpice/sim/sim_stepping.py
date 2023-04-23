@@ -22,9 +22,11 @@
 __author__ = "Nuno Canto Brum <nuno.brum@gmail.com>"
 __copyright__ = "Copyright 2017, Fribourg Switzerland"
 
-from typing import Callable, Any
+import functools
+from typing import Callable, Any, Union
 from typing import Iterable
 import pathlib
+from functools import wraps
 from PyLTSpice.sim.spice_editor import SpiceEditor
 from PyLTSpice.sim.sim_runner import SimRunner
 
@@ -88,6 +90,38 @@ class SimStepper(object):
         self.runner = SimRunner(parallel_sims=parallel_sims, output_folder=output_folder)
         self.netlist = SpiceEditor(spice_file)
         self.iter_list = []
+
+    @wraps(SpiceEditor.add_instruction)
+    def add_instruction(self, instruction: str):
+        self.netlist.add_instruction(instruction)
+
+    @wraps(SpiceEditor.add_instructions)
+    def add_instructions(self, *instructions) -> None:
+        self.netlist.add_instructions(*instructions)
+
+    @wraps(SpiceEditor.remove_instruction)
+    def remove_instruction(self, instruction) -> None:
+        self.netlist.remove_instruction(instruction)
+
+    @wraps(SpiceEditor.set_parameters)
+    def set_parameters(self, **kwargs):
+        self.netlist.set_parameters(**kwargs)
+
+    @wraps(SpiceEditor.set_parameter)
+    def set_parameter(self, param: str, value: Union[str, int, float]) -> None:
+        self.netlist.set_parameter(param, value)
+
+    @wraps(SpiceEditor.set_component_values)
+    def set_component_values(self, **kwargs):
+        self.netlist.set_component_values(**kwargs)
+
+    @wraps(SpiceEditor.set_component_value)
+    def set_component_value(self, device: str, value: Union[str, int, float]) -> None:
+        self.netlist.set_component_value(device, value)
+
+    @wraps(SpiceEditor.set_element_model)
+    def set_element_model(self, element: str, model: str) -> None:
+        self.netlist.set_element_model(element, model)
 
     def add_param_sweep(self, param: str, iterable: Iterable):
         """Adds a dimension to the simulation, where the param is swept."""
@@ -153,12 +187,21 @@ class SimStepper(object):
         """Rather uses run_all instead"""
         self.run_all()
 
+    @property
+    def okSim(self):
+        return self.runner.okSim
+
+    @property
+    def runno(self):
+        return self.runner.runno
+
 
 if __name__ == "__main__":
     from PyLTSpice.utils.sweep_iterators import *
 
     test = SimStepper("../../tests/DC sweep.asc")
     test.verbose = True
+    test.set_parameter('R1', 3)
     test.add_param_sweep("res", [10, 11, 9])
     test.add_value_sweep("R1", sweep_log(0.1, 10))
     # test.add_model_sweep("D1", ("model1", "model2"))

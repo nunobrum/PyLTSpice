@@ -30,7 +30,8 @@ import threading
 import time
 import traceback
 from time import sleep
-from typing import Callable, Union, Any, Tuple
+from typing import Callable, Union, Any, Tuple, Type
+from .process_callback import ProcessCallback
 
 
 from .simulator import Simulator
@@ -48,7 +49,7 @@ else:
 class RunTask(threading.Thread):
     """This is an internal Class and should not be used directly by the User."""
 
-    def __init__(self, simulator: Simulator, runno, netlist_file: Path, callback: Callable[[Path, Path], Any],
+    def __init__(self, simulator: Simulator, runno, netlist_file: Path, callback: Union[Type[ProcessCallback], Callable[[Path, Path], Any]],
                  switches, timeout=None, verbose=True):
         super().__init__(name=f"RunTask#{runno}")
         self.start_time = None
@@ -95,12 +96,21 @@ class RunTask(threading.Thread):
 
             if self.raw_file.exists() and self.log_file.exists():
                 if self.callback:
-                    self.print_info(logger.info, "Simulation Finished. Calling...{}(rawfile, logfile)".format(self.callback.__name__))
+                    self.print_info(logger.info, "Simulation Finished. Calling...{}(rawfile, logfile)".format(
+                        self.callback.__name__))
                     try:
-                        self.callback_return = self.callback(self.raw_file, self.log_file)
+                        return_or_process = self.callback(self.raw_file, self.log_file)
                     except Exception as err:
-                        error = traceback.format_tb()
+                        error = traceback.format_tb(err.__traceback__)
                         self.print_info(logger.error, error)
+
+                    if isinstance(return_or_process, ProcessCallback):
+                        proc = return_or_process
+                        proc.start()
+                        self.callback_return = proc.queue.get()
+                        proc.join()
+                    else:
+                        self.callback_return = return_or_process
                 else:
                     self.print_info(logger.info, 'Simulation Finished. No Callback function given')
             else:
@@ -111,17 +121,32 @@ class RunTask(threading.Thread):
             if self.log_file.exists():
                 self.log_file = self.log_file.replace(self.log_file.with_suffix('.fail'))
 
-    def wait_results(self) -> Tuple[str, str]:
+    def get_results(self) -> Union[None, Any, Tuple[str, str]]:
+        """
+        Returns the simulation outputs if the simulation and callback function has already finished.
+        If the simulation is not finished, it simply returns None. If no callback function is defined, then
+        it returns a tuple with (raw_file, log_file). If a callback function is defined, it returns whatever
+        the callback function is returning.
+        """
+        if self.is_alive():
+            return None
+
+        if self.retcode == 0:  # All finished OK
+            if self.callback:
+                return self.callback_return
+            else:
+                return self.raw_file, self.log_file
+        else:
+            return '', ''
+
+    def wait_results(self) -> Union[Any, Tuple[str, str]]:
         """
         Waits for the completion of the task and returns a tuple with the raw and log files.
-        :returns: Tupple with the path to the raw file and the path to the log file
+        :returns: Tuple with the path to the raw file and the path to the log file
         :rtype: tuple(str, str)
         """
         while self.is_alive() or self.retcode == -1:
             sleep(0.1)
-        if self.retcode == 0:  # All finished OK
-            return self.raw_file, self.log_file
-        else:
-            return '', ''
+        return self.get_results()
 
 

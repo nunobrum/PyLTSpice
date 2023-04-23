@@ -40,7 +40,7 @@ class SimServer():
         )
         self.server.register_introspection_functions()
         self.server.register_instance(self)
-        self.sessions = {}  # this will contain the session_id ids hashing their respective list of sim_taks
+        self.sessions = {}  # this will contain the session_id ids hashing their respective list of sim_tasks
         self.simulation_manager.start()
         self.server_thread = threading.Thread(target=self.server.serve_forever, name="ServerThread")
         self.server_thread.start()
@@ -64,7 +64,7 @@ class SimServer():
         return runno
 
     def start_session(self):
-        """Returns an unique key that represents the session. It will be later used to sort the sim_taks belonging
+        """Returns an unique key that represents the session. It will be later used to sort the sim_tasks belonging
         to the session."""
         session_id = str(uuid.uuid4())  # Needs to be a string, otherwise the rpc client can't handle it
         print("Starting session ", session_id)
@@ -111,7 +111,7 @@ class SimServer():
         return "", Binary(b'')  # Returns and empty data
 
     def close_session(self, session_id):
-        """Cleans all the pending sim_taks with """
+        """Cleans all the pending sim_tasks with """
         for runno in self.sessions[session_id]:
             self.simulation_manager.erase_files_of_runno(runno)
         return True  # Needs to return always something. None is not supported

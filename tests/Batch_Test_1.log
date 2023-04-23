@@ -11,57 +11,38 @@ Gmin = 0.000142725
 Gmin = 1.5325e-05
 Gmin = 1.6455e-06
 Gmin = 1.76685e-07
-vernier = 0.5
-vernier = 0.25
-Gmin = 6.41063e-08
-vernier = 0.125
-vernier = 0.0625
-vernier = 0.0833333
-Gmin = 6.04858e-08
-vernier = 0.111111
-Gmin = 4.7254e-08
-vernier = 0.148148
-vernier = 0.197531
-Gmin = 3.13284e-08
-vernier = 0.263374
-vernier = 0.351165
-Gmin = 1.6399e-08
-vernier = 0.46822
-Gmin = 6.0282e-09
-vernier = 0.624294
-vernier = 0.832392
-Gmin = 1.18541e-09
-vernier = 1
-Gmin = 1.36264e-10
-Gmin = 1.46313e-11
-Gmin = 1.57102e-12
-Gmin = 1.68687e-13
+Gmin = 1.89714e-08
+Gmin = 2.03704e-09
+Gmin = 2.18725e-10
+Gmin = 2.34854e-11
+Gmin = 2.52173e-12
+Gmin = 2.70769e-13
 Gmin = 0
 Gmin stepping succeeded in finding the operating point.
 
 
-vout_rms: RMS(v(out))=1.41166 FROM 0 TO 0.001
-vin_rms: RMS(v(in))=0.706507 FROM 0 TO 0.001
-gain: vout_rms/vin_rms=1.99808
-vout1m: v(out)=-0.0187858 at 0.001
-period: time=1.42226e-10 at 1.42226e-10
+vout_rms: RMS(v(out))=1.06048 FROM 0 TO 0.001
+vin_rms: RMS(v(in))=0.707048 FROM 0 TO 0.001
+gain: vout_rms/vin_rms=1.49987
+vout1m: v(out)=-0.0013187 at 0.001
+period: time=9.87226e-09 at 9.87226e-09
 
 
-Date: Mon Mar 20 19:01:03 2023
-Total elapsed time: 0.138 seconds.
+Date: Sun Apr 23 19:07:42 2023
+Total elapsed time: 0.270 seconds.
 
 tnom = 27
 temp = 27
 method = modified trap
-totiter = 3129
-traniter = 2100
-tranpoints = 1051
-accept = 1050
+totiter = 2460
+traniter = 2092
+tranpoints = 1047
+accept = 1046
 rejected = 1
-matrix size = 20
-fillins = 20
+matrix size = 11
+fillins = 2
 solver = Normal
 Avg thread counts: 1.3/1.6/1.6/1.3
-Matrix Compiler1: 1.50 KB object code size  0.9/0.6/[0.3]
-Matrix Compiler2: 2.25 KB object code size  0.5/0.8/[0.4]
+Matrix Compiler1: 566 bytes object code size  0.2/0.2/[0.2]
+Matrix Compiler2: 1.10 KB object code size  0.2/0.3/[0.2]
 

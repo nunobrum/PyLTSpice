@@ -10,7 +10,7 @@
 #          |___/                |_|
 #
 # Name:        srv_sim_runner.py
-# Purpose:     Manager of the simulation sim_taks on the server side
+# Purpose:     Manager of the simulation sim_tasks on the server side
 #
 # Author:      Nuno Brum (nuno.brum@gmail.com)
 #
@@ -56,8 +56,8 @@ class ServerSimRunner(threading.Thread):
         """This function makes a direct manipulation of the structures of SimRunner. This option is """
         while True:
             i = 0
-            while i < len(self.runner.sim_taks):
-                task = self.runner.sim_taks[i]
+            while i < len(self.runner.sim_tasks):
+                task = self.runner.sim_tasks[i]
                 if task.is_alive():
                     i += 1
                 else:
@@ -72,7 +72,7 @@ class ServerSimRunner(threading.Thread):
                         'stop': task.stop_time,
                     })
                     print(task, "is finished")
-                    del self.runner.sim_taks[i]
+                    del self.runner.sim_tasks[i]
                     print(self.completed_tasks[-1])
                     print(len(self.completed_tasks))
 

@@ -1,11 +1,17 @@
 from PyLTSpice import SimRunner, SpiceEditor, LTspice
 
+from time import sleep
+from random import random
 
 def processing_data(raw_file, log_file):
-    print("Handling the simulation data of %s, log file %s" % (raw_file, log_file))
+    print("Handling the simulation data of ""%s"", log file ""%s""" % (raw_file, log_file))
+    time_to_sleep = random( ) * 5
+    print(f"Sleeping for {time_to_sleep} seconds")
+    sleep(time_to_sleep)
+    return "This is the result passed to the iterator"
 
 
-runner = SimRunner(output_folder='./temp_batch3', simulator=LTspice, use_threads=False)  # Configures the simulator to use and output
+runner = SimRunner(output_folder='./temp_batch3', simulator=LTspice)  # Configures the simulator to use and output
 # folder
 
 netlist = SpiceEditor("Batch_Test.asc")  # Open the Spice Model, and creates the .net
@@ -29,11 +35,14 @@ for opamp in ('AD712', 'AD820'):
         netlist.set_component_value('V1', supply_voltage)
         netlist.set_component_value('V2', -supply_voltage)
         # overriding the automatic netlist naming
-        run_netlist_file = "{}_{}_{}.net".format(netlist.netlist_file.name, opamp, supply_voltage)
+        run_netlist_file = "{}_{}_{}.net".format(netlist.netlist_file.stem, opamp, supply_voltage)
         if use_run_now:
             runner.run_now(netlist, run_filename=run_netlist_file)
         else:
-            runner.run(netlist, run_filename=run_netlist_file, callback=processing_data)
+            runner.run(netlist, run_filename=run_netlist_file)
+
+for results in runner(4):
+    print(results)
 
 netlist.reset_netlist()
 netlist.add_instructions(   # Adding additional instructions
@@ -47,7 +56,7 @@ raw, log = runner.run(netlist, run_filename="no_callback.net").wait_results()
 processing_data(raw, log)
 
 if use_run_now is False:
-    runner.wait_completion(1, abort_all_on_timeout=True)
+    results = runner.wait_completion(1, abort_all_on_timeout=True)
 
     # Sim Statistics
     print('Successful/Total Simulations: ' + str(runner.okSim) + '/' + str(runner.runno))

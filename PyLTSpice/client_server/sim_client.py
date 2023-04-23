@@ -23,12 +23,19 @@ import xmlrpc.client
 import io
 import pathlib
 import time
+from collections import OrderedDict
+from dataclasses import dataclass
 
 
 class SimClientInvalidRunId(LookupError):
     """Raised when asking for a run_no that doesn't exist"""
     ...
 
+@dataclass
+class JobInformation:
+    """Contains information about pending simulation jobs"""
+    run_number: int  # The run id that is returned by the Server and which identifies the server
+    file_dir : pathlib.Path
 
 # class RunIterator(object):
 #
@@ -54,6 +61,10 @@ class SimClient(object):
 
     The run() method will transfer the netlist for the server, execute a simulation and transfer the simulation results
     back to the client.
+
+    Data is returned from the server inside a zipfie which is copied into the directory defined when the job was
+    created, /i.e./ run() method called.
+
     Two lists are kept by this class:
 
         * A list of started jobs (started_jobs) and,
@@ -61,6 +72,10 @@ class SimClient(object):
         * a list with finished jobs on the server, but, which haven't been yet transferred to the client (stored_jobs).
 
     This distinction is important because the data is erased on the server side when the data is transferred.
+
+    This class implements an iterator that is to be used for retrieving the job. See the example below.
+    The iterator polls the server with a time interval defined by the attribute ``minimum_time_between_server_calls``.
+    This attribute is set to 0.2 seconds by default, but it can be overriden.
 
     Usage:
 
@@ -90,9 +105,11 @@ class SimClient(object):
         # print(self.server.system.listMethods())
         self.session_id = self.server.start_session()
         print("started ", self.session_id)
-        self.started_jobs = []  # This list keeps track of started jobs on the server
-        self.stored_jobs = []  # This list keeps track of finished simulations that haven't yet been transferred.
+        self.started_jobs = OrderedDict()  # This list keeps track of started jobs on the server
+        self.stored_jobs = OrderedDict()  # This list keeps track of finished simulations that haven't yet been transferred.
         self.completed_jobs = 0
+        self.minimum_time_between_server_calls = 0.2  # Minimum time between server calls
+        self._last_server_call = time.clock()
 
     def __del__(self):
         print("closing session ", self.session_id)
@@ -107,9 +124,10 @@ class SimClient(object):
         :param circuit: path to the netlist file containing the simulation directives.
         :type circuit: pathlib.Path or str
         :returns: identifier on the server of the simulation.
-        :rtype int:
+        :rtype: int
         """
-        circuit_name = pathlib.Path(circuit).name
+        circuit_path = pathlib.Path(circuit)
+        circuit_name = circuit_path.name
         if os.path.exists(circuit):
             # Create a buffer to store the zip file in memory
             zip_buffer = io.BytesIO()
@@ -125,22 +143,28 @@ class SimClient(object):
             zip_data = zip_buffer.read()
 
             run_id = self.server.run(self.session_id, circuit_name, zip_data)
-            self.started_jobs.append(run_id)
+            job_info = JobInformation(run_number=run_id, file_dir=circuit_path.parent)
+            self.started_jobs[job_info] = job_info
             return run_id
         else:
             print(f"Circuit {circuit} doesn't exit")
             return -1
         
     def get_runno_data(self, runno) -> str:
-        """Returns the simulation output data inside a zip file name."""
+        """
+        Returns the simulation output data inside a zip file name.
+
+        :rtype: str
+        """
         if runno not in self.stored_jobs:
             raise SimClientInvalidRunId(f"Invalid Job id {runno}")
 
         zip_filename, zipdata = self.server.get_files(self.session_id, runno)
-        self.stored_jobs.remove(runno)
+        job = self.stored_jobs.pop(runno)  # Removes it from stored jobs
         self.completed_jobs += 1
         if zip_filename != '':
-            with open(zip_filename, 'wb') as f:
+            store_path = job.file_dir
+            with open(store_path / zip_filename, 'wb') as f:
                 f.write(zipdata.data)
         return zip_filename
 
@@ -152,11 +176,15 @@ class SimClient(object):
             status = self.server.status(self.session_id)
             if len(status) > 0:
                 runno = status.pop(0)
-                self.started_jobs.remove(runno)  # Job is taken out of the started jobs list
-                self.stored_jobs.append(runno)  # and is appended to the stored jobs
+                self.stored_jobs[runno] = self.started_jobs.pop(runno)  # Job is taken out of the started jobs list and
+                # is added to the stored jobs
                 return runno
             else:
-                time.sleep(0.2)  # Go asleep for a sec
+                now = time.clock()
+                delta = self.minimum_time_between_server_calls - (now - self._last_server_call)
+                if delta > 0:
+                    time.sleep(delta)  # Go asleep for a sec
+                self._last_server_call = now
 
         # when there are no pending jobs left, exit the iterator    
         raise StopIteration

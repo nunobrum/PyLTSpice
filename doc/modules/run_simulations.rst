@@ -114,21 +114,49 @@ Another way of bypassing this behaviour is just by setting the parameter ``wait_
     ``runner.run(netlist, wait_resource=False)``
 
 
-Finally we see in the example the ``runner.wait_completion()`` method. The usage of wait_completion() is optional. 
-Just note that the script will only end when all the scheduled tasks are executed.
+Finally we see in the example the ``runner.wait_completion()`` method. This method will wait for the completion
+of all the pending jobs. The usage of ``wait_completion()`` is recommended if the further steps on the script
+require that all the simulations are done.
+
+An alternative to ``wait_completion`` is to use an iterator as exemplified here:
+
+.. code-block:: python
+
+    runner = SimRunner(output_folder='./temp_batch3', simulator=LTspice)  # Configures the simulator to use and output
+    # folder
+
+    netlist = SpiceEditor("Batch_Test.asc")  # Open the Spice Model, and creates the .net
+
+    for opamp in ('AD712', 'AD820'):
+        netlist.set_element_model('XU1', opamp)
+        for supply_voltage in (5, 10, 15):
+            netlist.set_component_value('V1', supply_voltage)
+            netlist.set_component_value('V2', -supply_voltage)
+            runner.run(netlist, run_filename=run_netlist_file)
+
+    # runner.wait_completion()
+    for raw_file, log_file in runner:
+        if raw_file:
+            # process the raw file information
+            print("Processed the raw file in the main thread")
+
+    print(f'Successful/Total Simulations: {runner.okSim} /{runner.runno}')
 
 
 ---------
 Callbacks
 ---------
 
-As seen above, the ``wait_completion()`` can be used to wait for all the simulations to be finished. However, this is
-not efficient from a multiprocessor point of view. Ideally, the post-processing should be also handled while other
-simulations are still running. For this purpose, the user can use a call back function.
+The methods above are alright for tasks that don't require much computational effort, or there is a small risk
+that the the processing fails. If this is not the case, then executing the processing of simulation results on the
+background thread may make sense. This not only speeds up the process, but, it also avoids crashing the program,
+when a simulation among hundreds fails for some reason.
 
-The callback function is called when the simulation has finished directly by the thread/process that has handling the
+For this purpose, the user can define a call back function and pass it to the ``run()`` function using the callback
+parameter.
+The callback function is called when the simulation has finished directly by the thread that has handling the
 simulation. A function callback receives two arguments.
-The RAW file and the LOG file names. Below is an example of a callback function
+The RAW file and the LOG file names. Below is an example of a callback function.
 
 .. code-block:: python
 
@@ -139,13 +167,83 @@ The RAW file and the LOG file names. Below is an example of a callback function
         log_info = LTSpiceLogReader(log_filename)
         log_info.read_measures()
         rise, measures = log_info.dataset["rise_time"]
+        return rise, measures
 
-The callback function is optional. If  no callback function is given, the thread is terminated just after the
-simulation is finished.
+Callback functions can be either passed directly to the run function, and they are called once the simulation is
+finished.
 
-================================
+There are two ways of passing a callback function depending on whether we want it to be executed as a Thread
+or as a Process. The key differences is that Threads are executed on the same memory space and therefore on the same
+core. Processes are executed in completely different memory spaces and different processor resources. Processes are
+slower to start, so, it's usage is only justified when parsing simulation results is really costly.
+
+The callback functions are optional. As seen in the previous sections, if  no callback function is given, the thread
+is terminated just after the simulation is finished.
+
+=======
+Threads
+=======
+In order to use threads, it suffices to include the name of the function with the named parameter ``callback``.
+
+.. code-block:: python
+
+    for supply_voltage in (5, 10, 15):
+        netlist.set_component_value('V1', supply_voltage)
+        netlist.set_component_value('V2', -supply_voltage)
+        runner.run(netlist, callback=processing_data)
+
+    for rise, measures in runner:
+        print("The return of the callback function is ", rise, measures)
+
+=========
+Processes
+=========
+.. role:: underline 
+    :class: underline
+
+In order to use processes, the callback function needs to be encapsulated as a static method in a subclass of the
+special class called ``ProcessCallback`` and :underline:`very importantly`, all the code used to prepare and launch the
+simulation should be inside a ``if __name__ == "__main__":`` clause.
+
+The reason for this is that since the module is going to be imported two times, first by the python.exe __main__ 
+function and multiple times after by python processes searching for ProcessCallback subclass. The equivalent of the 
+previous code using processes looks like this.
+
+.. code-block:: python
+
+    from PyLTSpice.sim.process_callback import ProcessCallback  # Importing the ProcessCallback class type
+
+    class CallbackProc(ProcessCallback):
+        """Class encapsulating the callback function. It can have whatever name."""
+
+        @staticmethod  # This decorator defines the callback as a static method, i.e., it doesn't receive the `self`.
+        def callback(raw_file, log_file):  # This function must be called callback
+            '''This is a call back function that just prints the filenames'''
+            print("Simulation Raw file is %s. The log is %s" % (raw_filename, log_filename)
+            # Other code below either using LTSteps.py or raw_read.py
+            log_info = LTSpiceLogReader(log_filename)
+            log_info.read_measures()
+            rise, measures = log_info.dataset["rise_time"]
+            return rise, measures
+
+    if __name__ == "__main__":  # The code below must be only executed once.
+                                # Without this clause, it doesn't work. Don't forget to indent ALL the code below
+        runner = SimRunner(output_folder='./temp', simulator=LTspice)  # Configures the output folder and simulator
+        for supply_voltage in (5, 10, 15):
+            netlist.set_component_value('V1', supply_voltage)
+            netlist.set_component_value('V2', -supply_voltage)
+            runner.run(netlist, callback=CallbackProc)
+
+        for rise, measures in runner:
+            print("The return of the callback function is ", rise, measures)
+
+The ProcessCallback class which is imported from PyLTSpice.sim.process_callback already defines the __init__ function
+and creates all the environment for the calling and callback function, and creates the Queue used to pipe the result
+back to the main process.
+
+--------------------------------
 Processing of simulation outputs
-================================
+--------------------------------
 
 The previous sections described the way to launch simulations. The way to parse the
 simulation results contained in the RAW files are described in :doc:`read_rawfiles`.

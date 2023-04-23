@@ -99,11 +99,12 @@ __all__ = ['SimRunner']
 import logging
 import os
 import shutil
-import time
 from pathlib import Path
-from time import sleep
-from typing import Callable, Union, Any
+from time import sleep, thread_time as clock
 
+from typing import Callable, Union, Any, Type
+
+from .process_callback import ProcessCallback
 from ..sim.run_task import RunTask
 from ..sim.simulator import Simulator
 from ..sim.spice_editor import SpiceEditor
@@ -111,6 +112,11 @@ from ..sim.spice_editor import SpiceEditor
 END_LINE_TERM = '\n'
 
 logging.basicConfig(filename='SpiceBatch.log', level=logging.INFO)
+
+
+class SimRunnerTimeoutError(TimeoutError):
+    """Timeout Error class"""
+    ...
 
 
 class SimRunner(object):
@@ -153,7 +159,7 @@ class SimRunner(object):
             self.output_folder = None
 
         self.parallel_sims = parallel_sims
-        self.sim_taks = []
+        self.sim_tasks = []
 
         # master_log_filename = self.circuit_radic + '.masterlog' TODO: create the JSON or YAML file
         self.logger = logging.getLogger("SimCommander")
@@ -178,11 +184,11 @@ class SimRunner(object):
 
     def __del__(self):
         """Class Destructor : Closes Everything"""
-        self.logger.debug("Waiting for all spawned sim_taks to finish.")
-        self.wait_completion()  # TODO: Kill all pending simulations
+        self.logger.debug("Waiting for all spawned sim_tasks to finish.")
+        self.wait_completion(abort_all_on_timeout=True)  # Kill all pending simulations
         self.logger.debug("Exiting SimCommander")
 
-    def setRunCommand(self, spice_tool: Union[str, Simulator]) -> None:
+    def set_run_command(self, spice_tool: Union[str, Simulator]) -> None:
         """
         Manually setting the LTSpice run command
 
@@ -198,6 +204,8 @@ class SimRunner(object):
             self.simulator = spice_tool
         else:
             raise TypeError("Expecting str or Simulator objects")
+
+    SetRunCommand = set_run_command
 
     def clear_command_line_switches(self):
         """Clear all the command line switches added previously"""
@@ -251,6 +259,7 @@ class SimRunner(object):
         return "%s_%i.net" % (netlist.stem, self.runno)
 
     def create_netlist(self, asc_file: Union[str, Path]):
+        """Creates a .net from an .asc using the LTSpice -netlist command line"""
         if not isinstance(asc_file, Path):
             asc_file = Path(asc_file)
         if asc_file.suffix == '.asc':
@@ -296,7 +305,7 @@ class SimRunner(object):
         return run_netlist_file
 
     def run(self, netlist: Union[str, Path, SpiceEditor], *,  wait_resource: bool = True,
-            callback: Callable[[Path, Path], Any] = None, switches: list = [],
+            callback: Union[Type[ProcessCallback], Callable[[Path, Path], Any]] = None, switches: list = [],
             timeout: float = 600, run_filename: str = None) -> Union[RunTask, None]:
         """
         Executes a simulation run with the conditions set by the user.
@@ -329,18 +338,18 @@ class SimRunner(object):
         """
         run_netlist_file = self._prepare_sim(netlist, run_filename)
 
-        t0 = time.perf_counter()  # Store the time for timeout calculation
-        while time.perf_counter() - t0 < timeout:
+        t0 = clock()  # Store the time for timeout calculation
+        while clock() - t0 < timeout:
             cmdline_switches = switches or self.cmdline_switches  # If switches are passed, they override the ones
             # inside the class.
 
             if (wait_resource is False) or (self.active_threads() < self.parallel_sims):
                 t = RunTask(self.simulator, self.runno, run_netlist_file, callback, cmdline_switches,
                             timeout=self.timeout, verbose=self.verbose)
-                self.sim_taks.append(t)
+                self.sim_tasks.append(t)
                 t.start()
                 sleep(0.01)  # Give slack for the thread to start
-                return t  # Returns the task number
+                return t  # Returns the task object
             sleep(0.1)  # Give Time for other simulations to end
         else:
             self.logger.error("Timeout waiting for resources for simulation %d" % self.runno)
@@ -382,9 +391,9 @@ class SimRunner(object):
         return t.raw_file, t.log_file  # Returns the raw and log file
 
     def active_threads(self):
-        """Returns the number of active sim_taks"""
+        """Returns the number of active sim_tasks"""
         count = 0
-        for t in self.sim_taks:
+        for t in self.sim_tasks:
             if t.is_alive():
                 count += 1
         return count
@@ -398,17 +407,18 @@ class SimRunner(object):
         :returns: Nothing
         """
         i = 0
-        while i < len(self.sim_taks):
-            if self.sim_taks[i].is_alive():
+        while i < len(self.sim_tasks):
+            if self.sim_tasks[i].is_alive():
                 i += 1
             else:
-                if self.sim_taks[i].retcode == 0:
+                if self.sim_tasks[i].retcode == 0:
                     self.okSim += 1
                 else:
                     # simulation failed
                     self.failSim += 1
                 if release_tasks:
-                    del self.sim_taks[i]
+                    task = self.sim_tasks.pop(i)
+                    task.join()
 
     @staticmethod
     def kill_all_ltspice():
@@ -441,7 +451,7 @@ class SimRunner(object):
         timeout_counter = 0
         sim_counters = (self.okSim, self.failSim)
 
-        while len(self.sim_taks) > 0:
+        while len(self.sim_tasks) > 0:
             sleep(1)
             self.updated_stats()
             if timeout is not None:
@@ -487,3 +497,38 @@ class SimRunner(object):
             # Delete the file
             print("Deleting", workfile)
             workfile.unlink()
+
+    def __call__(self, timeout = 0):
+        self._timeout = timeout
+        return self
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        t0 = clock()
+        while True:
+            i = 0
+            while i < len(self.sim_tasks):
+                if self.sim_tasks[i].is_alive():
+                    i += 1
+                else:
+                    if self.sim_tasks[i].retcode == 0:
+                        self.okSim += 1
+                    else:
+                        # simulation failed
+                        self.failSim += 1
+                    task = self.sim_tasks.pop(i)
+                    ret = task.get_results()
+                    task.join()
+                    return ret
+
+            if i == 0:
+                # when there aren't any pending jobs left, exit the iterator
+                raise StopIteration
+
+            sleep(0.2)  # Go asleep for a sec
+            if self._timeout > 0 and ((clock() - t0) > self._timeout):
+                raise SimRunnerTimeoutError(f"Exceeded {self._timeout} seconds waiting for tasks to finish")
+
+

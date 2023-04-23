@@ -138,6 +138,7 @@ class SimCommander(SpiceEditor):
 
     def setLTspiceRunCommand(self, spice_tool: Union[str, Simulator]) -> None:
         """
+        *(Deprecated)*
         Manually setting the LTSpice run command.
 
         :param spice_tool: String containing the path to the spice tool to be used, or alternatively the Simulator
@@ -146,10 +147,11 @@ class SimCommander(SpiceEditor):
         :return: Nothing
         :rtype: None
         """
-        self.runner.setRunCommand(spice_tool)
+        self.runner.set_run_command(spice_tool)
 
     def add_LTspiceRunCmdLineSwitches(self, *args) -> None:
         """
+        *(Deprecated)*
         Used to add an extra command line argument such as -I<path> to add symbol search path or -FastAccess
         to convert the raw file into Fast Access.
         The arguments is a list of strings as is defined in the LTSpice command line documentation.
@@ -182,17 +184,17 @@ class SimCommander(SpiceEditor):
 
     @property
     def runno(self):
-        """Legacy property"""
+        """*(Deprecated)* Legacy property"""
         return self.runner.runno
 
     @property
     def okSim(self):
-        """Legacy property"""
+        """*(Deprecated)* Legacy property"""
         return self.runner.okSim
 
     @property
     def failSim(self):
-        """Legacy property"""
+        """*(Deprecated)* Legacy property"""
         return self.runner.failSim
 
 
