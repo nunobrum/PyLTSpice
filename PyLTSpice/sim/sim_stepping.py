@@ -27,8 +27,8 @@ from typing import Callable, Any, Union
 from typing import Iterable
 import pathlib
 from functools import wraps
-from PyLTSpice.sim.spice_editor import SpiceEditor
-from PyLTSpice.sim.sim_runner import SimRunner
+from .spice_editor import SpiceEditor
+from .sim_runner import SimRunner
 
 
 class StepInfo(object):

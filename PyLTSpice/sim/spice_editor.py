@@ -993,6 +993,9 @@ class SpiceEditor(SpiceCircuit):
         :param library: path to the library to search
         :type library: str
         :param subckt_name: Subcircuit to search for
+        :type subckt_name: str
+        :return: Returns a SpiceCircuit instance with the subcircuit found or None if not found
+        :rtype: SpiceCircuit
         """
         # 0. Setup things
         reg_subckt = re.compile(SUBCKT_CLAUSE_FIND + subckt_name, re.IGNORECASE)

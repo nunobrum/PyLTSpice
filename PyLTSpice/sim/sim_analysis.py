@@ -21,8 +21,8 @@
 
 from collections import OrderedDict
 from typing import Iterable
-from .sim_runner import SimCommander
-from PyLTSpice.sim.spice_editor import ComponentNotFoundError
+from .sim_batch import SimCommander
+from .spice_editor import ComponentNotFoundError
 
 
 class SimAnalysis(object):
