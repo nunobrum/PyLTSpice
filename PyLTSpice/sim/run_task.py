@@ -33,7 +33,6 @@ from time import sleep
 from typing import Callable, Union, Any, Tuple, Type
 from .process_callback import ProcessCallback
 
-
 from .simulator import Simulator
 
 END_LINE_TERM = '\n'
@@ -49,7 +48,8 @@ else:
 class RunTask(threading.Thread):
     """This is an internal Class and should not be used directly by the User."""
 
-    def __init__(self, simulator: Simulator, runno, netlist_file: Path, callback: Union[Type[ProcessCallback], Callable[[Path, Path], Any]],
+    def __init__(self, simulator: Simulator, runno, netlist_file: Path,
+                 callback: Union[Type[ProcessCallback], Callable[[Path, Path], Any]],
                  switches, timeout=None, verbose=True):
         super().__init__(name=f"RunTask#{runno}")
         self.start_time = None
@@ -97,20 +97,20 @@ class RunTask(threading.Thread):
             if self.raw_file.exists() and self.log_file.exists():
                 if self.callback:
                     self.print_info(logger.info, "Simulation Finished. Calling...{}(rawfile, logfile)".format(
-                        self.callback.__name__))
+                            self.callback.__name__))
                     try:
                         return_or_process = self.callback(self.raw_file, self.log_file)
                     except Exception as err:
                         error = traceback.format_tb(err.__traceback__)
                         self.print_info(logger.error, error)
-
-                    if isinstance(return_or_process, ProcessCallback):
-                        proc = return_or_process
-                        proc.start()
-                        self.callback_return = proc.queue.get()
-                        proc.join()
                     else:
-                        self.callback_return = return_or_process
+                        if isinstance(return_or_process, ProcessCallback):
+                            proc = return_or_process
+                            proc.start()
+                            self.callback_return = proc.queue.get()
+                            proc.join()
+                        else:
+                            self.callback_return = return_or_process
                 else:
                     self.print_info(logger.info, 'Simulation Finished. No Callback function given')
             else:
@@ -148,5 +148,3 @@ class RunTask(threading.Thread):
         while self.is_alive() or self.retcode == -1:
             sleep(0.1)
         return self.get_results()
-
-

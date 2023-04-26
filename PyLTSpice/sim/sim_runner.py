@@ -39,7 +39,7 @@ temperature to 80 degrees, and update the values of R1 and R2 to 3.3k. ::
     print("Successful Simulations: {}".format(LTC.okSim))
     print("Failed Simulations: {}".format(LTC.failSim))
 
-The first line will create an python class instance that represents the LTSpice file or netlist that is to be
+The first line will create a python class instance that represents the LTSpice file or netlist that is to be
 simulated. This object implements methods that are used to manipulate the spice netlist. For example, the method
 set_parameters() will set or update existing parameters defined in the netlist. The method set_component_value() is
 used to update existing component values or models.
@@ -111,7 +111,8 @@ from ..sim.spice_editor import SpiceEditor
 
 END_LINE_TERM = '\n'
 
-logging.basicConfig(filename='SpiceBatch.log', level=logging.INFO)
+
+# logging.basicConfig(filename='SpiceBatch.log', level=logging.INFO)
 
 
 class SimRunnerTimeoutError(TimeoutError):
@@ -125,7 +126,7 @@ class SimRunner(object):
     It takes a parameter the path to the LTSpice .asc file to be simulated, or directly the .net file.
     If an .asc file is given, the class will try to generate the respective .net file by calling LTspice with
     the --netlist option
-    :raises FileNotFoundError: When the file is not found  /!\ This will be changed
+    :raises FileNotFoundError: When the file is not found  /!\\ This will be changed
 
     :param parallel_sims: Defines the number of parallel simulations that can be executed at the same time. Ideally this
                           number should be aligned to the number of CPUs (processor cores) available on the machine.
@@ -152,7 +153,7 @@ class SimRunner(object):
         self.cmdline_switches = []
 
         if output_folder:
-            self.output_folder = Path(output_folder)  # If not None convert to Path() object
+            self.output_folder = Path(output_folder)  # If not None converts to Path() object
             if not self.output_folder.exists():
                 self.output_folder.mkdir()
         else:
@@ -160,11 +161,14 @@ class SimRunner(object):
 
         self.parallel_sims = parallel_sims
         self.sim_tasks = []
+        # Create another logger for the SimRunner class
 
         # master_log_filename = self.circuit_radic + '.masterlog' TODO: create the JSON or YAML file
-        self.logger = logging.getLogger("SimCommander")
+        self.logger = logging.getLogger("SimRunner")
         self.logger.setLevel(logging.INFO)
-        # TODO redirect this logger to a file.
+        # redirect this logger to a file.
+        self.logger.addHandler(logging.FileHandler('SimRunner.log', mode='w'))
+        self.logger.info("SimRunner started")
 
         self.runno = 0  # number of total runs
         self.failSim = 0  # number of failed simulations
@@ -205,7 +209,12 @@ class SimRunner(object):
         else:
             raise TypeError("Expecting str or Simulator objects")
 
-    SetRunCommand = set_run_command
+    def SetRunCommand(self, spice_tool: Union[str, Simulator]) -> None:
+        """
+        *(Deprecated)*
+        Use set_run_command() method.
+        """
+        self.set_run_command(spice_tool)
 
     def clear_command_line_switches(self):
         """Clear all the command line switches added previously"""
@@ -215,7 +224,7 @@ class SimRunner(object):
         """
         Used to add an extra command line argument such as -I<path> to add symbol search path or -FastAccess
         to convert the raw file into Fast Access.
-        The arguments is a list of strings as is defined in the LTSpice command line documentation.
+        The argument is a string as is defined in the LTSpice command line documentation.
 
         :param switch: switch to be added.
         :type switch: str:  A command line switch such as "-ascii" for generating a raw file in text format or
@@ -265,18 +274,18 @@ class SimRunner(object):
         if asc_file.suffix == '.asc':
             netlist_file = asc_file.with_suffix('.net')
             if self.verbose:
-                print("Creating Netlist")
+                self.logger.info("Creating Netlist")
             retcode = self.simulator.create_netlist(asc_file)
             if retcode == 0 and netlist_file.exists():
                 if self.verbose:
-                    print("The Netlist was successfully created")
+                    self.logger.info("The Netlist was successfully created")
                 netlist_file = self._to_output_folder(netlist_file, copy=False)
                 self.workfiles.append(netlist_file)
                 return netlist_file
             else:
                 self.logger.error("Unable to create Netlist")
                 if self.verbose:
-                    print("Unable to create the Netlist from %s" % asc_file)
+                    self.logger.info("Unable to create the Netlist from %s" % asc_file)
         return None
 
     def _prepare_sim(self, netlist: Union[str, Path, SpiceEditor], run_filename: str):
@@ -304,8 +313,8 @@ class SimRunner(object):
         self.workfiles.append(run_netlist_file)
         return run_netlist_file
 
-    def run(self, netlist: Union[str, Path, SpiceEditor], *,  wait_resource: bool = True,
-            callback: Union[Type[ProcessCallback], Callable[[Path, Path], Any]] = None, switches: list = [],
+    def run(self, netlist: Union[str, Path, SpiceEditor], *, wait_resource: bool = True,
+            callback: Union[Type[ProcessCallback], Callable[[Path, Path], Any]] = None, switches=None,
             timeout: float = 600, run_filename: str = None) -> Union[RunTask, None]:
         """
         Executes a simulation run with the conditions set by the user.
@@ -318,7 +327,7 @@ class SimRunner(object):
         :param wait_resource:
             Setting this parameter to False will force the simulation to start immediately, irrespective of the number
             of simulations already active.
-            By default the SimCommander class uses only four processors. This number can be overridden by setting
+            By default, the SimCommander class uses only four processors. This number can be overridden by setting
             the parameter ´parallel_sims´ to a different number.
             If there are more than ´parallel_sims´ simulations being done, the new one will be placed on hold till one
             of the other simulations are finished.
@@ -336,6 +345,8 @@ class SimRunner(object):
         :type run_filename: str or Path
         :returns: The task object of type RunTask
         """
+        if switches is None:
+            switches = []
         run_netlist_file = self._prepare_sim(netlist, run_filename)
 
         t0 = clock()  # Store the time for timeout calculation
@@ -354,10 +365,10 @@ class SimRunner(object):
         else:
             self.logger.error("Timeout waiting for resources for simulation %d" % self.runno)
             if self.verbose:
-                print("Timeout on launching simulation %d." % self.runno)
+                self.logger.info("Timeout on launching simulation %d." % self.runno)
             return None
 
-    def run_now(self, netlist: Union[str, Path, SpiceEditor], *, switches: list = [], run_filename: str = None) -> (str, str):
+    def run_now(self, netlist: Union[str, Path, SpiceEditor], *, switches=None, run_filename: str = None) -> (str, str):
         """
         Executes a simulation run with the conditions set by the user.
         Conditions are set by the set_parameter, set_component_value or add_instruction functions.
@@ -372,16 +383,19 @@ class SimRunner(object):
         :type run_filename: str or Path
         :returns: the raw and log filenames
         """
+        if switches is None:
+            switches = []
         run_netlist_file = self._prepare_sim(netlist, run_filename)
 
         cmdline_switches = switches or self.cmdline_switches  # If switches are passed, they override the ones inside
+
         # the class.
 
-        def dummmy_callback(raw, log):
+        def dummy_callback(raw, log):
             """Dummy call back that does nothing"""
             return None
 
-        t = RunTask(self.simulator, self.runno, run_netlist_file, dummmy_callback, cmdline_switches,
+        t = RunTask(self.simulator, self.runno, run_netlist_file, dummy_callback, cmdline_switches,
                     timeout=self.timeout, verbose=self.verbose)
         t.start()
         sleep(0.01)  # Give slack for the thread to start
@@ -420,8 +434,7 @@ class SimRunner(object):
                     task = self.sim_tasks.pop(i)
                     task.join()
 
-    @staticmethod
-    def kill_all_ltspice():
+    def kill_all_ltspice(self):
         """Function to terminate LTSpice in windows"""
         simulator = Simulator
         process_name = simulator.process_name
@@ -430,7 +443,7 @@ class SimRunner(object):
             # check whether the process name matches
 
             if proc.name() == process_name:
-                print("killing ngspice", proc.pid)
+                self.logger.info("killing ngspice", proc.pid)
                 proc.kill()
 
     def wait_completion(self, timeout=None, abort_all_on_timeout=False) -> bool:
@@ -439,8 +452,8 @@ class SimRunner(object):
 
         :param timeout: Cancels the wait after the number of seconds specified by the timeout.
             This timeout is reset everytime that a simulation is completed. The difference between this timeout and the
-            one defined in the SimCommander instance, is that the later is implemented by the subprocess class, and the
-            this timeout just cancels the wait.
+            one defined in the SimRunner instance, is that the latter is implemented by the subprocess class, and
+            this one just cancels the wait.
         :type timeout: int
         :param abort_all_on_timeout: attempts to stop all LTSpice processes if timeout is expired.
         :type abort_all_on_timeout: bool
@@ -457,7 +470,7 @@ class SimRunner(object):
             if timeout is not None:
                 if sim_counters == (self.okSim, self.failSim):
                     timeout_counter += 1
-                    print(timeout_counter, "timeout counter")
+                    self.logger.info(timeout_counter, "timeout counter")
                 else:
                     timeout_counter = 0
 
@@ -480,25 +493,25 @@ class SimRunner(object):
                 # Delete the log file if exists
                 logfile = workfile.with_suffix('.log')
                 if logfile.exists():
-                    print("Deleting", logfile)
+                    self.logger.info("Deleting", logfile)
                     logfile.unlink()
                 # Delete the raw file if exists
                 rawfile = workfile.with_suffix('.raw')
                 if rawfile.exists():
-                    print("Deleting", rawfile)
+                    self.logger.info("Deleting", rawfile)
                     rawfile.unlink()
 
                 # Delete the op.raw file if exists
                 oprawfile = workfile.with_suffix('.op.raw')
                 if oprawfile.exists():
-                    print("Deleting", oprawfile)
+                    self.logger.info("Deleting", oprawfile)
                     oprawfile.unlink()
 
             # Delete the file
-            print("Deleting", workfile)
+            self.logger.info("Deleting", workfile)
             workfile.unlink()
 
-    def __call__(self, timeout = 0):
+    def __call__(self, timeout=0):
         self._timeout = timeout
         return self
 
@@ -530,5 +543,3 @@ class SimRunner(object):
             sleep(0.2)  # Go asleep for a sec
             if self._timeout > 0 and ((clock() - t0) > self._timeout):
                 raise SimRunnerTimeoutError(f"Exceeded {self._timeout} seconds waiting for tasks to finish")
-
-
