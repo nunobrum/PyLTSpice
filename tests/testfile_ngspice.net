@@ -1,8 +1,7 @@
-* C:\sandbox\PySpice\tests\testfile.asc
-V1 in 0 PULSE(-1 1 1u 1n 1n 2m 1m 1)
-R1 out in {res}
-C1 out 0 {cap}
-C2 out in {cap}
-.tran 3m
-.param cap=1n res=1k
+* C:\sandbox\PyLTSpice_GitHub_nunobrum\tests\rc_example.asc
+V1 in 0 10V
+R1 out in 1k
+C1 out 0 1u
+.op
+.print op V(out)
 .end

@@ -952,19 +952,18 @@ class SpiceEditor(SpiceCircuit):
         :type run_netlist_file: Path
         :returns: Nothing
         """
-        f = run_netlist_file.open('w', encoding=self.encoding)
-        lines = iter(self.netlist)
-        for line in lines:
-            if isinstance(line, SpiceCircuit):
-                line._write_lines(f)
-            else:
-                # Writes the modified subcircuits at the end just before the .END clause
-                if line.upper().startswith(".END"):
-                    # write here the modified subcircuits
-                    for sub in self.modified_subcircuits.values():
-                        sub._write_lines(f)
-                f.write(line)
-        f.close()
+        with run_netlist_file.open('w', encoding=self.encoding) as f:
+            lines = iter(self.netlist)
+            for line in lines:
+                if isinstance(line, SpiceCircuit):
+                    line._write_lines(f)
+                else:
+                    # Writes the modified subcircuits at the end just before the .END clause
+                    if line.upper().startswith(".END"):
+                        # write here the modified subcircuits
+                        for sub in self.modified_subcircuits.values():
+                            sub._write_lines(f)
+                    f.write(line)
 
     def reset_netlist(self) -> None:
         """

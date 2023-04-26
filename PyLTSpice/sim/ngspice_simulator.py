@@ -18,12 +18,7 @@
 # Licence:     refer to the LICENSE file
 # -------------------------------------------------------------------------------
 
-import logging
-import sys
-import os
-
 from pathlib import Path
-from typing import Union
 
 from .simulator import Simulator, run_function
 
@@ -37,8 +32,8 @@ class NGspiceSimulator(Simulator):
         '--autorun'     : ['--autorun'],  # run the loaded netlist
         '-b'            : ['-b'],
         '--batch'       : ['--batch'],  # process FILE in batch mode
-        # '-c'            : ['-c', '<FILE>'],  #
-        # '--circuitfile' : ['--circuitfile', '<FILE>'],  # set the circuitfile
+        '-c'            : ['-c', '<FILE>'],  #
+        '--circuitfile' : ['--circuitfile', '<FILE>'],  # set the circuitfile
         '-D'            : ['-D', 'var_value'],  #
         '--define'      : ['--define', 'var_value'],  # define variable to true/[value]
         '-i'            : ['-i'],  #
@@ -58,11 +53,12 @@ class NGspiceSimulator(Simulator):
         '--server'      : ['--server'],  # run spice as a server process
         '-t'            : ['-t', '<TERM>'],  #
         '--term'        : ['--term', '<TERM>'],  # set the terminal type
-        # '-h'            : ['-h'],  #
-        # '--help'        : ['--help'],  # display this help and exit
+        '-h'            : ['-h'],  #
+        '--help'        : ['--help'],  # display this help and exit
         '-v'            : ['-v'],  #
         '--version'     : ['--version'],  # output version information and exit
     }
+    default_run_switches = ['-b', '-o', '-r', '-a']
 
     @classmethod
     def valid_switch(cls, switch, parameter='') -> list:
@@ -79,6 +75,9 @@ class NGspiceSimulator(Simulator):
         """
         ret = []  # This is an empty switch
         if switch in cls.ngspice_args:
+            if switch in cls.default_run_switches:
+                print(f"Switch {switch} is already in the default switches")
+                return ret
             switch_list = cls.ngspice_args[switch]
             if len(switch_list) == 2:
                 param_token = switch_list[1]
@@ -96,7 +95,9 @@ class NGspiceSimulator(Simulator):
 
     @classmethod
     def run(cls, netlist_file, cmd_line_switches, timeout):
-        cmd_run = cls.spice_exe + cmd_line_switches + ['-c'] + [netlist_file]
+        logfile = Path(netlist_file).with_suffix('.log').as_posix()
+        rawfile = Path(netlist_file).with_suffix('.raw').as_posix()
+        cmd_run = cls.spice_exe + cmd_line_switches + ['-b'] + ['-o'] + [logfile] + ['-r'] + [rawfile] + [netlist_file]
         # start execution
         return run_function(cmd_run, timeout=timeout)
 
