@@ -1,0 +1,854 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PyLTSpice.raw_read &#8212; PyLTSpice 3.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/agogo.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="header-wrapper" role="banner">
+      <div class="header">
+        <div class="headertitle"><a
+          href="../../index.html">PyLTSpice 3.0 documentation</a></div>
+        <div class="rel" role="navigation" aria-label="related navigation">
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a>
+        </div>
+       </div>
+    </div>
+
+    <div class="content-wrapper">
+      <div class="content">
+        <div class="sidebar">
+          
+          <h3>Table of Contents</h3>
+          <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities/utilities.html">Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules/modules.html">Python Modules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../classes/classes.html">Python Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../varia/varia.html">Varia</a></li>
+</ul>
+
+          <div role="search">
+            <h3 style="margin-top: 1.5em;">Search</h3>
+            <form class="search" action="../../search.html" method="get">
+                <input type="text" name="q" />
+                <input type="submit" value="Go" />
+            </form>
+          </div>
+
+        </div>
+        <div class="document">
+            
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for PyLTSpice.raw_read</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># coding=utf-8</span>
+
+<span class="c1"># -------------------------------------------------------------------------------</span>
+<span class="c1">#    ____        _   _____ ____        _</span>
+<span class="c1">#   |  _ \ _   _| | |_   _/ ___| _ __ (_) ___ ___</span>
+<span class="c1">#   | |_) | | | | |   | | \___ \| &#39;_ \| |/ __/ _ \</span>
+<span class="c1">#   |  __/| |_| | |___| |  ___) | |_) | | (_|  __/</span>
+<span class="c1">#   |_|    \__, |_____|_| |____/| .__/|_|\___\___|</span>
+<span class="c1">#          |___/                |_|</span>
+<span class="c1">#</span>
+<span class="c1"># Name:        raw_read.py</span>
+<span class="c1"># Purpose:     Process LTSpice output files and align data for usage in a spread-</span>
+<span class="c1">#              sheet tool such as Excel, or Calc.</span>
+<span class="c1">#</span>
+<span class="c1"># Author:      Nuno Brum (nuno.brum@gmail.com)</span>
+<span class="c1">#</span>
+<span class="c1"># Created:     19-06-2022</span>
+<span class="c1"># Licence:     refer to the LICENSE file</span>
+<span class="c1"># -------------------------------------------------------------------------------</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module reads data from an LTSpice RAW file.</span>
+<span class="sd">The main class object is the RawRead which is initialized with the filename of the RAW file to be processed.</span>
+<span class="sd">The object wil read the file and construct a structure of objects which can be used to access the data inside the</span>
+<span class="sd">RAW file.</span>
+<span class="sd">To understand why this is done so, in the next section follows a brief explanation of what is contained inside a RAW</span>
+<span class="sd">file.</span>
+<span class="sd">In case RAW file contains stepped data detected, i.e. when the .STEP command is used, then it will also try to open the</span>
+<span class="sd">simulation LOG file and read the stepping information.</span>
+
+<span class="sd">RAW File Structure</span>
+<span class="sd">==================</span>
+
+<span class="sd">This section is written to help understand the why the structure of classes is defined as it is. You can gladly skip</span>
+<span class="sd">this section and get right down to business by seeing the examples section below.</span>
+
+<span class="sd">The RAW file starts with a text preamble that contains information about the names of the traces the order they</span>
+<span class="sd">appear on the binary part and some extra information.</span>
+<span class="sd">In the preamble, the lines are always started by one of the following identifiers:</span>
+
+<span class="sd">   + Title:          =&gt; Contains the path of the source .asc file used to make the simulation preceded by *</span>
+
+<span class="sd">   + Date:           =&gt; Date when the simulation started</span>
+
+<span class="sd">   + Plotname:       =&gt; Name of the simulation. The known Simulation Types are:</span>
+<span class="sd">                       * Operation Point</span>
+<span class="sd">                       * DC transfer characteristic</span>
+<span class="sd">                       * AC Analysis</span>
+<span class="sd">                       * Transient Analysis</span>
+<span class="sd">                       * Noise Spectral Density - (V/Hz½ or A/Hz½)</span>
+<span class="sd">                       * Transfer Function</span>
+
+<span class="sd">   + Flags:          =&gt; Flags that are used in this plot. The simulation can have any combination of these flags.</span>
+<span class="sd">                      * &quot;real&quot; -&gt; The traces in the raw file contain real values. As for exmple on a TRAN simulation.</span>
+<span class="sd">                      * &quot;complex&quot; -&gt; Traces in the raw file contain complex values. As for exmple on an AC simulation.</span>
+<span class="sd">                      * &quot;forward&quot; -&gt; Tells whether the simulation has more than one point. DC transfer</span>
+<span class="sd">                        characteristic, AC Analysis, Transient Analysis or Noise Spectral Density have the forward flag.</span>
+<span class="sd">                        Operating Point and Transfer Function don&#39;t have this flag activated.</span>
+<span class="sd">                      * &quot;log&quot; -&gt; The preferred plot view of this data is logarithmic.</span>
+<span class="sd">                      * &quot;stepped&quot; -&gt; The simulation had .STEP primitives.</span>
+<span class="sd">                      * &quot;FastAccess&quot; -&gt; Order of the data is changed to speed up access. See Binary section for details.</span>
+
+<span class="sd">   + No. Variables:  =&gt; number of variables contained in this dataset. See section below for details.</span>
+
+<span class="sd">   + No. Points:     =&gt; number of points per each variable in</span>
+
+<span class="sd">   + Offset:         =&gt; when the saving of data started</span>
+
+<span class="sd">   + Command:        =&gt; Name of the simulator executable generating this file.</span>
+
+<span class="sd">   + Backannotation: =&gt; Backannotation alerts that occurred during simulation</span>
+
+<span class="sd">   + Variables:      =&gt; a list of variable, one per line as described below</span>
+
+<span class="sd">   + Binary:         =&gt; Start of the binary section. See section below for details.</span>
+
+<span class="sd">Variables List</span>
+<span class="sd">--------------</span>
+<span class="sd">The variable list contains the list of measurements saved in the raw file. The order of the variables defines how they are</span>
+<span class="sd">stored in the binary section. The format is one variable per line, using the following format:</span>
+
+<span class="sd">&lt;tab&gt;&lt;ordinal number&gt;&lt;tab&gt;&lt;measurement&gt;&lt;tab&gt;&lt;type of measurement&gt;</span>
+
+<span class="sd">Here is an example:</span>
+
+<span class="sd">.. code-block:: text</span>
+
+<span class="sd">    0	time	time</span>
+<span class="sd">    1	V(n001)	   voltage</span>
+<span class="sd">    2	V(n004)	   voltage</span>
+<span class="sd">    3	V(n003)	   voltage</span>
+<span class="sd">    4	V(n006)	   voltage</span>
+<span class="sd">    5	V(adcc)    voltage</span>
+<span class="sd">    6	V(n002)	   voltage</span>
+<span class="sd">    7	V(3v3_m)   voltage</span>
+<span class="sd">    8	V(n005)	   voltage</span>
+<span class="sd">    9	V(n007)	   voltage</span>
+<span class="sd">    10	V(24v_dsp) voltage</span>
+<span class="sd">    11	I(C3)	   device_current</span>
+<span class="sd">    12	I(C2)	   device_current</span>
+<span class="sd">    13	I(C1)	   device_current</span>
+<span class="sd">    14	I(I1)	   device_current</span>
+<span class="sd">    15	I(R4)	   device_current</span>
+<span class="sd">    16	I(R3)	   device_current</span>
+<span class="sd">    17	I(V2)	   device_current</span>
+<span class="sd">    18	I(V1)	   device_current</span>
+<span class="sd">    19	Ix(u1:+)   subckt_current</span>
+<span class="sd">    20	Ix(u1:-)   subckt_current</span>
+
+<span class="sd">Binary Section</span>
+<span class="sd">--------------</span>
+<span class="sd">The binary section of .RAW file is where the data is usually written, unless the user had explicitly specified an ASCII</span>
+<span class="sd">representation. In this case this section is replaced with a &quot;Values&quot; section.</span>
+<span class="sd">LTSpice stores data directly onto the disk during simulation, writing per each time or frequency step the list of</span>
+<span class="sd">values, as exemplified below for a .TRAN simulation.</span>
+
+<span class="sd">     &lt;timestamp 0&gt;&lt;trace1 0&gt;&lt;trace2 0&gt;&lt;trace3 0&gt;...&lt;traceN 0&gt;</span>
+
+<span class="sd">     &lt;timestamp 1&gt;&lt;trace1 1&gt;&lt;trace2 1&gt;&lt;trace3 1&gt;...&lt;traceN 1&gt;</span>
+
+<span class="sd">     &lt;timestamp 2&gt;&lt;trace1 2&gt;&lt;trace2 2&gt;&lt;trace3 2&gt;...&lt;traceN 2&gt;</span>
+
+<span class="sd">     ...</span>
+
+<span class="sd">     &lt;timestamp T&gt;&lt;trace1 T&gt;&lt;trace2 T&gt;&lt;trace3 T&gt;...&lt;traceN T&gt;</span>
+<span class="sd">     </span>
+<span class="sd">Depending on the type of simulation the type of data changes.</span>
+<span class="sd">On TRAN simulations the timestamp is always stored as 8 bytes float (double) and trace values as a 4 bytes (single).</span>
+<span class="sd">On AC simulations the data is stored in complex format, which includes a real part and an imaginary part, each with 8</span>
+<span class="sd">bytes.</span>
+<span class="sd">The way we determine the size of the data is dividing the total block size by the number of points, then taking only</span>
+<span class="sd">the integer part.</span>
+
+<span class="sd">Fast Access</span>
+<span class="sd">-----------</span>
+
+<span class="sd">Once a simulation is done, the user can ask LTSpice to optimize the data structure in such that variables are stored</span>
+<span class="sd">contiguously as illustrated below.</span>
+
+<span class="sd">     &lt;timestamp 0&gt;&lt;timestamp 1&gt;...&lt;timestamp T&gt;</span>
+
+<span class="sd">     &lt;trace1 0&gt;&lt;trace1 1&gt;...&lt;trace1 T&gt;</span>
+
+<span class="sd">     &lt;trace2 0&gt;&lt;trace2 1&gt;...&lt;trace2 T&gt;</span>
+
+<span class="sd">     &lt;trace3 0&gt;&lt;trace3 1&gt;...&lt;trace3 T&gt;</span>
+
+<span class="sd">     ...</span>
+
+<span class="sd">     &lt;traceN T&gt;&lt;traceN T&gt;...&lt;tranceN T&gt;</span>
+
+<span class="sd">This can speed up the data reading. Note that this transformation is not done automatically. Transforming data to Fast</span>
+<span class="sd">Access must be requested by the user. If the transformation is done, it is registered in the Flags: line in the</span>
+<span class="sd">header. RawReader supports both Normal and Fast Access formats</span>
+
+<span class="sd">Classes Defined</span>
+<span class="sd">===============</span>
+
+<span class="sd">The .RAW file is read during the construction (constructor method) of an `RawRead` object. All traces on the RAW</span>
+<span class="sd">file are uploaded into memory.</span>
+
+<span class="sd">The RawRead class then has all the methods that allow the user to access the Axis and Trace Values. If there is</span>
+<span class="sd">any stepped data (.STEP primitives), the RawRead class will try to load the log information from the same</span>
+<span class="sd">directory as the raw file in order to obtain the STEP information.</span>
+
+<span class="sd">Follows an example of the RawRead class usage. Information on the RawRead methods can be found here.</span>
+
+<span class="sd">Examples</span>
+<span class="sd">========</span>
+
+<span class="sd">The example below demonstrates the usage of the RawRead class. It reads a .RAW file and uses the matplotlib</span>
+<span class="sd">library to plot the results of three traces in two subplots. ::</span>
+
+<span class="sd">    import matplotlib.pyplot as plt  # Imports the matplotlib library for plotting the results</span>
+
+<span class="sd">    LTR = RawRead(&quot;some_random_file.raw&quot;)  # Reads the RAW file contents from file</span>
+
+<span class="sd">    print(LTR.get_trace_names())  # Prints the contents of the RAW file. The result is a list, and print formats it.</span>
+<span class="sd">    print(LTR.get_raw_property())  # Prints all the properties found in the Header section.</span>
+
+<span class="sd">    plt.figure()  # Creates the canvas for plotting</span>
+
+<span class="sd">    vin = LTR.get_trace(&#39;V(in)&#39;)  # Get&#39;s the trace data. If Numpy is installed, then it comes in numpy array format.</span>
+<span class="sd">    vout = LTR.get_trace(&#39;V(out)&#39;) # Get&#39;s the second trace.</span>
+
+<span class="sd">    steps = LTR.get_steps()  # Get&#39;s the step information. Returns a list of step numbers, ex: [0,1,2...]. If no steps</span>
+<span class="sd">                             # are present on the RAW file, returns only one step : [0] .</span>
+
+<span class="sd">    fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)  # Creates the two subplots. One on top of the other.</span>
+
+<span class="sd">    for ax in (ax1, ax2):  # Crates a grid on all the plots.</span>
+<span class="sd">        ax.grid(True)</span>
+
+<span class="sd">    plt.xlim([0.9e-3, 1.2e-3])  # Optionally, limits the X axis to just a subrange.</span>
+
+<span class="sd">    x = LTR.get_axis(0)  # Retrieves the time vector that will be used as X axis. Uses STEP 0</span>
+<span class="sd">    ax1.plot(x, vin.get_wave(0)) # On first plot plots the first STEP (=0) of Vin</span>
+
+<span class="sd">    for step in steps:  # On the second plot prints all the STEPS of the Vout</span>
+<span class="sd">        x = LTR.get_axis(step)  # Retrieves the time vector that will be used as X axis.</span>
+<span class="sd">        ax2.plot(x, vout.get_wave(step))</span>
+
+<span class="sd">    plt.show()  # Creates the matplotlib&#39;s interactive window with the plots.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;Nuno Canto Brum &lt;nuno.brum@gmail.com&gt;&quot;</span>
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s2">&quot;Copyright 2022, Fribourg Switzerland&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span> <span class="nn">struct</span> <span class="kn">import</span> <span class="n">unpack</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span> <span class="nn">.raw_classes</span> <span class="kn">import</span> <span class="n">Axis</span><span class="p">,</span> <span class="n">Trace</span><span class="p">,</span> <span class="n">DummyTrace</span><span class="p">,</span> <span class="n">SpiceReadException</span>
+<span class="kn">from</span> <span class="nn">.detect_encoding</span> <span class="kn">import</span> <span class="n">detect_encoding</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">zeros</span><span class="p">,</span> <span class="n">complex128</span><span class="p">,</span> <span class="n">float32</span><span class="p">,</span> <span class="n">float64</span><span class="p">,</span> <span class="n">frombuffer</span><span class="p">,</span> <span class="n">angle</span>
+
+
+<span class="k">def</span> <span class="nf">read_float64</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reads a 64 bit float value, normally associated with the plot X axis.</span>
+<span class="sd">    The codification is done as follows:</span>
+
+<span class="sd">    =====  === === === ===   === === === ===</span>
+<span class="sd">    bit#   7   6   5   4     3   2   1   0</span>
+<span class="sd">    =====  === === === ===   === === === ===</span>
+<span class="sd">    Byte7  SGM SGE E9  E8    E7  E6  E5  E4</span>
+<span class="sd">    Byte6  E3  E2  E1  E0    M51 M50 M49 M48</span>
+<span class="sd">    Byte5  M47 M46 M45 M44   M43 M42 M41 M40</span>
+<span class="sd">    Byte4  M39 M38 M37 M36   M35 M34 M33 M32</span>
+<span class="sd">    Byte3  M31 M30 M29 M28   M27 M26 M25 M24</span>
+<span class="sd">    Byte2  M23 M22 M21 M20   M19 M18 M17 M16</span>
+<span class="sd">    Byte1  M15 M14 M13 M12   M11 M10 M9  M8</span>
+<span class="sd">    Byte0  M7  M6  M5  M4    M3  M2  M1  M0</span>
+<span class="sd">    =====  === === === ===   === === === ===</span>
+
+<span class="sd">    Legend:</span>
+
+<span class="sd">    SGM - Signal of Mantissa: 0 - Positive 1 - Negative</span>
+
+<span class="sd">    SGE - Signal of Exponent: 0 - Positive 1 - Negative</span>
+
+<span class="sd">    E[9:0] - Exponent</span>
+
+<span class="sd">    M[51:0] - Mantissa.</span>
+
+<span class="sd">    :param f: data stream to convert to float value</span>
+<span class="sd">    :type f: file</span>
+<span class="sd">    :returns: double precision float</span>
+<span class="sd">    :rtype: float</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;d&quot;</span><span class="p">,</span> <span class="n">s</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">read_complex</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Used to convert a 16 byte stream into a complex data point. Usually used for the .AC simulations.</span>
+<span class="sd">    The encoding is the same as for the set_pointB8() but two values are encoded. First one is the real part and</span>
+<span class="sd">    the second is the complex part.</span>
+
+<span class="sd">    :param f: data stream</span>
+<span class="sd">    :type f: file</span>
+<span class="sd">    :return: complex value</span>
+<span class="sd">    :rtype: complex</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span>
+    <span class="p">(</span><span class="n">re</span><span class="p">,</span> <span class="n">im</span><span class="p">)</span> <span class="o">=</span> <span class="n">unpack</span><span class="p">(</span><span class="s1">&#39;dd&#39;</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">complex</span><span class="p">(</span><span class="n">re</span><span class="p">,</span> <span class="n">im</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">read_float32</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reads a 32bit float (single precision) from a stream. This is how most real values are stored in the RAW file.</span>
+<span class="sd">    This codification uses 4 bytes as follows:</span>
+
+<span class="sd">    =====  === === === ===   === === === ===</span>
+<span class="sd">    bit#   7   6   5   4     3   2   1   0</span>
+<span class="sd">    =====  === === === ===   === === === ===</span>
+<span class="sd">    Byte3  SGM SGE E6  E5    E4  E3  E2  E1</span>
+<span class="sd">    Byte2  E0  M22 M21 M20   M19 M18 M17 M16</span>
+<span class="sd">    Byte1  M15 M14 M13 M12   M11 M10 M9  M8</span>
+<span class="sd">    Byte0  M7  M6  M5  M4    M3  M2  M1  M0</span>
+<span class="sd">    =====  === === === ===   === === === ===</span>
+
+<span class="sd">    Legend:</span>
+
+<span class="sd">    SGM - Signal of Mantissa: 0 - Positive 1 - Negative</span>
+
+<span class="sd">    SGE - Signal of Exponent: 0 - Positive 1 - Negative</span>
+
+<span class="sd">    E[6:0] - Exponent</span>
+
+<span class="sd">    M[22:0] - Mantissa.</span>
+
+<span class="sd">    :param f: data stream to read from</span>
+<span class="sd">    :type f: file</span>
+<span class="sd">    :returns: float value</span>
+<span class="sd">    :rtype: float</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;f&quot;</span><span class="p">,</span> <span class="n">s</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">consume4bytes</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Used to advance the file pointer 4 bytes&quot;&quot;&quot;</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">consume8bytes</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Used to advance the file pointer 8 bytes&quot;&quot;&quot;</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">consume16bytes</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Used to advance the file pointer 16 bytes&quot;&quot;&quot;</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="RawRead"><a class="viewcode-back" href="../../classes/raw_read.html#PyLTSpice.raw_read.RawRead">[docs]</a><span class="k">class</span> <span class="nc">RawRead</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class for reading LTSpice wave Files. It can read all types of Files. If stepped data is detected,</span>
+<span class="sd">    it will also try to read the corresponding LOG file so to retrieve the stepped data.</span>
+
+<span class="sd">    :param raw_filename: The file containing the RAW data to be read</span>
+<span class="sd">    :type raw_filename: str | pahtlib.Path</span>
+<span class="sd">    :param traces_to_read:</span>
+<span class="sd">        A string or a list containing the list of traces to be read. If None is provided, only the header is read and</span>
+<span class="sd">        all trace data is discarded. If a &#39;*&#39; wildcard is given or no parameter at all then all traces are read.</span>
+<span class="sd">    :type traces_to_read: str, list or tuple</span>
+<span class="sd">    :key headeronly:</span>
+<span class="sd">        Used to only load the header information and skip the trace data entirely. Use `headeronly=True`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">header_lines</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s2">&quot;Title&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Date&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Plotname&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Output&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Flags&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;No. Variables&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;No. Points&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Offset&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Command&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Variables&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Backannotation&quot;</span>
+    <span class="p">)</span>
+
+    <span class="n">ACCEPTED_PLOTNAMES</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s1">&#39;AC Analysis&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;DC transfer characteristic&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;Operating Point&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;Transient Analysis&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;Transfer Function&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;Noise Spectral Density&#39;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">raw_filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">traces_to_read</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;verbose&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="n">raw_filename</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">raw_filename</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">traces_to_read</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">traces_to_read</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)),</span> <span class="s2">&quot;traces_to_read must be a string, a list or None&quot;</span>
+
+        <span class="n">raw_file_size</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">stat</span><span class="p">(</span><span class="n">raw_filename</span><span class="p">)</span><span class="o">.</span><span class="n">st_size</span>  <span class="c1"># Get the file size in order to know the data size</span>
+        <span class="n">raw_file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">raw_filename</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span>
+
+        <span class="n">ch</span> <span class="o">=</span> <span class="n">raw_file</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ch</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf_8&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;Title:&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">encoding</span> <span class="o">=</span> <span class="s1">&#39;utf_8&#39;</span>
+            <span class="n">sz_enc</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="s1">&#39;Title:&#39;</span>
+        <span class="k">elif</span> <span class="n">ch</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf_16_le&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;Tit&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">encoding</span> <span class="o">=</span> <span class="s1">&#39;utf_16_le&#39;</span>
+            <span class="n">sz_enc</span> <span class="o">=</span> <span class="mi">2</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="s1">&#39;Tit&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Unrecognized encoding&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Reading file with encoding &quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoding</span><span class="p">)</span>
+        <span class="c1"># Storing the filename as part of the dictionary</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">raw_params</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">(</span><span class="n">Filename</span><span class="o">=</span><span class="n">raw_filename</span><span class="p">)</span>  <span class="c1"># Initializing the dict that contains all raw file info</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">backannotations</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Storing backannotations</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">binary_start</span> <span class="o">=</span> <span class="mi">6</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">ch</span> <span class="o">=</span> <span class="n">raw_file</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">sz_enc</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">encoding</span><span class="p">)</span>
+            <span class="n">binary_start</span> <span class="o">+=</span> <span class="n">sz_enc</span>
+            <span class="k">if</span> <span class="n">ch</span> <span class="o">==</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoding</span> <span class="o">==</span> <span class="s1">&#39;utf_8&#39;</span><span class="p">:</span>  <span class="c1"># must remove the \r</span>
+                    <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="n">header</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">line</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;Binary:&#39;</span><span class="p">,</span> <span class="s1">&#39;Values:&#39;</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">raw_type</span> <span class="o">=</span> <span class="n">line</span>
+                    <span class="k">break</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">line</span> <span class="o">+=</span> <span class="n">ch</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">header</span><span class="p">:</span>
+            <span class="n">k</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="s1">&#39;Variables&#39;</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">raw_params</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nPoints</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">raw_params</span><span class="p">[</span><span class="s1">&#39;No. Points&#39;</span><span class="p">],</span> <span class="mi">10</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nVariables</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">raw_params</span><span class="p">[</span><span class="s1">&#39;No. Variables&#39;</span><span class="p">],</span> <span class="mi">10</span><span class="p">)</span>
+
+        <span class="n">has_axis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">raw_params</span><span class="p">[</span><span class="s1">&#39;Plotname&#39;</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;Operating Point&#39;</span><span class="p">,</span> <span class="s1">&#39;Transfer Function&#39;</span><span class="p">,)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_traces</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">steps</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">axis</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Creating the axis</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">flags</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">raw_params</span><span class="p">[</span><span class="s1">&#39;Flags&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="k">if</span> <span class="s1">&#39;complex&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">raw_params</span><span class="p">[</span><span class="s1">&#39;Flags&#39;</span><span class="p">]</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">raw_params</span><span class="p">[</span><span class="s1">&#39;Plotname&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;AC Analysis&#39;</span><span class="p">:</span>
+            <span class="n">numerical_type</span> <span class="o">=</span> <span class="s1">&#39;complex&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">numerical_type</span> <span class="o">=</span> <span class="s1">&#39;real&#39;</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">header</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;Variables:&#39;</span><span class="p">)</span>
+        <span class="n">ivar</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">header</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>  <span class="c1"># Parse the variable names</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">var_type</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">lstrip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">has_axis</span> <span class="ow">and</span> <span class="n">ivar</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># If it has an axis, it should be always read</span>
+                <span class="k">if</span> <span class="n">numerical_type</span> <span class="o">==</span> <span class="s1">&#39;real&#39;</span><span class="p">:</span>
+                    <span class="n">axis_numerical_type</span> <span class="o">=</span> <span class="s1">&#39;double&#39;</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">axis_numerical_type</span> <span class="o">=</span> <span class="n">numerical_type</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">axis</span> <span class="o">=</span> <span class="n">Axis</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">var_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nPoints</span><span class="p">,</span> <span class="n">axis_numerical_type</span><span class="p">)</span>
+                <span class="n">trace</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="n">traces_to_read</span> <span class="o">==</span> <span class="s2">&quot;*&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">name</span> <span class="ow">in</span> <span class="n">traces_to_read</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">has_axis</span><span class="p">:</span>  <span class="c1"># Reads data</span>
+                    <span class="n">trace</span> <span class="o">=</span> <span class="n">Trace</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">var_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nPoints</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span> <span class="n">numerical_type</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># If an Operation Point or Transfer Function, only one point per step</span>
+                    <span class="n">trace</span> <span class="o">=</span> <span class="n">Trace</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">var_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nPoints</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;real&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">trace</span> <span class="o">=</span> <span class="n">DummyTrace</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">var_type</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_traces</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">trace</span><span class="p">)</span>
+            <span class="n">ivar</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="n">traces_to_read</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_traces</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># The read is stopped here if there is nothing to read.</span>
+            <span class="n">raw_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;headeronly&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="n">raw_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;File contains </span><span class="si">{}</span><span class="s2"> traces, reading </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ivar</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_traces</span><span class="p">)))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">raw_type</span> <span class="o">==</span> <span class="s2">&quot;Binary:&quot;</span><span class="p">:</span>
+            <span class="c1"># Will start the reading of binary values</span>
+            <span class="c1"># But first check whether how data is stored.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">block_size</span> <span class="o">=</span> <span class="p">(</span><span class="n">raw_file_size</span> <span class="o">-</span> <span class="n">binary_start</span><span class="p">)</span> <span class="o">//</span> <span class="bp">self</span><span class="o">.</span><span class="n">nPoints</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_size</span> <span class="o">//</span> <span class="bp">self</span><span class="o">.</span><span class="n">nVariables</span>
+
+            <span class="n">scan_functions</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">trace</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_traces</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_size</span> <span class="o">==</span> <span class="mi">8</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span> <span class="n">DummyTrace</span><span class="p">):</span>
+                        <span class="n">fun</span> <span class="o">=</span> <span class="n">consume8bytes</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">fun</span> <span class="o">=</span> <span class="n">read_float64</span>
+                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_size</span> <span class="o">==</span> <span class="mi">16</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span> <span class="n">DummyTrace</span><span class="p">):</span>
+                        <span class="n">fun</span> <span class="o">=</span> <span class="n">consume16bytes</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">fun</span> <span class="o">=</span> <span class="n">read_complex</span>
+                <span class="k">else</span><span class="p">:</span>  <span class="c1"># data size is only 4 bytes</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">scan_functions</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># This is the axis</span>
+                        <span class="n">fun</span> <span class="o">=</span> <span class="n">read_float64</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span> <span class="n">DummyTrace</span><span class="p">):</span>
+                            <span class="n">fun</span> <span class="o">=</span> <span class="n">consume4bytes</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">fun</span> <span class="o">=</span> <span class="n">read_float32</span>
+                <span class="n">scan_functions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fun</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="s2">&quot;fastaccess&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">raw_params</span><span class="p">[</span><span class="s2">&quot;Flags&quot;</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Binary RAW file with Fast access&quot;</span><span class="p">)</span>
+                <span class="c1"># Fast access means that the traces are grouped together.</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">var</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_traces</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">DummyTrace</span><span class="p">):</span>
+                        <span class="c1"># TODO: replace this by a seek</span>
+                        <span class="n">raw_file</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nPoints</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_size</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_size</span> <span class="o">==</span> <span class="mi">8</span><span class="p">:</span>
+                            <span class="n">s</span> <span class="o">=</span> <span class="n">raw_file</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nPoints</span> <span class="o">*</span> <span class="mi">8</span><span class="p">)</span>
+                            <span class="n">var</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">frombuffer</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">float64</span><span class="p">)</span>
+                        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_size</span> <span class="o">==</span> <span class="mi">16</span><span class="p">:</span>
+                            <span class="n">s</span> <span class="o">=</span> <span class="n">raw_file</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nPoints</span> <span class="o">*</span> <span class="mi">16</span><span class="p">)</span>
+                            <span class="n">var</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">frombuffer</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                                <span class="n">s</span> <span class="o">=</span> <span class="n">raw_file</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nPoints</span> <span class="o">*</span> <span class="mi">8</span><span class="p">)</span>
+                                <span class="n">var</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">frombuffer</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">float64</span><span class="p">)</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="n">s</span> <span class="o">=</span> <span class="n">raw_file</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nPoints</span> <span class="o">*</span> <span class="mi">4</span><span class="p">)</span>
+                                <span class="n">var</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">frombuffer</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">float32</span><span class="p">)</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Binary RAW file with Normal access&quot;</span><span class="p">)</span>
+                <span class="c1"># This is the default save after a simulation where the traces are scattered</span>
+                <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nPoints</span><span class="p">):</span>
+                    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">var</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_traces</span><span class="p">):</span>
+                        <span class="n">value</span> <span class="o">=</span> <span class="n">scan_functions</span><span class="p">[</span><span class="n">i</span><span class="p">](</span><span class="n">raw_file</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                            <span class="n">var</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">point</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">raw_type</span> <span class="o">==</span> <span class="s2">&quot;Values:&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ASCII RAW File&quot;</span><span class="p">)</span>
+            <span class="c1"># Will start the reading of ASCII Values</span>
+            <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nPoints</span><span class="p">):</span>
+                <span class="n">first_var</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_traces</span><span class="p">:</span>
+                    <span class="n">line</span> <span class="o">=</span> <span class="n">raw_file</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">encoding</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">first_var</span><span class="p">:</span>
+                        <span class="n">first_var</span> <span class="o">=</span> <span class="kc">False</span>
+                        <span class="n">spoint</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+                        <span class="k">if</span> <span class="n">point</span> <span class="o">!=</span> <span class="nb">int</span><span class="p">(</span><span class="n">spoint</span><span class="p">):</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Error Reading File&quot;</span><span class="p">)</span>
+                            <span class="k">break</span>
+                        <span class="n">value</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">spoint</span><span class="p">):</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">value</span> <span class="o">=</span> <span class="n">line</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">DummyTrace</span><span class="p">):</span>
+                        <span class="n">var</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">point</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">raw_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">raise</span> <span class="n">SpiceReadException</span><span class="p">(</span><span class="s2">&quot;Unsupported RAW File. &quot;&quot;</span><span class="si">%s</span><span class="s2">&quot;&quot;&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">raw_type</span><span class="p">)</span>
+
+        <span class="n">raw_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="c1"># Setting the properties in the proper format</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">raw_params</span><span class="p">[</span><span class="s2">&quot;No. Points&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nPoints</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">raw_params</span><span class="p">[</span><span class="s2">&quot;No. Variables&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nVariables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">raw_params</span><span class="p">[</span><span class="s2">&quot;Variables&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">var</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_traces</span><span class="p">]</span>
+        <span class="c1"># Now Purging Dummy Traces</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_traces</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_traces</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">DummyTrace</span><span class="p">):</span>
+                <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_traces</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="c1"># Finally, Check for Step Information</span>
+        <span class="k">if</span> <span class="s2">&quot;stepped&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">raw_params</span><span class="p">[</span><span class="s2">&quot;Flags&quot;</span><span class="p">]:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_load_step_information</span><span class="p">(</span><span class="n">raw_filename</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">SpiceReadException</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;LOG file not found or problems happened while reading it. Auto-detecting steps&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">has_axis</span><span class="p">:</span>
+                    <span class="n">number_of_steps</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">v</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                            <span class="n">number_of_steps</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">number_of_steps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nPoints</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">steps</span> <span class="o">=</span> <span class="p">[{</span><span class="s1">&#39;run&#39;</span><span class="p">:</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">}</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_steps</span><span class="p">)]</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">steps</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">has_axis</span><span class="p">:</span>
+                    <span class="c1"># Individual access to the Trace Classes, this information is stored in the Axis</span>
+                    <span class="c1"># which is always in position 0</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_traces</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">_set_steps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">)</span>
+
+<div class="viewcode-block" id="RawRead.get_raw_property"><a class="viewcode-back" href="../../classes/raw_read.html#PyLTSpice.raw_read.RawRead.get_raw_property">[docs]</a>    <span class="k">def</span> <span class="nf">get_raw_property</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">property_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get a property. By default it returns all properties defined in the RAW file.</span>
+
+<span class="sd">        :param property_name: name of the property to retrieve.</span>
+<span class="sd">        :type property_name: str</span>
+<span class="sd">        :returns: Property object</span>
+<span class="sd">        :rtype: str</span>
+<span class="sd">        :raises: ValueError if the property doesn&#39;t exist</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">property_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">raw_params</span>
+        <span class="k">elif</span> <span class="n">property_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">raw_params</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">raw_params</span><span class="p">[</span><span class="n">property_name</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid property. Use </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">raw_params</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span></div>
+
+<div class="viewcode-block" id="RawRead.get_trace_names"><a class="viewcode-back" href="../../classes/raw_read.html#PyLTSpice.raw_read.RawRead.get_trace_names">[docs]</a>    <span class="k">def</span> <span class="nf">get_trace_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a list of exiting trace names inside of the RAW file.</span>
+
+<span class="sd">        :return: trace names</span>
+<span class="sd">        :rtype: list[str]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">trace</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">trace</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_traces</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="RawRead.get_trace"><a class="viewcode-back" href="../../classes/raw_read.html#PyLTSpice.raw_read.RawRead.get_trace">[docs]</a>    <span class="k">def</span> <span class="nf">get_trace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trace_ref</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieves the trace with the requested name (trace_ref).</span>
+
+<span class="sd">        :param trace_ref: Name of the trace or the index of the trace</span>
+<span class="sd">        :type trace_ref: str or int</span>
+<span class="sd">        :return: An object containing the requested trace</span>
+<span class="sd">        :rtype: DataSet subclass</span>
+<span class="sd">        :raises IndexError: When a trace is not found</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">trace_ref</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">trace</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_traces</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">trace_ref</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="n">trace</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">upper</span><span class="p">():</span>  <span class="c1"># The trace names are case insensitive</span>
+                    <span class="c1"># assert isinstance(trace, DataSet)</span>
+                    <span class="k">return</span> <span class="n">trace</span>
+            <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="si">}</span><span class="s2"> doesn&#39;t contain trace </span><span class="se">\&quot;</span><span class="si">{</span><span class="n">trace_ref</span><span class="si">}</span><span class="se">\&quot;\n</span><span class="s2">&quot;</span>
+                             <span class="sa">f</span><span class="s2">&quot;Valid traces are </span><span class="si">{</span><span class="p">[</span><span class="n">trc</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">trc</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_traces</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_traces</span><span class="p">[</span><span class="n">trace_ref</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="RawRead.get_wave"><a class="viewcode-back" href="../../classes/raw_read.html#PyLTSpice.raw_read.RawRead.get_wave">[docs]</a>    <span class="k">def</span> <span class="nf">get_wave</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trace_ref</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Retrieves the trace data with the requested name (trace_ref), optionally providing the step number.</span>
+
+<span class="sd">        :param trace_ref: Name of the trace or the index of the trace</span>
+<span class="sd">        :type trace_ref: str or int</span>
+<span class="sd">        :param step: Optional parameter specifying which step to retrieve.</span>
+<span class="sd">        :type step: int</span>
+<span class="sd">        :return: A numpy array containing the requested waveform.</span>
+<span class="sd">        :rtype: numpy.array</span>
+<span class="sd">        :raises IndexError: When a trace is not found</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_trace</span><span class="p">(</span><span class="n">trace_ref</span><span class="p">)</span><span class="o">.</span><span class="n">get_wave</span><span class="p">(</span><span class="n">step</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RawRead.get_time_axis"><a class="viewcode-back" href="../../classes/raw_read.html#PyLTSpice.raw_read.RawRead.get_time_axis">[docs]</a>    <span class="k">def</span> <span class="nf">get_time_axis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        *(Deprecated)* Use get_axis method instead</span>
+
+<span class="sd">        This function is equivalent to get_trace(&#39;time&#39;).get_time_axis(step) instruction.</span>
+<span class="sd">        It&#39;s workaround on a LTSpice issue when using 2nd Order compression, where some values on</span>
+<span class="sd">        the time trace have a negative value.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_trace</span><span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">get_time_axis</span><span class="p">(</span><span class="n">step</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RawRead.get_axis"><a class="viewcode-back" href="../../classes/raw_read.html#PyLTSpice.raw_read.RawRead.get_axis">[docs]</a>    <span class="k">def</span> <span class="nf">get_axis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This function is equivalent to get_trace(0).get_wave(step) instruction.</span>
+<span class="sd">        It also implements a workaround on a LTSpice issue when using 2nd Order compression, where some values on</span>
+<span class="sd">        the time trace have a negative value.</span>
+<span class="sd">        :param step: Step number</span>
+<span class="sd">        :type step: int</span>
+<span class="sd">        :returns: Array with the X axis</span>
+<span class="sd">        :rtype: list[float] or numpy.array</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">:</span>
+            <span class="n">axis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_trace</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">axis</span><span class="o">.</span><span class="n">whattype</span> <span class="o">==</span> <span class="s1">&#39;time&#39;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">axis</span><span class="o">.</span><span class="n">get_time_axis</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">axis</span><span class="o">.</span><span class="n">get_wave</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;This RAW file does not have an axis.&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RawRead.get_len"><a class="viewcode-back" href="../../classes/raw_read.html#PyLTSpice.raw_read.RawRead.get_len">[docs]</a>    <span class="k">def</span> <span class="nf">get_len</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the length of the data at the give step index.</span>
+<span class="sd">        :param step: Optional parameter the step index.</span>
+<span class="sd">        :type step: int</span>
+<span class="sd">        :return: The number of data points</span>
+<span class="sd">        :rtype: int</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">get_len</span><span class="p">(</span><span class="n">step</span><span class="p">)</span> </div>
+
+    <span class="k">def</span> <span class="nf">_load_step_information</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="n">Path</span><span class="p">):</span>
+        <span class="c1"># Find the extension of the file</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">filename</span><span class="o">.</span><span class="n">suffix</span> <span class="o">==</span> <span class="s2">&quot;.raw&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">SpiceReadException</span><span class="p">(</span><span class="s2">&quot;Invalid Filename. The file should end with &#39;.raw&#39;&quot;</span><span class="p">)</span>
+        <span class="n">logfile</span> <span class="o">=</span> <span class="n">filename</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s2">&quot;.log&quot;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">encoding</span> <span class="o">=</span> <span class="n">detect_encoding</span><span class="p">(</span><span class="n">logfile</span><span class="p">,</span> <span class="s2">&quot;Circuit:&quot;</span><span class="p">)</span>
+            <span class="n">log</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">logfile</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s1">&#39;replace&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="n">encoding</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">SpiceReadException</span><span class="p">(</span><span class="s2">&quot;Step information needs the &#39;.log&#39; file generated by LTSpice&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">UnicodeError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">SpiceReadException</span><span class="p">(</span><span class="s2">&quot;Unable to parse log file and obtain .STEP information. Check Unicode&quot;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">log</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;.step&quot;</span><span class="p">):</span>
+                <span class="n">step_dict</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="k">for</span> <span class="n">tok</span> <span class="ow">in</span> <span class="n">line</span><span class="p">[</span><span class="mi">6</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">):</span>
+                    <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="n">tok</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">)</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="c1"># Tries to convert to float for backward compatibility</span>
+                        <span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                    <span class="k">except</span><span class="p">:</span>
+                        <span class="k">pass</span>
+                        <span class="c1"># Leave value as a string to accommodate cases like temperature steps.</span>
+                        <span class="c1"># Temperature steps have the form &#39;.step temp=25°C&#39;</span>
+                    <span class="n">step_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">steps</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">steps</span> <span class="o">=</span> <span class="p">[</span><span class="n">step_dict</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">step_dict</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Helper function to access traces by using the [ ] operator.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_trace</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+<div class="viewcode-block" id="RawRead.get_steps"><a class="viewcode-back" href="../../classes/raw_read.html#PyLTSpice.raw_read.RawRead.get_steps">[docs]</a>    <span class="k">def</span> <span class="nf">get_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the steps that correspond to the query set in the * * kwargs parameters.</span>
+<span class="sd">        Example: ::</span>
+
+<span class="sd">            raw_read.get_steps(V5=1.2, TEMP=25)</span>
+
+<span class="sd">        This will return all steps in which the voltage source V5 was set to 1.2V and the TEMP parameter is 24 degrees.</span>
+<span class="sd">        This feature is only possible if a .log file with the same name as the .raw file exists in the same directory.</span>
+<span class="sd">        Note: the correspondence between step numbers and .STEP information is stored on the .log file.</span>
+
+<span class="sd">        :key kwargs:</span>
+<span class="sd">         key-value arguments in which the key correspond to a stepped parameter or source name, and the value is the</span>
+<span class="sd">         stepped value.</span>
+
+<span class="sd">        :return: The steps that match the query</span>
+<span class="sd">        :rtype: list[int]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">steps</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># returns an single step</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">ret_steps</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Initializing an empty array</span>
+                <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">for</span> <span class="n">step_dict</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+                        <span class="n">ll</span> <span class="o">=</span> <span class="n">step_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">ll</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                            <span class="k">break</span>
+                        <span class="k">elif</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">!=</span> <span class="n">ll</span><span class="p">:</span>
+                            <span class="k">break</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">ret_steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>  <span class="c1"># All the step parameters match</span>
+                    <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">return</span> <span class="n">ret_steps</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">))</span>  <span class="c1"># Returns all the steps</span></div></div>
+
+
+<span class="c1"># Backward compatibility naming</span>
+<span class="n">LTSpiceRawRead</span> <span class="o">=</span> <span class="n">RawRead</span>
+
+<span class="c1"># if __name__ == &quot;__main__&quot;:</span>
+<span class="c1"># out = open(&quot;RAW_TEST_out_test1.txt&quot;, &#39;w&#39;)</span>
+<span class="c1">#</span>
+<span class="c1"># for step in LTR.get_steps():</span>
+<span class="c1">#     for x in range(len(LTR[0].data)):</span>
+<span class="c1">#         out.write(&quot;%s, %e, %e\n&quot; % (step, LTR[0].data[x], LTR[2].data[x]))</span>
+<span class="c1"># out.close()</span>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+        </div>
+        <div class="clearer"></div>
+      </div>
+    </div>
+
+    <div class="footer-wrapper">
+      <div class="footer">
+        <div class="left">
+          <div role="navigation" aria-label="related navigaton">
+            <a href="../../py-modindex.html" title="Python Module Index"
+              >modules</a> |
+            <a href="../../genindex.html" title="General Index"
+              >index</a>
+          </div>
+          <div role="note" aria-label="source link">
+          </div>
+        </div>
+
+        <div class="right">
+          
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2023, Nuno Brum.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
+    </div>
+        </div>
+        <div class="clearer"></div>
+      </div>
+    </div>
+
+  </body>
+</html>

@@ -65,6 +65,9 @@ test_dir = '../' if os.path.abspath(os.curdir).endswith('unittest') else './test
 print("test_dir", test_dir)
 # ------------------------------------------------------------------------------
 
+if has_ltspice:
+    os.chdir(os.path.abspath((os.path.dirname(os.path.abspath(__file__)))))
+
 
 class test_pyltspice(unittest.TestCase):
     """Unnittesting PyLTSpice"""

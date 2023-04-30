@@ -1,6 +1,9 @@
 from PyLTSpice import SimRunner
 from PyLTSpice import SpiceEditor
 
+# Force another simulatior
+simulator = r"C:\Program Files\LTC\LTspiceXVII\XVIIx64.exe"
+
 # select spice model
 LTC = SimRunner(output_folder='./temp')
 LTC.create_netlist('Batch_Test.asc')
