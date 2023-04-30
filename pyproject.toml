@@ -18,12 +18,27 @@ dependencies = [
     "numpy",
     "psutil",
     "clipboard",
+    "matplotlib"
 ]
 classifiers=[
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     "Operating System :: OS Independent",
 ]
+
+[tool.setuptools.packages.find]
+# All the following settings are optional:
+where = ["PyLTSpice"]  # ["."] by default
+include = ["*"]  # ["*"] by default
+exclude = ["tests"]  # empty by default
+namespaces = true  # true by default
+
+
+[project.scripts]
+ltsteps = "PyLTSpice.ltsteps"
+histogram = "PyLTSpice.Histogram"
+rawplot = "PyLTSpice.raw.rawread:main"
+rawconvert = "PyLTSpice.raw.raw_convert:main"
 
 [project.urls]
 "Homepage" = "https://github.com/nunobrum/PyLTSpice"
