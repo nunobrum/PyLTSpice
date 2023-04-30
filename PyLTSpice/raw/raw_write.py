@@ -118,7 +118,7 @@ class RawWrite(object):
                 flag_numtype = 'real'
             elif trace.whattype == 'frequency':
                 if (trace.numerical_type != 'complex' and self.flag_numtype != 'complex') or 'Noise' in self.plot_name:
-                    self.plot_name = self.plot_name or 'Noise Spectral Density - (V/Hz� or A/Hz�)'
+                    self.plot_name = self.plot_name or 'Noise Spectral Density - (V/Hz½ or A/Hz½)'
                     flag_numtype = 'real'
                 else:
                     self.plot_name = self.plot_name or 'AC Analysis'
