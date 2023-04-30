@@ -51,7 +51,10 @@ class Trace(DataSet):
             if name == 'time':
                 numerical_type = 'double'
             elif name == 'frequency':
-                numerical_type = 'complex'
+                raise AssertionError("For frequency plots, please specify the numerical_type:\n"
+                                     "Use:\n"
+                                     "   * numerical_type='complex' for .AC analysis\n"
+                                     "   * numerical_type='double' for .NOISE analysys")
             elif isinstance(data[0], float32) or isinstance(data[0], float):
                 numerical_type = 'real'
             elif isinstance(data[0], complex):
@@ -73,7 +76,7 @@ class RawWrite(object):
 
     """
 
-    def __init__(self, plot_name=None, fastacces=True, numtype='real', encoding='utf_16_le'):
+    def __init__(self, plot_name=None, fastacces=True, numtype='auto', encoding='utf_16_le'):
         self._traces = list()
         self.flag_numtype = numtype
         self.flag_forward = False
@@ -109,21 +112,28 @@ class RawWrite(object):
         :rtype: None
         """
         assert isinstance(trace, Trace), "The trace needs to be of the type ""Trace"""
-        if self.plot_name is None or len(self._traces) == 0:
+        if len(self._traces) == 0:
             if trace.whattype == 'time':
                 self.plot_name = self.plot_name or 'Transient Analysis'
-                self.flag_numtype = 'real'
+                flag_numtype = 'real'
             elif trace.whattype == 'frequency':
-                self.plot_name = self.plot_name or 'AC Analysis'
-                self.flag_numtype = 'complex'
+                if (trace.numerical_type != 'complex' and self.flag_numtype != 'complex') or 'Noise' in self.plot_name:
+                    self.plot_name = self.plot_name or 'Noise Spectral Density - (V/Hz� or A/Hz�)'
+                    flag_numtype = 'real'
+                else:
+                    self.plot_name = self.plot_name or 'AC Analysis'
+                    flag_numtype = 'complex'
             elif trace.whattype in ('voltage', 'current'):
                 self.plot_name = self.plot_name or 'DC transfer characteristic'
-                self.flag_numtype = 'real'
+                flag_numtype = 'real'
             elif trace.whattype == 'param':
                 self.plot_name = self.plot_name or 'Operating Point'
-                self.flag_numtype = 'real'
+                flag_numtype = 'real'
             else:
                 raise ValueError("First Trace needs to be either 'time', 'frequency', 'param', 'voltage' or '...'")
+
+            if self.flag_numtype == 'auto':
+                self.flag_numtype = flag_numtype
         else:
             if len(self._traces[0]) != len(trace):
                 raise IndexError("The trace needs to be the same size as trace 0")

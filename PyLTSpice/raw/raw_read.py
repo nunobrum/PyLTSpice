@@ -356,6 +356,7 @@ class RawRead(object):
         'Transient Analysis',
         'Transfer Function',
         'Noise Spectral Density',
+        'Frequency Response Analysis',
     )
 
     def __init__(self, raw_filename: str, traces_to_read: Union[str, List[str], Tuple[str], None] = '*', **kwargs):
@@ -793,6 +794,7 @@ class RawRead(object):
     def to_dataframe(self, columns: list = None, step: Union[int, List[int]] = -1, **kwargs):
         """
         Returns a pandas DataFrame with the requested data.
+
         :param step: Step number to retrieve. If not given, it
         :type step: int
         :param columns: List of traces to use as columns. Default is all traces
@@ -814,6 +816,7 @@ class RawRead(object):
                separator=',', **kwargs):
         """
         Saves the data to a CSV file.
+
         :param filename: Name of the file to save the data to
         :type filename: str
         :param columns: List of traces to use as columns. Default is all traces
