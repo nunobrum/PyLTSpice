@@ -214,7 +214,7 @@ from struct import unpack
 from typing import Union, List, Tuple, Dict
 from pathlib import Path
 
-from .raw_classes import Axis, Trace, DummyTrace, SpiceReadException
+from .raw_classes import Axis, TraceRead, DummyTrace, SpiceReadException
 from ..utils.detect_encoding import detect_encoding
 
 import numpy as np
@@ -429,10 +429,10 @@ class RawRead(object):
                 trace = self.axis
             elif (traces_to_read == "*") or (name in traces_to_read):
                 if has_axis:  # Reads data
-                    trace = Trace(name, var_type, self.nPoints, self.axis, numerical_type)
+                    trace = TraceRead(name, var_type, self.nPoints, self.axis, numerical_type)
                 else:
                     # If an Operation Point or Transfer Function, only one point per step
-                    trace = Trace(name, var_type, self.nPoints, None, 'real')
+                    trace = TraceRead(name, var_type, self.nPoints, None, 'real')
             else:
                 trace = DummyTrace(name, var_type)
 
@@ -560,8 +560,8 @@ class RawRead(object):
                 print("LOG file not found or problems happened while reading it. Auto-detecting steps")
                 if has_axis:
                     number_of_steps = 0
-                    for v in self.axis:
-                        if v == self.axis[0]:
+                    for v in self.axis.data:
+                        if v == self.axis.data[0]:
                             number_of_steps += 1
                 else:
                     number_of_steps = self.nPoints

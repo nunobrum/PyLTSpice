@@ -3,6 +3,7 @@ from PyLTSpice import SimRunner, SpiceEditor, LTspice
 from time import sleep
 from random import random
 
+
 def processing_data(raw_file, log_file):
     print("Handling the simulation data of ""%s"", log file ""%s""" % (raw_file, log_file))
     time_to_sleep = random( ) * 5
@@ -39,9 +40,9 @@ for opamp in ('AD712', 'AD820'):
         if use_run_now:
             runner.run_now(netlist, run_filename=run_netlist_file)
         else:
-            runner.run(netlist, run_filename=run_netlist_file)
+            runner.run(netlist, run_filename=run_netlist_file, callback=processing_data)
 
-for results in runner(4):
+for results in runner:
     print(results)
 
 netlist.reset_netlist()

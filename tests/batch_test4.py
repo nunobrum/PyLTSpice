@@ -40,7 +40,7 @@ if __name__ == "__main__":
             run_netlist_file = "{}_{}_{}.net".format(netlist.netlist_file.stem, opamp, supply_voltage)
             runner.run(netlist, run_filename=run_netlist_file, callback=CallbackProc)
 
-    for results in runner(0.4):
+    for results in runner:
         print(results)
 
     netlist.reset_netlist()

@@ -164,7 +164,7 @@ class LTspice(Simulator):
         if sys.platform == 'darwin':
             NotImplementedError("In this platform LTSpice doesn't have netlist generation capabilities")
         cmd_netlist = cls.spice_exe + ['-netlist'] + [circuit_file.as_posix()]
-        print(f'Creating netlist file from "{circuit_file}"', end='...')
+        # print(f'Creating netlist file from "{circuit_file}"', end='...')
         error = run_function(cmd_netlist)
 
         if error == 0:
@@ -173,6 +173,6 @@ class LTspice(Simulator):
                 print("OK")
                 return netlist
         msg = "Failed to create netlist"
-        print(msg)
+        # print(msg)
         logging.error(msg)
         raise RuntimeError(msg)

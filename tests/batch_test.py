@@ -1,9 +1,5 @@
-from PyLTSpice.sim.sim_runner import SimRunner
-from PyLTSpice.sim.spice_editor import SpiceEditor
-
-def processing_data(raw_file, log_file):
-    print("Handling the simulation data of %s, log file %s" % (raw_file, log_file))
-
+from PyLTSpice import SimRunner
+from PyLTSpice import SpiceEditor
 
 # select spice model
 LTC = SimRunner(output_folder='./temp')
@@ -25,12 +21,15 @@ for opamp in ('AD712', 'AD820'):
     for supply_voltage in (5, 10, 15):
         netlist.set_component_value('V1', supply_voltage)
         netlist.set_component_value('V2', -supply_voltage)
-        # overriding he automatic netlist naming
-        run_netlist_file = "{}_{}_{}.net".format(netlist.netlist_file.stem, opamp, supply_voltage)
         print("simulating OpAmp", opamp, "Voltage", supply_voltage)
-        LTC.run(netlist, callback=processing_data, run_filename=run_netlist_file)
+        LTC.run(netlist)
 
-LTC.wait_completion()
+for raw, log in LTC:
+    print("Raw file: %s, Log file: %s" % (raw, log))
+    # do something with the data
+    # raw_data = RawRead(raw)
+    # log_data = LTSteps(log)
+    # ...
 
 netlist.reset_netlist()
 netlist.add_instructions(
@@ -39,12 +38,6 @@ netlist.add_instructions(
     ".meas AC Gain MAX mag(V(out)) ; find the peak response and call it ""Gain""",
     ".meas AC Fcut TRIG mag(V(out))=Gain/sqrt(2) FALL=last"
 )
-
-
-raw, log = netlist.run("no_callback.net").wait_results()
-processing_data(raw, log)
-
-LTC.wait_completion()
 
 # Sim Statistics
 print('Successful/Total Simulations: ' + str(LTC.okSim) + '/' + str(LTC.runno))

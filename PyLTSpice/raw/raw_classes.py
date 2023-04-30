@@ -66,6 +66,12 @@ class DataSet(object):
     def __len__(self):
         return len(self.data)
 
+    def __iter__(self):
+        return iter(self.data)
+
+    def __getitem__(self, item):
+        return self.data[item]
+
     def get_wave(self) -> np.array:
         """
         :return: Internal data array
@@ -184,7 +190,7 @@ class Axis(DataSet):
 
     def __getitem__(self, item) -> Union[float, complex]:
         """This is only here for compatibility with previous code. """
-        assert self.step_info is None, "Indexing should not be used with stepped data. Use get_point"
+        assert self.step_info is None, "Indexing should not be used with stepped data. Use get_point or get_wave"
         return self.data.__getitem__(item)
 
     def get_position(self, t, step: int = 0) -> Union[int, float]:
@@ -231,8 +237,12 @@ class Axis(DataSet):
         else:
             return self.get_len()
 
+    def __iter__(self):
+        assert self.step_info is None, "Iteration can't be used with stepped data. Use get_wave() method."
+        return self.data.__iter__()
 
-class Trace(DataSet):
+
+class TraceRead(DataSet):
     """This class is used to represent a trace. It derives from DataSet and implements the additional methods to
     support STEPed simulations.
     This class is constructed by the get_trace() command.

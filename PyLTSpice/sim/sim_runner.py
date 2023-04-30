@@ -168,6 +168,9 @@ class SimRunner(object):
         self.logger.setLevel(logging.INFO)
         # redirect this logger to a file.
         self.logger.addHandler(logging.FileHandler('SimRunner.log', mode='w'))
+        # if verbose is true, all log messages are also printed to the console
+        if verbose:
+            self.logger.addHandler(logging.StreamHandler())
         self.logger.info("SimRunner started")
 
         self.runno = 0  # number of total runs
@@ -272,21 +275,12 @@ class SimRunner(object):
         if not isinstance(asc_file, Path):
             asc_file = Path(asc_file)
         if asc_file.suffix == '.asc':
-            netlist_file = asc_file.with_suffix('.net')
             if self.verbose:
                 self.logger.info("Creating Netlist")
-            retcode = self.simulator.create_netlist(asc_file)
-            if retcode == 0 and netlist_file.exists():
-                if self.verbose:
-                    self.logger.info("The Netlist was successfully created")
-                netlist_file = self._to_output_folder(netlist_file, copy=False)
-                self.workfiles.append(netlist_file)
-                return netlist_file
-            else:
-                self.logger.error("Unable to create Netlist")
-                if self.verbose:
-                    self.logger.info("Unable to create the Netlist from %s" % asc_file)
-        return None
+            return self.simulator.create_netlist(asc_file)
+        else:
+            self.logger.info("Unable to create the Netlist from %s" % asc_file)
+            return None
 
     def _prepare_sim(self, netlist: Union[str, Path, SpiceEditor], run_filename: str):
         """Internal function"""
@@ -493,27 +487,23 @@ class SimRunner(object):
                 # Delete the log file if exists
                 logfile = workfile.with_suffix('.log')
                 if logfile.exists():
-                    self.logger.info("Deleting", logfile)
+                    self.logger.info("Deleting..." + logfile.name)
                     logfile.unlink()
                 # Delete the raw file if exists
                 rawfile = workfile.with_suffix('.raw')
                 if rawfile.exists():
-                    self.logger.info("Deleting", rawfile)
+                    self.logger.info("Deleting..." + rawfile.name)
                     rawfile.unlink()
 
                 # Delete the op.raw file if exists
                 oprawfile = workfile.with_suffix('.op.raw')
                 if oprawfile.exists():
-                    self.logger.info("Deleting", oprawfile)
+                    self.logger.info("Deleting..." + oprawfile.name)
                     oprawfile.unlink()
 
             # Delete the file
-            self.logger.info("Deleting", workfile)
+            self.logger.info("Deleting..." + workfile.name)
             workfile.unlink()
-
-    def __call__(self, timeout=0):
-        self._timeout = timeout
-        return self
 
     def __iter__(self):
         return self
@@ -541,5 +531,5 @@ class SimRunner(object):
                 raise StopIteration
 
             sleep(0.2)  # Go asleep for a sec
-            if self._timeout > 0 and ((clock() - t0) > self._timeout):
-                raise SimRunnerTimeoutError(f"Exceeded {self._timeout} seconds waiting for tasks to finish")
+            if self.timeout and ((clock() - t0) > self.timeout):
+                raise SimRunnerTimeoutError(f"Exceeded {self.timeout} seconds waiting for tasks to finish")
