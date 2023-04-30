@@ -23,7 +23,7 @@ Implements a parser for extracting Semiconductor Devices Operating Points from a
 """
 
 import re
-from .detect_encoding import detect_encoding
+from ..utils.detect_encoding import detect_encoding
 
 
 def opLogReader(filename: str) -> dict:

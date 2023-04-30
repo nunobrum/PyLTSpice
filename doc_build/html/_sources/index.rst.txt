@@ -10,9 +10,15 @@ Welcome to PyLTSpice's documentation!
    :maxdepth: 2
    :caption: Contents:
    
+<<<<<<< HEAD
+   modules/modules
+   classes/classes
+   utilities/utilities
+=======
    utilities/utilities
    modules/modules
    classes/classes
+>>>>>>> master
    varia/varia
 
 Indices and tables

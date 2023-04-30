@@ -1,6 +1,6 @@
 Semiconductor Operating Point Reader
 ====================================
-.. automodule:: PyLTSpice.SemiDevOpReader
+.. automodule:: PyLTSpice.log.semi_dev_op_reader
    :members:
    :undoc-members:
    :show-inheritance:

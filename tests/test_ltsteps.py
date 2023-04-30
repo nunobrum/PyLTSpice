@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # coding=utf-8
 
-from PyLTSpice.LTSteps import LTSpiceLogReader
+from PyLTSpice.log.ltsteps import LTSpiceLogReader
 
-data = LTSpiceLogReader("Batch_Test_AD820_15.log")
+data = LTSpiceLogReader("./temp_batch3/Batch_Test_AD820_15.log")
 
 print("Number of steps  :", data.step_count)
 step_names = data.get_step_vars()

@@ -22,7 +22,7 @@
 from collections import OrderedDict
 from typing import Iterable
 from .sim_batch import SimCommander
-from .SpiceEditor import ComponentNotFoundError
+from .spice_editor import ComponentNotFoundError
 
 
 class SimAnalysis(object):

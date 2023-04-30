@@ -329,7 +329,7 @@ class RawWrite(object):
                     trace.data = self._interpolate(trace.data, my_axis, new_axis)
             for imported_trace in self._imported_data:
                 new_trace = Trace(imported_trace.name,
-                                  self._interpolate(imported_trace.data, imported_trace.axis, new_axis),
+                                  self._interpolate(imported_trace.get_wave(), imported_trace.axis.get_wave(), new_axis),
                                   imported_trace.whattype, imported_trace.numerical_type)
                 self._traces.append(new_trace)
             self._traces[0] = Trace(old_axis.name, new_axis,

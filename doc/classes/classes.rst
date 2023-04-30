@@ -3,13 +3,23 @@ Python Classes
 ==============
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 4
 
-   logreader
-   sim_batch
-   SpiceEditor
-   SpiceCircuit
+   spice_editor
+   spice_circuit
+   sim_runner
+   sim_simulator
    raw_read
    raw_write
-   trace
-   write_trace
+   sim_client
+   sim_server
+
+
+============
+Deprecations
+============
+
+.. toctree::
+   :maxdepth: 4
+
+   sim_batch

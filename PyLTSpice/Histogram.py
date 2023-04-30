@@ -159,8 +159,6 @@ else:
                     break
             else:
                 values.append(float(env[TRACE]))
-
-
     log.close()
 
 if len(values) == 0:

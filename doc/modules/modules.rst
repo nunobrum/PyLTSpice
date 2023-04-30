@@ -13,3 +13,4 @@ PyLTSpice contains several modules for working with netlists, simulations and si
    read_steps
    write_rawfiles
    SemiOpLogReader
+   client_server

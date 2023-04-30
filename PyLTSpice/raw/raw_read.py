@@ -10,12 +10,11 @@
 #          |___/                |_|
 #
 # Name:        raw_read.py
-# Purpose:     Process LTSpice output files and align data for usage in a spread-
-#              sheet tool such as Excel, or Calc.
+# Purpose:     Process LTSpice output files and align data for usage in a spreadsheet
+#              tool such as Excel, or Calc.
 #
 # Author:      Nuno Brum (nuno.brum@gmail.com)
 #
-# Created:     19-06-2022
 # Licence:     refer to the LICENSE file
 # -------------------------------------------------------------------------------
 
@@ -52,8 +51,8 @@ In the preamble, the lines are always started by one of the following identifier
                        * Transfer Function
 
    + Flags:          => Flags that are used in this plot. The simulation can have any combination of these flags.
-                      * "real" -> The traces in the raw file contain real values. As for exmple on a TRAN simulation.
-                      * "complex" -> Traces in the raw file contain complex values. As for exmple on an AC simulation.
+                      * "real" -> The traces in the raw file contain real values. As for example on a TRAN simulation.
+                      * "complex" -> Traces in the raw file contain complex values. As for example on an AC simulation.
                       * "forward" -> Tells whether the simulation has more than one point. DC transfer
                         characteristic, AC Analysis, Transient Analysis or Noise Spectral Density have the forward flag.
                         Operating Point and Transfer Function don't have this flag activated.
@@ -77,8 +76,8 @@ In the preamble, the lines are always started by one of the following identifier
 
 Variables List
 --------------
-The variable list contains the list of measurements saved in the raw file. The order of the variables defines how they are
-stored in the binary section. The format is one variable per line, using the following format:
+The variable list contains the list of measurements saved in the raw file. The order of the variables defines how they
+are stored in the binary section. The format is one variable per line, using the following format:
 
 <tab><ordinal number><tab><measurement><tab><type of measurement>
 
@@ -126,7 +125,7 @@ values, as exemplified below for a .TRAN simulation.
      <timestamp T><trace1 T><trace2 T><trace3 T>...<traceN T>
      
 Depending on the type of simulation the type of data changes.
-On TRAN simulations the timestamp is always stored as 8 bytes float (double) and trace values as a 4 bytes (single).
+On TRAN simulations the timestamp is always stored as 8 bytes float (double) and trace values as 4 bytes (single).
 On AC simulations the data is stored in complex format, which includes a real part and an imaginary part, each with 8
 bytes.
 The way we determine the size of the data is dividing the total block size by the number of points, then taking only
@@ -181,10 +180,10 @@ library to plot the results of three traces in two subplots. ::
 
     plt.figure()  # Creates the canvas for plotting
 
-    vin = LTR.get_trace('V(in)')  # Get's the trace data. If Numpy is installed, then it comes in numpy array format.
-    vout = LTR.get_trace('V(out)') # Get's the second trace.
+    vin = LTR.get_trace('V(in)')  # Gets the trace data. If Numpy is installed, then it comes in numpy array format.
+    vout = LTR.get_trace('V(out)') # Gets the second trace.
 
-    steps = LTR.get_steps()  # Get's the step information. Returns a list of step numbers, ex: [0,1,2...]. If no steps
+    steps = LTR.get_steps()  # Gets the step information. Returns a list of step numbers, ex: [0,1,2...]. If no steps
                              # are present on the RAW file, returns only one step : [0] .
 
     fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)  # Creates the two subplots. One on top of the other.
@@ -212,11 +211,11 @@ import os
 
 from collections import OrderedDict
 from struct import unpack
-from typing import Union, List, Tuple
+from typing import Union, List, Tuple, Dict
 from pathlib import Path
 
-from .raw_classes import Axis, Trace, DummyTrace, SpiceReadException
-from .detect_encoding import detect_encoding
+from .raw_classes import Axis, TraceRead, DummyTrace, SpiceReadException
+from ..utils.detect_encoding import detect_encoding
 
 import numpy as np
 from numpy import zeros, complex128, float32, float64, frombuffer, angle
@@ -224,7 +223,7 @@ from numpy import zeros, complex128, float32, float64, frombuffer, angle
 
 def read_float64(f):
     """
-    Reads a 64 bit float value, normally associated with the plot X axis.
+    Reads a 64-bit float value, normally associated with the plot X axis.
     The codification is done as follows:
 
     =====  === === === ===   === === === ===
@@ -381,13 +380,12 @@ class RawRead(object):
         else:
             raise RuntimeError("Unrecognized encoding")
         if self.verbose:
-            print("Reading file with encoding ", self.encoding)
+            print("Reading the file with encoding ", self.encoding)
         # Storing the filename as part of the dictionary
         self.raw_params = OrderedDict(Filename=raw_filename)  # Initializing the dict that contains all raw file info
         self.backannotations = []  # Storing backannotations
         header = []
         binary_start = 6
-        line = ""
         while True:
             ch = raw_file.read(sz_enc).decode(encoding=self.encoding)
             binary_start += sz_enc
@@ -432,10 +430,10 @@ class RawRead(object):
                 trace = self.axis
             elif (traces_to_read == "*") or (name in traces_to_read):
                 if has_axis:  # Reads data
-                    trace = Trace(name, var_type, self.nPoints, self.axis, numerical_type)
+                    trace = TraceRead(name, var_type, self.nPoints, self.axis, numerical_type)
                 else:
                     # If an Operation Point or Transfer Function, only one point per step
-                    trace = Trace(name, var_type, self.nPoints, None, 'real')
+                    trace = TraceRead(name, var_type, self.nPoints, None, 'real')
             else:
                 trace = DummyTrace(name, var_type)
 
@@ -452,7 +450,9 @@ class RawRead(object):
             return
 
         if self.verbose:
-            print("File contains {} traces, reading {}".format(ivar, len(self._traces)))
+            print("File contains {} traces, reading {}".format(ivar,
+                                                               len([trace for trace in self._traces
+                                                                    if not isinstance(trace, DummyTrace)])))
 
         if self.raw_type == "Binary:":
             # Will start the reading of binary values
@@ -525,12 +525,12 @@ class RawRead(object):
                     line = raw_file.readline().decode(encoding=self.encoding, errors='ignore')
                     if first_var:
                         first_var = False
-                        spoint = line.split("\t", 1)[0]
+                        s_point = line.split("\t", 1)[0]
 
-                        if point != int(spoint):
+                        if point != int(s_point):
                             print("Error Reading File")
                             break
-                        value = line[len(spoint):-1]
+                        value = line[len(s_point):-1]
                     else:
                         value = line[:-1]
                     if not isinstance(var, DummyTrace):
@@ -561,12 +561,12 @@ class RawRead(object):
                 print("LOG file not found or problems happened while reading it. Auto-detecting steps")
                 if has_axis:
                     number_of_steps = 0
-                    for v in self.axis:
-                        if v == self.axis[0]:
+                    for v in self.axis.data:
+                        if v == self.axis.data[0]:
                             number_of_steps += 1
                 else:
                     number_of_steps = self.nPoints
-                self.steps = [{'run': i+1} for i in range(number_of_steps)]
+                self.steps = [{'run': i + 1} for i in range(number_of_steps)]
 
             if self.steps is not None:
                 if has_axis:
@@ -576,7 +576,7 @@ class RawRead(object):
 
     def get_raw_property(self, property_name=None):
         """
-        Get a property. By default it returns all properties defined in the RAW file.
+        Get a property. By default, it returns all properties defined in the RAW file.
 
         :param property_name: name of the property to retrieve.
         :type property_name: str
@@ -593,7 +593,7 @@ class RawRead(object):
 
     def get_trace_names(self):
         """
-        Returns a list of exiting trace names inside of the RAW file.
+        Returns a list of exiting trace names of the RAW file.
 
         :return: trace names
         :rtype: list[str]
@@ -612,7 +612,7 @@ class RawRead(object):
         """
         if isinstance(trace_ref, str):
             for trace in self._traces:
-                if trace_ref.upper() == trace.name.upper():  # The trace names are case insensitive
+                if trace_ref.upper() == trace.name.upper():  # The trace names are case-insensitive
                     # assert isinstance(trace, DataSet)
                     return trace
             raise IndexError(f"{self} doesn't contain trace \"{trace_ref}\"\n"
@@ -655,10 +655,8 @@ class RawRead(object):
         """
         if self.axis:
             axis = self.get_trace(0)
-            if axis.whattype == 'time':
-                return axis.get_time_axis(step)
-            else:
-                return axis.get_wave(step)
+            assert isinstance(axis, Axis), "This RAW file does not have an axis."
+            return axis.get_wave(step)
         else:
             raise RuntimeError("This RAW file does not have an axis.")
 
@@ -670,7 +668,7 @@ class RawRead(object):
         :return: The number of data points
         :rtype: int
         """
-        return self.axis.get_len(step) 
+        return self.axis.get_len(step)
 
     def _load_step_information(self, filename: Path):
         # Find the extension of the file
@@ -693,7 +691,7 @@ class RawRead(object):
                     try:
                         # Tries to convert to float for backward compatibility
                         value = float(value)
-                    except:
+                    except ValueError:
                         pass
                         # Leave value as a string to accommodate cases like temperature steps.
                         # Temperature steps have the form '.step temp=25°C'
@@ -726,7 +724,7 @@ class RawRead(object):
         :rtype: list[int]
         """
         if self.steps is None:
-            return [0]  # returns an single step
+            return [0]  # returns a single step
         else:
             if len(kwargs) > 0:
                 ret_steps = []  # Initializing an empty array
@@ -745,14 +743,245 @@ class RawRead(object):
             else:
                 return range(len(self.steps))  # Returns all the steps
 
+    def export(self, columns: list = None, step: Union[int, List[int]] = -1, **kwargs) -> Dict[str, list]:
+        """
+        Returns a native python class structure with the requested trace data and steps.
+        It consists of an ordered dictionary where the columns are the keys and the values are lists with the data.
+
+        This function is used by the export functions.
+
+        :param step: Step number to retrieve. If not given, it will return all steps
+        :type step: int
+        :param columns: List of traces to use as columns. Default is all traces
+        :type columns: list
+        :param kwargs: Additional arguments to pass to the pandas.DataFrame constructor
+        :type kwargs: **dict
+        :return: A pandas DataFrame
+        :rtype: pandas.DataFrame
+        """
+        if columns is None:
+            columns = self.get_trace_names()  # if no columns are given, use all traces
+        else:
+            if self.axis and self.axis.name not in columns:  # If axis is not in the list, add it
+                columns.insert(0, self.axis.name)
+
+        if isinstance(step, list):
+            steps_to_read = step  # If a list of steps is given, use it
+        elif step == -1:
+            steps_to_read = self.get_steps(**kwargs)  # If no step is given, read all steps
+        else:
+            steps_to_read = [step]  # If a single step is given, pass it as a list
+
+        step_columns = []
+        if len(step_columns) > 1:
+            for step_dict in self.steps[0]:
+                for key in step_dict:
+                    step_columns.append(key)
+        data = OrderedDict()
+        # Create the headers with the column names and empty lists
+        for col in columns:
+            data[col] = []
+        for col in step_columns:
+            data[col] = []
+        # Read the data
+        for step in steps_to_read:
+            for col in columns:
+                data[col] += list(self.get_wave(col, step))
+            for col in step_columns:
+                data[col] += [self.steps[step][col]] * len(data[columns[0]])
+        return data
+
+    def to_dataframe(self, columns: list = None, step: Union[int, List[int]] = -1, **kwargs):
+        """
+        Returns a pandas DataFrame with the requested data.
+        :param step: Step number to retrieve. If not given, it
+        :type step: int
+        :param columns: List of traces to use as columns. Default is all traces
+        :type columns: list
+        :param kwargs: Additional arguments to pass to the pandas.DataFrame constructor
+        :type kwargs: **dict
+        :return: A pandas DataFrame
+        :rtype: pandas.DataFrame
+        """
+        try:
+            import pandas as pd
+        except ImportError:
+            raise ImportError("The 'pandas' module is required to use this function.\n"
+                              "Use 'pip install pandas' to install it.")
+        data = self.export(columns=columns, step=step, **kwargs)
+        return pd.DataFrame(data, **kwargs)
+
+    def to_csv(self, filename: Union[str, Path], columns: list = None, step: Union[int, List[int]] = -1,
+               separator=',', **kwargs):
+        """
+        Saves the data to a CSV file.
+        :param filename: Name of the file to save the data to
+        :type filename: str
+        :param columns: List of traces to use as columns. Default is all traces
+        :type columns: list
+        :param step: Step number to retrieve. If not given, it
+        :type step: int
+        :param separator: separator to use in the CSV file
+        :type separator: str
+        :param kwargs: Additional arguments to pass to the pandas.DataFrame.to_csv function
+        :type kwargs: **dict
+        """
+        try:
+            import pandas as pd
+        except ImportError:
+            use_pandas = False
+        else:
+            use_pandas = True
+
+        if use_pandas:
+            df = self.to_dataframe(columns=columns, step=step)
+            df.to_csv(filename, sep=separator, **kwargs)
+        else:
+            # Export to CSV using python built-in functions
+            data = self.export(columns=columns, step=step)
+            with open(filename, 'w') as f:
+                f.write(separator.join(data.keys()) + '\n')
+                for i in range(len(data[columns[0]])):
+                    f.write(separator.join([str(data[col][i]) for col in data.keys()]) + '\n')
+
+    def to_excel(self, filename: Union[str, Path], columns: list = None, step: Union[int, List[int]] = -1,
+                 **kwargs):
+        """
+        Saves the data to an Excel file.
+        :param filename: Name of the file to save the data to
+        :type filename: str
+        :param columns: List of traces to use as columns. Default is all traces
+        :type columns: list
+        :param step: Step number to retrieve. If not given, it
+        :type step: int
+        :param kwargs: Additional arguments to pass to the pandas.DataFrame.to_excel function
+        :type kwargs: **dict
+        """
+        try:
+            import pandas as pd
+        except ImportError:
+            raise ImportError("The 'pandas' module is required to use this function.\n"
+                              "Use 'pip install pandas' to install it.")
+        df = self.to_dataframe(columns=columns, step=step)
+        df.to_excel(filename, **kwargs)
+
 
 # Backward compatibility naming
 LTSpiceRawRead = RawRead
 
-# if __name__ == "__main__":
+
+def main():
+    """Uses matplotlib to plot the data in the raw file"""
+    import sys
+    import matplotlib.pyplot as plt
+    import os
+    from os.path import split as path_split
+    from os.path import join as path_join
+    from numpy import abs as mag
+
+    def what_to_units(whattype):
+        """Determines the unit to display on the plot Y axis"""
+        if 'voltage' in whattype:
+            return 'V'
+        if 'current' in whattype:
+            return 'A'
+
+    directory = os.getcwd()
+
+    if len(sys.argv) > 1:
+        raw_filename = sys.argv[1]
+        trace_names = sys.argv[2:]
+        if len(trace_names) == 0:
+            trace_names = '*'
+    else:
+        test_directory = path_join(path_split(directory)[0], 'tests')
+        filename = 'DC sweep.raw'
+        # filename = 'tran.raw'
+        # filename = 'tran - step.raw'
+        # filename = 'ac.raw'
+        # filename = 'AC - STEP.raw'
+        # filename = 'PI_Filter_tf.raw'
+        # filename = 'DC op point - STEP_1.raw'
+        # filename = 'Noise.raw'
+        filename = "test2_gs_000.raw"
+        trace_names = ("run", "V(out)", "V(err)")
+        # trace_names = '*' # 'V(out)',
+        raw_filename = path_join(test_directory, filename)
+
+    LTR = RawRead(raw_filename, trace_names, verbose=True)
+    for param, value in LTR.raw_params.items():
+        print("{}: {}{}".format(param, " " * (20 - len(param)), str(value).strip()))
+
+    if trace_names == '*':
+        print("Reading all the traces in the raw file")
+        trace_names = LTR.get_trace_names()
+
+    traces = [LTR.get_trace(trace) for trace in trace_names]
+    if LTR.axis is not None:
+        steps_data = LTR.get_steps()
+    else:
+        steps_data = [0]
+    print("Steps read are :", list(steps_data))
+
+    if 'complex' in LTR.flags:
+        n_axis = len(traces) * 2
+    else:
+        n_axis = len(traces)
+
+    fig, axis_set = plt.subplots(n_axis, 1, sharex='all')
+    write_labels = True
+
+    for i, trace in enumerate(traces):
+        if 'complex' in LTR.flags:
+            axis_set = axis_set[2 * i: 2 * i + 2]  # Returns two axis
+        else:
+            if n_axis == 1:
+                axis_set = [axis_set]  # Needs to return a list
+            else:
+                axis_set = axis_set[i:i + 1]  # Returns just one axis but enclosed in a list
+        magnitude = True
+        for ax in axis_set:
+            ax.grid(True)
+            if 'log' in LTR.flags:
+                ax.set_xscale('log')
+            for step_i in steps_data:
+                if LTR.axis:
+                    x = LTR.get_axis(step_i)
+                else:
+                    x = np.arange(LTR.nPoints)
+                y = traces[i].get_wave(step_i)
+                if 'complex' in LTR.flags:
+                    x = mag(x)
+                    if magnitude:
+                        ax.set_yscale('log')
+                        y = mag(y)
+                    else:
+                        y = angle(y, deg=True)
+                if write_labels:
+                    ax.plot(x, y, label=str(steps_data[step_i]))
+                else:
+                    ax.plot(x, y)
+            write_labels = False
+
+            if 'complex' in LTR.flags:
+                if magnitude:
+                    title = f"{trace.name} Mag [db{what_to_units(trace.whattype)}]"
+                    magnitude = False
+                else:
+                    title = f"{trace.name} Phase [deg]"
+            else:
+                title = f"{trace.name} [{what_to_units(trace.whattype)}]"
+            ax.set_title(title)
+
+    plt.figlegend()
+    plt.show()
+'''
+'''
 # out = open("RAW_TEST_out_test1.txt", 'w')
 #
 # for step in LTR.get_steps():
 #     for x in range(len(LTR[0].data)):
 #         out.write("%s, %e, %e\n" % (step, LTR[0].data[x], LTR[2].data[x]))
 # out.close()
+if __name__ == "__main__":
+    main()

@@ -1,5 +1,5 @@
-# coding=utf-8
 #!/usr/bin/env python
+# coding=utf-8
 
 # -------------------------------------------------------------------------------
 #    ____        _   _____ ____        _
@@ -26,7 +26,7 @@ from pathlib import Path
 from typing import Union
 
 
-def detect_encoding(file_path, expected_str: Union[str, Path] = '') -> str:
+def detect_encoding(file_path: Union[str, Path], expected_str: str = '') -> str:
     """
     Simple strategy to detect file encoding.  If an expected_str is given the function will scan through the possible
     encodings and return a match.
@@ -57,4 +57,7 @@ def detect_encoding(file_path, expected_str: Union[str, Path] = '') -> str:
                 continue
             return encoding
     else:
-        raise UnicodeError(f"Unable to detect log file encoding, or expected string ""{expected_str}"" not found")
+        if expected_str:
+            raise UnicodeError(f"Expected string \"{expected_str}\" not found in file:{file_path}")
+        else:
+            raise UnicodeError(f"Unable to detect log file encoding")

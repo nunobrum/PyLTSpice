@@ -22,9 +22,13 @@
 __author__ = "Nuno Canto Brum <nuno.brum@gmail.com>"
 __copyright__ = "Copyright 2017, Fribourg Switzerland"
 
-from typing import Callable, Any
+import functools
+from typing import Callable, Any, Union
 from typing import Iterable
-from .sim_batch import SimCommander
+import pathlib
+from functools import wraps
+from .spice_editor import SpiceEditor
+from .sim_runner import SimRunner
 
 
 class StepInfo(object):
@@ -40,32 +44,34 @@ class StepInfo(object):
         return f"Iteration on {self.what} {self.elem} : {self.iter}"
 
 
-class SimStepper(SimCommander):
+class SimStepper(object):
 
-    def __init__(self, spice_file: str, parallel_sims=4, renaming_mask=None):
-        """This class is intended to be used for simulations with many parameter sweeps. This provides a more user-
-        friendly interface than the SimCommander class when there are many parameters to be found. Using the
-        SimCommander class a loop needs to be added for each dimension of the simulations.
+    def __init__(self, spice_file: str, parallel_sims=4, output_folder=None):
+        """This class is intended to be used for simulations with many parameter sweeps. This provides a more
+        user-friendly interface than the SpiceEditor/SimRunner class when there are many parameters to be stepped.
+
+        Using the SpiceEditor/SimRunner classes a loop needs to be added for each dimension of the simulations.
         A typical usage would be as follows:
         ```
-        LTC = SimCommander("my_circuit.asc")
+        netlist = SpiceEditor("my_circuit.asc")
+        runner = SimRunner(parallel_sims=4)
         for dmodel in ("BAT54", "BAT46WJ")
-            LTC.set_element_model("D1", model)  # Sets the Diode D1 model
+            netlist.set_element_model("D1", model)  # Sets the Diode D1 model
             for res_value1 in sweep(2.2, 2,4, 0.2):  # Steps from 2.2 to 2.4 with 0.2 increments
-                LTC.set_component_value('R1', res_value1)  # Updates the resistor R1 value to be 3.3k
+                netlist.set_component_value('R1', res_value1)  # Updates the resistor R1 value to be 3.3k
                 for temperature in sweep(0, 80, 20):  # Makes temperature step from 0 to 80 degrees in 20 degree steps
-                    LTC.set_parameters(temp=80)  # Sets the simulation temperature to be 80 degrees
+                    netlist.set_parameters(temp=80)  # Sets the simulation temperature to be 80 degrees
                     for res_value2 in (10, 25, 32):
-                        LTC.set_component_value('R2', res_value2)  # Updates the resistor R2 value to be 3.3k
-                        LTC.run()
+                        netlist.set_component_value('R2', res_value2)  # Updates the resistor R2 value to be 3.3k
+                        runner.run(netlist)
 
-        LTC.wait_completion()  # Waits for the LTSpice simulations to complete
+        runner.wait_completion()  # Waits for the LTSpice simulations to complete
         ```
 
         With SimStepper the same thing can be done as follows, resulting in a more cleaner code.
 
         ```
-        Stepper = SimStepper("my_circuit.asc")
+        Stepper = SimStepper("my_circuit.asc", parallel_sims=4)
         Stepper.add_model_sweep('D1', "BAT54", "BAT46WJ")
         Stepper.add_component_sweep('R1', sweep(2.2, 2,4, 0.2))  # Steps from 2.2 to 2.4 with 0.2 increments
         Stepper.add_parameter_sweep('temp', sweep(0, 80, 20))  # Makes temperature step from 0 to 80 degrees in 20
@@ -78,8 +84,44 @@ class SimStepper(SimCommander):
         Another advantage of using SimStepper is that it can optionally use the .SAVEBIAS in the first simulation and
         then use the .LOADBIAS command at the subsequent ones to speed up the simulation times.
         """
-        SimCommander.__init__(self, spice_file, parallel_sims)
+        spice_file = pathlib.Path(spice_file)
+        if output_folder is None:
+            output_folder = spice_file.parent
+        self.runner = SimRunner(parallel_sims=parallel_sims, output_folder=output_folder)
+        self.netlist = SpiceEditor(spice_file)
         self.iter_list = []
+
+    @wraps(SpiceEditor.add_instruction)
+    def add_instruction(self, instruction: str):
+        self.netlist.add_instruction(instruction)
+
+    @wraps(SpiceEditor.add_instructions)
+    def add_instructions(self, *instructions) -> None:
+        self.netlist.add_instructions(*instructions)
+
+    @wraps(SpiceEditor.remove_instruction)
+    def remove_instruction(self, instruction) -> None:
+        self.netlist.remove_instruction(instruction)
+
+    @wraps(SpiceEditor.set_parameters)
+    def set_parameters(self, **kwargs):
+        self.netlist.set_parameters(**kwargs)
+
+    @wraps(SpiceEditor.set_parameter)
+    def set_parameter(self, param: str, value: Union[str, int, float]) -> None:
+        self.netlist.set_parameter(param, value)
+
+    @wraps(SpiceEditor.set_component_values)
+    def set_component_values(self, **kwargs):
+        self.netlist.set_component_values(**kwargs)
+
+    @wraps(SpiceEditor.set_component_value)
+    def set_component_value(self, device: str, value: Union[str, int, float]) -> None:
+        self.netlist.set_component_value(device, value)
+
+    @wraps(SpiceEditor.set_element_model)
+    def set_element_model(self, element: str, model: str) -> None:
+        self.netlist.set_element_model(element, model)
 
     def add_param_sweep(self, param: str, iterable: Iterable):
         """Adds a dimension to the simulation, where the param is swept."""
@@ -88,13 +130,13 @@ class SimStepper(SimCommander):
     def add_value_sweep(self, comp: str, iterable: Iterable):
         """Adds a dimension to the simulation, where a component value is swept."""
         # The next line raises an ComponentNotFoundError if the component doesn't exist
-        _ = self.get_component_value(comp)
+        _ = self.netlist.get_component_value(comp)
         self.iter_list.append(StepInfo("component", comp, iterable))
 
     def add_model_sweep(self, comp: str, iterable: Iterable):
         """Adds a dimension to the simulation, where a component model is swept."""
         # The next line raises an ComponentNotFoundError if the component doesn't exist
-        _ = self.get_component_value(comp)
+        _ = self.netlist.get_component_value(comp)
         self.iter_list.append(StepInfo("model", comp, iterable))
 
     def total_number_of_simulations(self):
@@ -125,35 +167,44 @@ class SimStepper(SimCommander):
                     iter_no -= 1
                     continue
                 if self.iter_list[iter_no].what == 'param':
-                    self.set_parameter(self.iter_list[iter_no].elem, value)
+                    self.netlist.set_parameter(self.iter_list[iter_no].elem, value)
                 elif self.iter_list[iter_no].what == 'component':
-                    self.set_component_value(self.iter_list[iter_no].elem, value)
+                    self.netlist.set_component_value(self.iter_list[iter_no].elem, value)
                 elif self.iter_list[iter_no].what == 'model':
-                    self.set_element_model(self.iter_list[iter_no].elem, value)
+                    self.netlist.set_element_model(self.iter_list[iter_no].elem, value)
                 else:
                     # TODO: develop other types of sweeps EX: add .STEP instruction
                     raise ValueError("Not Supported sweep")
                 iter_no += 1
             if iter_no < 0:
                 break
-            # TODO: Implement the renaming Mask, so the output filename is written according to user instructions
-            SimCommander.run(self, callback=callback)  # Like this a recursion is avoided
+            self.runner.run(self.netlist, callback=callback)  # Like this a recursion is avoided
             iter_no = len(self.iter_list) - 1  # Resets the counter to start next iteration
         # Now waits for the simulations to end
-        self.wait_completion()
+        self.runner.wait_completion()
 
     def run(self):
         """Rather uses run_all instead"""
         self.run_all()
 
+    @property
+    def okSim(self):
+        return self.runner.okSim
+
+    @property
+    def runno(self):
+        return self.runner.runno
+
 
 if __name__ == "__main__":
-    from PyLTSpice.sweep_iterators import *
+    from PyLTSpice.utils.sweep_iterators import *
 
-    test = SimStepper("..\\tests\\DC sweep.asc")
+    test = SimStepper("../../tests/DC sweep.asc")
     test.verbose = True
+    test.set_parameter('R1', 3)
     test.add_param_sweep("res", [10, 11, 9])
     test.add_value_sweep("R1", sweep_log(0.1, 10))
-    test.add_model_sweep("D1", ("model1", "model2"))
+    # test.add_model_sweep("D1", ("model1", "model2"))
     test.run_all()
-
+    print("Finished")
+    exit(0)

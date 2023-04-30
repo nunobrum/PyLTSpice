@@ -9,28 +9,28 @@
 #   |_|    \__, |_____|_| |____/| .__/|_|\___\___|
 #          |___/                |_|
 #
-# Name:        SpiceEditor.py
+# Name:        spice_editor.py
 # Purpose:     Class made to update Generic Spice Netlists
 #
 # Author:      Nuno Brum (nuno.brum@gmail.com)
 #
-# Created:     30-08-2020
 # Licence:     refer to the LICENSE file
 # -------------------------------------------------------------------------------
 import os
+from pathlib import Path
 import traceback
 import re
 import logging
 from math import log, floor
-from typing import Union, Optional, List
-from .detect_encoding import detect_encoding
+from typing import Union, List, Callable, Any
+from ..utils.detect_encoding import detect_encoding
 
 __author__ = "Nuno Canto Brum <nuno.brum@gmail.com>"
 __copyright__ = "Copyright 2021, Fribourg Switzerland"
 
 END_LINE_TERM = '\n'  #: This controls the end of line terminator used
 SUBCIRCUIT_DIVIDER = ':'  #: This controls the Subcircuit divider when setting component values inside subcircuits.
-                          # Ex: Editor.set_component
+                          # Ex: Editor.set_component_value('XU1:R1', '1k')
 
 # A Spice netlist can only have one of the instructions below, otherwise an error will be raised
 UNIQUE_SIMULATION_DOT_INSTRUCTIONS = ('.AC', '.DC', '.TRAN', '.NOISE', '.DC', '.TF')
@@ -97,6 +97,7 @@ REPLACE_REGXES = {
     'X': r"^(?P<designator>X§?\w+)(?P<nodes>(\s+\S+){1,99}?)\s+(?P<value>\w+)(\s+params:)?(?P<params>(\s+\w+\s*=\s*[\d\w\{\}\(\)\-\+\*/]+)*)\s*\\?$",  # Sub-circuit, Parameter substitution not supported
     'Z': r"^(?P<designator>Z§?\w+)(?P<nodes>(\s+\S+){3})\s+(?P<value>\w+).*$",  # MESFET and IBGT. TODO: Parameters substitution not supported
     '@': r"^(?P<designator>@§?\d+)(?P<nodes>(\s+\S+){2})\s?(?P<params>(.*)*)$",  # Frequency Noise Analysis (FRA) wiggler
+    # pattern = r'^@(\d+)\s+(\w+)\s+(\w+)(?:\s+delay=(\d+\w+))?(?:\s+fstart=(\d+\w+))?(?:\s+fend=(\d+\w+))?(?:\s+oct=(\d+))?(?:\s+fcoarse=(\d+\w+))?(?:\s+nmax=(\d+\w+))?\s+(\d+)\s+(\d+\w+)\s+(\d+)(?:\s+pp0=(\d+\.\d+))?(?:\s+pp1=(\d+\.\d+))?(?:\s+f0=(\d+\w+))?(?:\s+f1=(\d+\w+))?(?:\s+tavgmin=(\d+\w+))?(?:\s+tsettle=(\d+\w+))?(?:\s+acmag=(\d+))?$'
 }
 
 
@@ -263,14 +264,18 @@ class MissingExpectedClauseError(Exception):
     """Missing expected clause in Spice netlist"""
 
 
+
 class SpiceCircuit(object):
     """
     The Spice Circuit represents subcircuits within a SPICE circuit and since subcircuits can have subcircuits inside
-    them, it serves as base for the top level netlist.
-    This hierchical approach helps to encapsulate and protect parameters and components from a edits made a a higher
+    them, it serves as base for the top level netlist. See class SpiceEditor
+    This hierarchical approach helps to encapsulate and protect parameters and components from edits made at a higher
     level.
-    The information is stored in a python list, each line of the SPICE netlist is an item of the list. A Subcircuit
-    is represented as a SpiceCircuit object.
+
+    The netlist information is stored in a list, each element of the list corresponds to a SPICE instruction.
+    If an instruction spawns more than a line with the '+' operator, it is contained in the same element.
+
+    This class serves as subclass to the SpiceEditor class.
     """
 
     def __init__(self):
@@ -345,7 +350,7 @@ class SpiceCircuit(object):
             line_no += 1
         return -1, None  # If it fails, it returns an invalid line number and No match
 
-    def _get_subcircuit(self, instance_name: str) -> 'SubCircuit':
+    def _get_subcircuit(self, instance_name: str) -> 'SpiceCircuit':
         """Internal function. Do not use."""
         global LibSearchPaths
         if SUBCIRCUIT_DIVIDER in instance_name:
@@ -409,7 +414,6 @@ class SpiceCircuit(object):
             # The search was not successful
             raise ComponentNotFoundError(f'Subcircuit "{subcircuit_name}" not found')
 
-
     def _set_model_and_value(self, component, value):
         """Internal function. Do not use."""
         prefix = component[0]  # Using the first letter of the component to identify what is it
@@ -453,7 +457,12 @@ class SpiceCircuit(object):
             clone.setname(new_name)
         return clone
 
-    def name(self):
+    def name(self) -> str:
+        """
+        Returns the name of the Sub-Circuit -> str.
+
+        :rtype: str
+        """
         if len(self.netlist):
             for line in self.netlist:
                 m = subcircuit_regex.search(line)
@@ -530,7 +539,7 @@ class SpiceCircuit(object):
         if m is None:
             error_msg = 'Unsupported line "{}"\nExpected format is "{}"'.format(line, REPLACE_REGXES[prefix])
             self.logger.error(error_msg)
-            raise UnrecognizedSyntaxError(REPLACE_REGXES[prefix], line)
+            raise UnrecognizedSyntaxError(line, REPLACE_REGXES[prefix])
 
         info = m.groupdict()
         info['line'] = line_no  # adding the line number to the component information
@@ -810,18 +819,23 @@ class SpiceEditor(SpiceCircuit):
     This class implements interfaces to manipulate SPICE netlist files. The class doesn't update the netlist file
     itself. After implementing the modifications the user should call the "write_netlist" method to write a new
     netlist file.
+
     :param netlist_file: Name of the .NET file to parse
-    :type netlist_file: str
+    :type netlist_file: str or Path
     :param encoding: Forcing the encoding to be used on the circuit netlile read. Defaults to 'autodetect' which will
-    call a function that tries to detect the encoding automatically. This however is not 100% fool proof.
+        call a function that tries to detect the encoding automatically. This however is not 100% fool proof.
     :type encoding: str, optional
     """
-    def __init__(self, netlist_file, encoding='autodetect'):
+    def __init__(self, netlist_file: Union[str, Path], encoding='autodetect'):
         super().__init__()
-        self.netlist_file = netlist_file
+        self.netlist_file = Path(netlist_file)
+        if self.netlist_file.suffix == '.asc':
+            from .ltspice_simulator import LTspice
+
+            self.netlist_file = LTspice.create_netlist(self.netlist_file)
         self.modified_subcircuits = {}
         if encoding == 'autodetect':
-            self.encoding = detect_encoding(netlist_file, '*')  # Normally the file will start with a '*'
+            self.encoding = detect_encoding(self.netlist_file, '*')  # Normally the file will start with a '*'
         else:
             self.encoding = encoding
         self.reset_netlist()
@@ -892,7 +906,7 @@ class SpiceEditor(SpiceCircuit):
                 line = len(self.netlist) - 2  # This is where typically the .backanno instruction is
             self.netlist.insert(line, instruction)
 
-    def add_instructions(self, *instructions)->None:
+    def add_instructions(self, *instructions) -> None:
         """Adds a list of instructions to the SPICE NETLIST.
         Example:
         ::
@@ -903,7 +917,7 @@ class SpiceEditor(SpiceCircuit):
             )
 
         :param instructions: Argument list of instructions to add
-        :type instructions: list
+        :type instructions: argument list
         :returns: Nothing
         """
         for instruction in instructions:
@@ -915,12 +929,15 @@ class SpiceEditor(SpiceCircuit):
 
             LTC.remove_instruction(".STEP run -1 1023 1")
 
-        :param instructions The list of instructions to remove. Each instruction is of the type 'str'
+        This only works if the instruction exactly matches the line on the netlist. This means that space characters,
+        and upper case and lower case differences will not match the line.
+
+        :param instruction: The list of instructions to remove. Each instruction is of the type 'str'
         :type instruction: str
         :returns: Nothing
-        TODO: This only works with a full line instruction. Make it more inteligent so it recognizes .models, .param
-        and .subckt
         """
+        # TODO: Make it more inteligent so it recognizes .models, .param
+        #  and .subckt
         # Because the netlist is stored containing the end of line terminations and because they are added when they
         # they are added to the netlist.
         if not instruction.endswith(END_LINE_TERM):
@@ -928,26 +945,26 @@ class SpiceEditor(SpiceCircuit):
 
         self.netlist.remove(instruction)
 
-    def write_netlist(self, run_netlist_file: str)->None:
+    def write_netlist(self, run_netlist_file: 'Path') -> None:
         """
         Writes the netlist will all the requested updates into a file named <run_netlist_file>.
+
         :param run_netlist_file: File name of the netlist file.
-        :type run_netlist_file: str
-        :return Nothing
+        :type run_netlist_file: Path
+        :returns: Nothing
         """
-        f = open(run_netlist_file, 'w', encoding=self.encoding)
-        lines = iter(self.netlist)
-        for line in lines:
-            if isinstance(line, SpiceCircuit):
-                line._write_lines(f)
-            else:
-                # Writes the modified subcircuits at the end just before the .END clause
-                if line.upper().startswith(".END"):
-                    # write here the modified subcircuits
-                    for sub in self.modified_subcircuits.values():
-                        sub._write_lines(f)
-                f.write(line)
-        f.close()
+        with run_netlist_file.open('w', encoding=self.encoding) as f:
+            lines = iter(self.netlist)
+            for line in lines:
+                if isinstance(line, SpiceCircuit):
+                    line._write_lines(f)
+                else:
+                    # Writes the modified subcircuits at the end just before the .END clause
+                    if line.upper().startswith(".END"):
+                        # write here the modified subcircuits
+                        for sub in self.modified_subcircuits.values():
+                            sub._write_lines(f)
+                    f.write(line)
 
     def reset_netlist(self) -> None:
         """
@@ -957,8 +974,8 @@ class SpiceEditor(SpiceCircuit):
         """
         self.netlist.clear()
         self.modified_subcircuits.clear()
-        if os.path.exists(self.netlist_file):
-            with open(self.netlist_file, 'r', encoding=self.encoding, errors='replace') as f:
+        if self.netlist_file.exists():
+            with self.netlist_file.open('r', encoding=self.encoding, errors='replace') as f:
                 lines = iter(f)  # Creates an iterator object to consume the file
                 finished = self._add_lines(lines)
                 if not finished:
@@ -970,13 +987,16 @@ class SpiceEditor(SpiceCircuit):
             self.logger.error("Netlist file not found")
 
     @staticmethod
-    def find_subckt_in_lib(library, subckt_name) -> 'SpiceEditor':
+    def find_subckt_in_lib(library, subckt_name) -> Union['SpiceCircuit', None]:
         """
-        Finds returns a Subckt from a library file
+        Finds returns a Subckt from a library file.
 
         :param library: path to the library to search
         :type library: str
         :param subckt_name: Subcircuit to search for
+        :type subckt_name: str
+        :return: Returns a SpiceCircuit instance with the subcircuit found or None if not found
+        :rtype: SpiceCircuit
         """
         # 0. Setup things
         reg_subckt = re.compile(SUBCKT_CLAUSE_FIND + subckt_name, re.IGNORECASE)
@@ -993,8 +1013,20 @@ class SpiceEditor(SpiceCircuit):
                     finished = sub_circuit._add_lines(lib)
                     if finished:
                         return sub_circuit
-        #  3. Return an instance of SpiceEditor
+        #  3. Return an instance of SpiceCircuit
         return None
+
+    def run(self, wait_resource: bool = True,
+            callback: Callable[[str, str], Any] = None, timeout: float = 600, run_filename: str = None, simulator=None):
+        """
+        *(Deprecated)*
+
+        Convenience function for maintaining legacy with legacy code.
+        """
+        from .sim_runner import SimRunner
+        Sim = SimRunner()
+        return Sim.run(self, wait_resource=wait_resource, callback=callback, timeout=timeout, run_filename=run_filename)
+
 
 if __name__ == '__main__':
     E = SpiceEditor(os.path.abspath('..\\tests\\PI_Filter_resampled.net'))

@@ -17,7 +17,9 @@
 # Created:     19-06-2022
 # Licence:     refer to the LICENSE file
 # -------------------------------------------------------------------------------
-
+"""
+Defines base classes for the RAW file data structures.
+"""
 import numpy as np
 from numpy import zeros, complex128, float32, float64
 from binascii import b2a_hex
@@ -26,7 +28,7 @@ from typing import Union, List
 
 class DataSet(object):
     """
-    This is the base class for storing all traces inside of a RAW file. Returned by the get_trace() or by the get_axis()
+    This is the base class for storing all traces of a RAW file. Returned by the get_trace() or by the get_axis()
     methods.
     Normally the user doesn't have to be aware of this class. It is only used internally to encapsulate the different
     implementations of the wave population.
@@ -64,10 +66,16 @@ class DataSet(object):
     def __len__(self):
         return len(self.data)
 
-    def get_wave(self):
+    def __iter__(self):
+        return iter(self.data)
+
+    def __getitem__(self, item):
+        return self.data[item]
+
+    def get_wave(self) -> np.array:
         """
         :return: Internal data array
-        :rtype: list or numpy.array
+        :rtype: numpy.array
         """
         return self.data
 
@@ -106,7 +114,7 @@ class Axis(DataSet):
 
         if k != len(self.step_info):
             raise SpiceReadException("The file a different number of steps than expected.\n" +
-                                       "Expecting %d got %d" % (len(self.step_offsets), k))
+                                     "Expecting %d got %d" % (len(self.step_offsets), k))
 
     def step_offset(self, step: int):
         """
@@ -129,9 +137,9 @@ class Axis(DataSet):
             else:
                 return self.step_offsets[step]
 
-    def get_wave(self, step: int = 0):
+    def get_wave(self, step: int = 0) -> np.array:
         """
-        Returns an the vector containing the wave values. If numpy is installed, data is returned as a numpy array.
+        Returns a vector containing the wave values. If numpy is installed, data is returned as a numpy array.
         If not, the wave is returned as a list of floats.
 
         If stepped data is present in the array, the user should specify which step is to be returned. Failing to do so,
@@ -140,18 +148,21 @@ class Axis(DataSet):
         :param step: Optional step in stepped data raw files.
         :type step: int
         :return: The trace values
-        :rtype: list[float] or numpy.array
+        :rtype: numpy.array
         """
-        # print(self.data)
-        # print('step offset %d' % self.step_offset(step))
-        # print(self.data[self.step_offset(step):self.step_offset(step + 1)])
         if step == 0:
-            return self.data[:self.step_offset(1)]
+            wave = self.data[:self.step_offset(1)]
         else:
-            return self.data[self.step_offset(step):self.step_offset(step + 1)]
+            wave = self.data[self.step_offset(step):self.step_offset(step + 1)]
+        if self.name == 'time':  # This is a bug in LTSpice, where the time axis values are sometimes negative
+            return np.abs(wave)
+        else:
+            return wave
 
     def get_time_axis(self, step: int = 0):
         """
+        **Deprecated**. Use get_wave() instead.
+
         Returns the time axis raw data. Please note that the time axis may not have a constant time step. LTSpice will
         increase the time-step in simulation phases where there aren't value changes, and decrease time step in
         the parts where more time accuracy is needed.
@@ -159,13 +170,13 @@ class Axis(DataSet):
         :param step: Optional step number if reading a raw file with stepped data.
         :type step: int
         :return: time axis
-        :rtype: list[float] or numpy.array
+        :rtype: numpy.array
         """
         assert self.name == 'time', \
             "This function is only applicable to transient analysis, where a bug exists on the time signal"
-        return np.abs(self.get_wave(step))
+        return self.get_wave(step)
 
-    def get_point(self, n, step: int = 0):
+    def get_point(self, n, step: int = 0) -> Union[float, complex]:
         """
         Get a point from the dataset
         :param n: position on the vector
@@ -177,9 +188,9 @@ class Axis(DataSet):
         """
         return self.data[n + self.step_offset(step)]
 
-    def __getitem__(self, item):
+    def __getitem__(self, item) -> Union[float, complex]:
         """This is only here for compatibility with previous code. """
-        assert self.step_info is None, "Indexing should not be used with stepped data. Use get_point"
+        assert self.step_info is None, "Indexing should not be used with stepped data. Use get_point or get_wave"
         return self.data.__getitem__(item)
 
     def get_position(self, t, step: int = 0) -> Union[int, float]:
@@ -226,8 +237,12 @@ class Axis(DataSet):
         else:
             return self.get_len()
 
+    def __iter__(self):
+        assert self.step_info is None, "Iteration can't be used with stepped data. Use get_wave() method."
+        return self.data.__iter__()
 
-class Trace(DataSet):
+
+class TraceRead(DataSet):
     """This class is used to represent a trace. It derives from DataSet and implements the additional methods to
     support STEPed simulations.
     This class is constructed by the get_trace() command.
@@ -239,7 +254,7 @@ class Trace(DataSet):
         super().__init__(name, whattype, datalen, numerical_type)
         self.axis = axis
 
-    def get_point(self, n: int, step: int = 0):
+    def get_point(self, n: int, step: int = 0) -> Union[float, complex]:
         """
         Implementation of the [] operator.
 
@@ -258,13 +273,13 @@ class Trace(DataSet):
         else:
             return self.data[self.axis.step_offset(step) + n]
 
-    def __getitem__(self, item):
+    def __getitem__(self, item) -> Union[float, complex]:
         """This is only here for compatibility with previous code. """
         assert self.axis is None or self.axis.step_info is None, \
             "Indexing should not be used with stepped data. Use get_point() method"
         return self.data.__getitem__(item)
 
-    def get_wave(self, step: int = 0):
+    def get_wave(self, step: int = 0) -> np.array:
         """
         Returns the data contained in this object. For stepped simulations an argument must be passed specifying the
         step number. If no steps exist, the argument must be left blank.
@@ -275,7 +290,7 @@ class Trace(DataSet):
         :param step: To be used when stepped data exist on the RAW file.
         :type step: int
         :return: a List or numpy array (if installed) containing the data contained in this object.
-        :rtype: list or numpy.array
+        :rtype: numpy.array
         """
         # print('step size %d' % step)
         # print(self.data[self.axis.step_offset(step):self.axis.step_offset(step + 1)])
@@ -287,7 +302,7 @@ class Trace(DataSet):
             else:
                 return self.data[self.axis.step_offset(step):self.axis.step_offset(step + 1)]
 
-    def get_point_at(self, t, step: int = 0):
+    def get_point_at(self, t, step: int = 0) -> Union[float, complex]:
         """
         Get a point from the trace at the point specified by the /t/ argument.
         If the point doesn't exist on the axis, the data is interpolated using a linear regression between the two
@@ -323,7 +338,10 @@ class Trace(DataSet):
         return self.axis.step_offset(step + 1)
 
     def __len__(self):
-        """This is only here for compatibility with previous code. """
+        """
+        **Deprecated**
+        This is only here for compatibility with previous code.
+        """
         assert self.axis is None or self.axis.step_info is None, \
             "len() should not be used with stepped data. Use get_len() method passing the step index"
         return len(self.data)
@@ -341,3 +359,4 @@ class DummyTrace(object):
 
 class SpiceReadException(Exception):
     """Custom class for exception handling"""
+    ...

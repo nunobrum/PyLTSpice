@@ -6,7 +6,7 @@ Created on Wed Jul 24 14:39:01 2019
 """
 
 import matplotlib.pyplot as plt
-from PyLTSpice.raw_read import RawRead
+from PyLTSpice import RawRead
 
 test_directory = "C:/Users/Bruce Banner/Documents/GitHub/ADC_experiments/ideal_sims/"
 filename = 'dyn_comparator.raw'
