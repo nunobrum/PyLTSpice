@@ -269,6 +269,8 @@ documentation is directly included in the source file docstrings.
 * Alternative contact : nuno.brum@gmail.com
 
 ## History ##
+* Version 4.0.1\
+  Bug fix on CLI for the Histogram.py and LTSteps.py
 
 * Version 4.0.0\
   Separating the SimCommander into two separate classes, one for the spice netlist editing (SpiceEditor) and another for

@@ -133,7 +133,7 @@ class RawWrite(object):
                 raise ValueError("First Trace needs to be either 'time', 'frequency', 'param', 'voltage' or '...'")
 
             if self.flag_numtype == 'auto':
-                self.plot_name = flag_numtype
+                self.flag_numtype = flag_numtype
         else:
             if len(self._traces[0]) != len(trace):
                 raise IndexError("The trace needs to be the same size as trace 0")

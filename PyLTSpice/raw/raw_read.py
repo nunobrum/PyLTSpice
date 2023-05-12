@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # coding=utf-8
 
 # -------------------------------------------------------------------------------
@@ -794,6 +793,7 @@ class RawRead(object):
     def to_dataframe(self, columns: list = None, step: Union[int, List[int]] = -1, **kwargs):
         """
         Returns a pandas DataFrame with the requested data.
+
         :param step: Step number to retrieve. If not given, it
         :type step: int
         :param columns: List of traces to use as columns. Default is all traces
@@ -815,6 +815,7 @@ class RawRead(object):
                separator=',', **kwargs):
         """
         Saves the data to a CSV file.
+
         :param filename: Name of the file to save the data to
         :type filename: str
         :param columns: List of traces to use as columns. Default is all traces
@@ -868,120 +869,3 @@ class RawRead(object):
 
 # Backward compatibility naming
 LTSpiceRawRead = RawRead
-
-
-def main():
-    """Uses matplotlib to plot the data in the raw file"""
-    import sys
-    import matplotlib.pyplot as plt
-    import os
-    from os.path import split as path_split
-    from os.path import join as path_join
-    from numpy import abs as mag
-
-    def what_to_units(whattype):
-        """Determines the unit to display on the plot Y axis"""
-        if 'voltage' in whattype:
-            return 'V'
-        if 'current' in whattype:
-            return 'A'
-
-    directory = os.getcwd()
-
-    if len(sys.argv) > 1:
-        raw_filename = sys.argv[1]
-        trace_names = sys.argv[2:]
-        if len(trace_names) == 0:
-            trace_names = '*'
-    else:
-        test_directory = path_join(path_split(directory)[0], 'tests')
-        filename = 'DC sweep.raw'
-        # filename = 'tran.raw'
-        # filename = 'tran - step.raw'
-        # filename = 'ac.raw'
-        # filename = 'AC - STEP.raw'
-        # filename = 'PI_Filter_tf.raw'
-        # filename = 'DC op point - STEP_1.raw'
-        # filename = 'Noise.raw'
-        filename = "test2_gs_000.raw"
-        trace_names = ("run", "V(out)", "V(err)")
-        # trace_names = '*' # 'V(out)',
-        raw_filename = path_join(test_directory, filename)
-
-    LTR = RawRead(raw_filename, trace_names, verbose=True)
-    for param, value in LTR.raw_params.items():
-        print("{}: {}{}".format(param, " " * (20 - len(param)), str(value).strip()))
-
-    if trace_names == '*':
-        print("Reading all the traces in the raw file")
-        trace_names = LTR.get_trace_names()
-
-    traces = [LTR.get_trace(trace) for trace in trace_names]
-    if LTR.axis is not None:
-        steps_data = LTR.get_steps()
-    else:
-        steps_data = [0]
-    print("Steps read are :", list(steps_data))
-
-    if 'complex' in LTR.flags:
-        n_axis = len(traces) * 2
-    else:
-        n_axis = len(traces)
-
-    fig, axis_set = plt.subplots(n_axis, 1, sharex='all')
-    write_labels = True
-
-    for i, trace in enumerate(traces):
-        if 'complex' in LTR.flags:
-            axis_set = axis_set[2 * i: 2 * i + 2]  # Returns two axis
-        else:
-            if n_axis == 1:
-                axis_set = [axis_set]  # Needs to return a list
-            else:
-                axis_set = axis_set[i:i + 1]  # Returns just one axis but enclosed in a list
-        magnitude = True
-        for ax in axis_set:
-            ax.grid(True)
-            if 'log' in LTR.flags:
-                ax.set_xscale('log')
-            for step_i in steps_data:
-                if LTR.axis:
-                    x = LTR.get_axis(step_i)
-                else:
-                    x = np.arange(LTR.nPoints)
-                y = traces[i].get_wave(step_i)
-                if 'complex' in LTR.flags:
-                    x = mag(x)
-                    if magnitude:
-                        ax.set_yscale('log')
-                        y = mag(y)
-                    else:
-                        y = angle(y, deg=True)
-                if write_labels:
-                    ax.plot(x, y, label=str(steps_data[step_i]))
-                else:
-                    ax.plot(x, y)
-            write_labels = False
-
-            if 'complex' in LTR.flags:
-                if magnitude:
-                    title = f"{trace.name} Mag [db{what_to_units(trace.whattype)}]"
-                    magnitude = False
-                else:
-                    title = f"{trace.name} Phase [deg]"
-            else:
-                title = f"{trace.name} [{what_to_units(trace.whattype)}]"
-            ax.set_title(title)
-
-    plt.figlegend()
-    plt.show()
-'''
-'''
-# out = open("RAW_TEST_out_test1.txt", 'w')
-#
-# for step in LTR.get_steps():
-#     for x in range(len(LTR[0].data)):
-#         out.write("%s, %e, %e\n" % (step, LTR[0].data[x], LTR[2].data[x]))
-# out.close()
-if __name__ == "__main__":
-    main()
