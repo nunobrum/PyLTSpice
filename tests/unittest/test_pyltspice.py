@@ -68,7 +68,6 @@ print("test_dir", test_dir)
 # if has_ltspice:
 #    os.chdir(os.path.abspath((os.path.dirname(os.path.abspath(__file__)))))
 
-
 class test_pyltspice(unittest.TestCase):
     """Unnittesting PyLTSpice"""
     # *****************************
