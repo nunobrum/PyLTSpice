@@ -82,68 +82,77 @@ If `<path_to_filename>` argument is ommited, the script will automatically searc
 and use it.
 
 """
+__author__ = "Nuno Canto Brum <me@nunobrum.com>"
+__copyright__ = "Copyright 2023, Fribourg Switzerland"
 import os
 import sys
 
-from .log.ltsteps import *
+from PyLTSpice.log.ltsteps import *
 
 
-def valid_extension(filename):
-    return filename.endswith('.txt') or filename.endswith('.log') or filename.endswith('.mout')
+def main():
+    """
+    Main function for the LTSteps.py script
+    """
 
+    def valid_extension(filename):
+        """A simple function to check if the filename has a valid extension"""
+        return filename.endswith('.txt') or filename.endswith('.log') or filename.endswith('.mout')
 
-if len(sys.argv) > 1:
-    filename = sys.argv[1]
-    if not valid_extension(filename):
-        print("Invalid extension in filename '%s'" % filename)
+    if len(sys.argv) > 1:
+        filename = sys.argv[1]
+        if not valid_extension(filename):
+            print("Invalid extension in filename '%s'" % filename)
+            print("This tool only supports the following extensions :'.txt','.log','.mout'")
+            exit(-1)
+    else:
+        filename = None
+        newer_date = 0
+        for f in os.listdir():
+            date = os.path.getmtime(f)
+            if date > newer_date and valid_extension(f):
+                newer_date = date
+                filename = f
+    if filename is None:
+        print("File not found")
         print("This tool only supports the following extensions :'.txt','.log','.mout'")
         exit(-1)
-else:
-    filename = None
-    newer_date = 0
-    for f in os.listdir():
-        date = os.path.getmtime(f)
-        if date > newer_date and valid_extension(f):
-            newer_date = date
-            filename = f
-if filename is None:
-    print("File not found")
-    print("This tool only supports the following extensions :'.txt','.log','.mout'")
-    exit(-1)
 
-fname_out = None
-if filename.endswith('.txt'):
-    fname_out = filename[:-len('txt')] + 'tsv'
-elif filename.endswith('.log'):
-    fname_out = filename[:-len('log')] + 'tlog'
-elif filename.endswith('.mout'):
-    fname_out = filename[:-len('mout')] + 'tmout'
-else:
-    print("Error in file type")
-    print("This tool only supports the following extensions :'.txt','.log','.mout'")
-    exit(-1)
+    fname_out = None
+    if filename.endswith('.txt'):
+        fname_out = filename[:-len('txt')] + 'tsv'
+    elif filename.endswith('.log'):
+        fname_out = filename[:-len('log')] + 'tlog'
+    elif filename.endswith('.mout'):
+        fname_out = filename[:-len('mout')] + 'tmout'
+    else:
+        print("Error in file type")
+        print("This tool only supports the following extensions :'.txt','.log','.mout'")
+        exit(-1)
 
-if fname_out is not None:
-    print("Processing File %s" % filename)
-    print("Creating File %s" % fname_out)
-    if filename.endswith('txt'):
-        print("Processing Data File")
-        reformat_LTSpice_export(filename, fname_out)
-    elif filename.endswith("log"):
-        data = LTSpiceLogReader(filename)
-        data.split_complex_values_on_datasets()
-        data.export_data(fname_out)
-    elif filename.endswith(".mout"):
-        log_file = filename[:len('mout')] + 'log'
-        if os.path.exists(log_file):
-            steps = LTSpiceLogReader(log_file, read_measures=False)
-            data = LTSpiceLogReader(filename, step_set=steps.stepset)
-            data.stepset = steps.stepset
-        else:
-            # just reformats
+    if fname_out is not None:
+        print("Processing File %s" % filename)
+        print("Creating File %s" % fname_out)
+        if filename.endswith('txt'):
+            print("Processing Data File")
+            reformat_LTSpice_export(filename, fname_out)
+        elif filename.endswith("log"):
             data = LTSpiceLogReader(filename)
-        data.split_complex_values_on_datasets()
-        data.export_data(fname_out)
-        data.export_data(fname_out)
+            data.split_complex_values_on_datasets()
+            data.export_data(fname_out)
+        elif filename.endswith(".mout"):
+            log_file = filename[:len('mout')] + 'log'
+            if os.path.exists(log_file):
+                steps = LTSpiceLogReader(log_file, read_measures=False)
+                data = LTSpiceLogReader(filename, step_set=steps.stepset)
+                data.stepset = steps.stepset
+            else:
+                # just reformats
+                data = LTSpiceLogReader(filename)
+            data.split_complex_values_on_datasets()
+            data.export_data(fname_out)
+            data.export_data(fname_out)
 
-# input("Press Enter to Continue")
+    # input("Press Enter to Continue")
+
+main()

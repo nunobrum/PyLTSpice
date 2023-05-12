@@ -6,7 +6,7 @@ requires = [
 build-backend = "setuptools.build_meta"
 [project]
 name = "PyLTSpice"
-version = "4.0"
+version = "4.0.1"
 authors = [
   { name="Nuno Brum", email="me@nunobrum.com" },
 ]
@@ -15,7 +15,7 @@ readme = "README.md"
 license = { file="LICENSE" }
 requires-python = ">=3.7"
 dependencies = [
-    "numpy",
+    "numpy==1.21",
     "psutil",
     "clipboard",
     "matplotlib"
@@ -28,16 +28,16 @@ classifiers=[
 
 [tool.setuptools.packages.find]
 # All the following settings are optional:
-where = ["PyLTSpice"]  # ["."] by default
+where = ["."]  # ["."] by default
 include = ["*"]  # ["*"] by default
 exclude = ["tests"]  # empty by default
 namespaces = true  # true by default
 
 
 [project.scripts]
-ltsteps = "PyLTSpice.ltsteps"
-histogram = "PyLTSpice.Histogram"
-rawplot = "PyLTSpice.raw.rawread:main"
+ltsteps = "PyLTSpice.LTSteps:main"
+histogram = "PyLTSpice.Histogram:main"
+rawplot = "PyLTSpice.rawplot:main"
 rawconvert = "PyLTSpice.raw.raw_convert:main"
 
 [project.urls]

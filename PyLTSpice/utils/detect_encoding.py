@@ -25,6 +25,12 @@ for the time being a reduced set of encodings.
 from pathlib import Path
 from typing import Union
 
+class EncodingDetectError(Exception):
+    """
+    Exception raised when the encoding of a file cannot be detected
+    """
+    pass
+
 
 def detect_encoding(file_path: Union[str, Path], expected_str: str = '') -> str:
     """
@@ -48,6 +54,9 @@ def detect_encoding(file_path: Union[str, Path], expected_str: str = '') -> str:
             # This encoding didn't work, let's try again
             continue
         else:
+            if len(lines) == 0:
+                # Empty file
+                continue
             if expected_str:
                 if not lines[0].startswith(expected_str):
                     # File did not start with expected string
@@ -58,6 +67,6 @@ def detect_encoding(file_path: Union[str, Path], expected_str: str = '') -> str:
             return encoding
     else:
         if expected_str:
-            raise UnicodeError(f"Expected string \"{expected_str}\" not found in file:{file_path}")
+            raise EncodingDetectError(f"Expected string \"{expected_str}\" not found in file:{file_path}")
         else:
-            raise UnicodeError(f"Unable to detect log file encoding")
+            raise EncodingDetectError(f"Unable to detect encoding on log file: {file_path}")
