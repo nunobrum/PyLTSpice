@@ -6,7 +6,7 @@ requires = [
 build-backend = "setuptools.build_meta"
 [project]
 name = "PyLTSpice"
-version = "4.0.1"
+version = "4.0.2"
 authors = [
   { name="Nuno Brum", email="me@nunobrum.com" },
 ]
@@ -15,7 +15,8 @@ readme = "README.md"
 license = { file="LICENSE" }
 requires-python = ">=3.7"
 dependencies = [
-    "numpy==1.21",
+    "numpy",
+    "scipy",
     "psutil",
     "clipboard",
     "matplotlib"

@@ -269,6 +269,9 @@ documentation is directly included in the source file docstrings.
 * Alternative contact : nuno.brum@gmail.com
 
 ## History ##
+* Version 4.0.2\
+  Changing list of Library dependencies.
+
 * Version 4.0.1\
   Bug fix on CLI for the Histogram.py and LTSteps.py
 
