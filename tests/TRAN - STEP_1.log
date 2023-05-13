@@ -1,4 +1,4 @@
-Circuit: * C:\sandbox\PySpice\tests\TRAN - STEP.asc
+Circuit: * C:\sandbox\PyLTSpice_GitHub_nunobrum\tests\TRAN - STEP.asc
 
 .OP point found by inspection.
 .step vin=1 r1=1000

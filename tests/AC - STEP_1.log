@@ -1,4 +1,4 @@
-Circuit: * C:\sandbox\PySpice\tests\AC - STEP.asc
+Circuit: * C:\sandbox\PyLTSpice_GitHub_nunobrum\tests\AC - STEP.asc
 
 .OP point found by inspection.
 .step r1=1000
