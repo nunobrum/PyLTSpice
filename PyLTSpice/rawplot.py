@@ -26,11 +26,12 @@ from PyLTSpice import RawRead
 def main():
     """Uses matplotlib to plot the data in the raw file"""
     import sys
+    import matplotlib
     import matplotlib.pyplot as plt
     import os
     from os.path import split as path_split
     from os.path import join as path_join
-    from numpy import abs as mag
+    from numpy import abs as mag, angle as phase_np
 
     def what_to_units(whattype):
         """Determines the unit to display on the plot Y axis"""
@@ -40,10 +41,14 @@ def main():
             return 'A'
 
     directory = os.getcwd()
+    matplotlib.use('wxagg')
 
     if len(sys.argv) > 2:
         raw_filename = sys.argv[1]
         trace_names = sys.argv[2:]
+    elif len(sys.argv) > 1:
+        raw_filename = sys.argv[1]
+        trace_names = '*'  # All traces
     else:
         print("Usage: rawplot.py RAW_FILE TRACE_NAME")
         print("TRACE_NAME is the traces to plot")
@@ -64,57 +69,46 @@ def main():
         steps_data = [0]
     print("Steps read are :", list(steps_data))
 
-    if 'complex' in LTR.flags:
-        n_axis = len(traces) * 2
-    else:
-        n_axis = len(traces)
+    n_axis = len(traces)
 
     fig, axis_set = plt.subplots(nrows=n_axis, ncols=1, sharex='all')
-    write_labels = True
+
+    if n_axis == 1:
+        axis_set = [axis_set]  # Needs to have a list of axis
 
     for i, trace in enumerate(traces):
-        if 'complex' in LTR.flags:
-            axis_set = axis_set[2 * i: 2 * i + 2]  # Returns two axis
-        else:
-            if n_axis == 1:
-                axis_set = [axis_set]  # Needs to return a list
-            else:
-                axis_set = axis_set[i:i + 1]  # Returns just one axis but enclosed in a list
-        magnitude = True
-        for ax in axis_set:
-            ax.grid(True)
-            if 'log' in LTR.flags:
-                ax.set_xscale('log')
-            for step_i in steps_data:
-                if LTR.axis:
-                    x = LTR.get_axis(step_i)
-                else:
-                    x = arange(LTR.nPoints)
-                y = traces[i].get_wave(step_i)
-                if 'complex' in LTR.flags:
-                    x = mag(x)
-                    if magnitude:
-                        ax.set_yscale('log')
-                        y = mag(y)
-                    else:
-                        y = angle(y, deg=True)
-                if write_labels:
-                    ax.plot(x, y, label=str(steps_data[step_i]))
-                else:
-                    ax.plot(x, y)
-            write_labels = False
+        ax = axis_set[i]
 
+        ax.grid(True)
+        if 'log' in LTR.flags:
+            ax.set_xscale('log')
+        for step_i in steps_data:
+            if LTR.axis:
+                x = LTR.get_axis(step_i)
+            else:
+                x = arange(LTR.nPoints)
+            y = traces[i].get_wave(step_i)
+            label = f"{trace.name}:{steps_data[step_i]})"
             if 'complex' in LTR.flags:
-                if magnitude:
-                    title = f"{trace.name} Mag [db{what_to_units(trace.whattype)}]"
-                    magnitude = False
-                else:
-                    title = f"{trace.name} Phase [deg]"
+                x = mag(x)
+                ax.set_yscale('log')
+                y = mag(y)
+                ax.yaxis.label.set_color('blue')
+                ax.set(ylabel=label+'(dB)')
+                ax.plot(x, y)
+                ax_phase = ax.twinx()
+                y = phase_np(y, deg=True)
+                ax_phase.plot(x, y, color='red', linestyle='-.')
+                ax_phase.yaxis.label.set_color('red')
+                ax_phase.set(ylabel=label+'Phase (o)')
+                # title = f"{trace.name} Phase [deg]"
+                # ax.set_title(title)
             else:
-                title = f"{trace.name} [{what_to_units(trace.whattype)}]"
-            ax.set_title(title)
-
-    plt.figlegend()
+                ax.plot(x, y)
+                ax.set(ylabel=label)
+                # title = f"{trace.name} [{what_to_units(trace.whattype)}]"
+                # ax.set_title(title)
+    fig.tight_layout()
     plt.show()
 '''
 '''

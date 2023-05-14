@@ -1,4 +1,4 @@
-from PyLTSpice import SimRunner, SpiceEditor, LTspice
+from PyLTSpice import SimRunner, SpiceEditor
 
 from time import sleep
 from random import random
@@ -12,7 +12,7 @@ def processing_data(raw_file, log_file):
     return "This is the result passed to the iterator"
 
 
-runner = SimRunner(output_folder='./temp_batch3', simulator=LTspice)  # Configures the simulator to use and output
+runner = SimRunner(output_folder='./temp_batch3')  # Configures the simulator to use and output
 # folder
 
 netlist = SpiceEditor("Batch_Test.asc")  # Open the Spice Model, and creates the .net

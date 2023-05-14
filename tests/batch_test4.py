@@ -1,5 +1,5 @@
 
-from PyLTSpice import SimRunner, SpiceEditor, LTspice
+from PyLTSpice import SimRunner, SpiceEditor
 from PyLTSpice.sim.process_callback import ProcessCallback  # Importing the ProcessCallback class type
 
 
@@ -10,11 +10,11 @@ class CallbackProc(ProcessCallback):
     def callback(raw_file, log_file):
         print("Handling the simulation data of ""%s"", log file ""%s""" % (raw_file, log_file))
         # Doing some processing here
-        return "Parsed Result"
+        return "Parsed Result of ""%s""" % raw_file, ", log file ""%s""" % log_file
 
 
 if __name__ == "__main__":
-
+    from PyLTSpice.sim.ltspice_simulator import LTspice
     runner = SimRunner(output_folder='./temp_batch4', simulator=LTspice)  # Configures the simulator to use and output
     # folder
 
