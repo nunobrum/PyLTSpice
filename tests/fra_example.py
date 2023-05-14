@@ -24,7 +24,7 @@ def plot_fra(name, freq, complex_data, FRA_data ):
     ax2 = ax1.twinx()
 
     gain = 20*np.log10(np_mag(complex_data))
-    phase = np_angle( complex_data, deg=True)
+    phase = np_angle(complex_data, deg=True)
     for i in range(len(phase)):
         if phase[i] > 0:
             phase[i] = phase[i] - 360
