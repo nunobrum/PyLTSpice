@@ -1,4 +1,7 @@
+# coding=utf-8
 
+import sys
+sys.path.insert(0, '..')    # This is to allow the import from the PyLTSpice folder
 from PyLTSpice import SimRunner, SpiceEditor
 from PyLTSpice.sim.process_callback import ProcessCallback  # Importing the ProcessCallback class type
 
@@ -10,7 +13,7 @@ class CallbackProc(ProcessCallback):
     def callback(raw_file, log_file):
         print("Handling the simulation data of ""%s"", log file ""%s""" % (raw_file, log_file))
         # Doing some processing here
-        return "Parsed Result of ""%s""" % raw_file, ", log file ""%s""" % log_file
+        return "Parsed Result of ""%s""" % raw_file + ", log file ""%s""" % log_file
 
 
 if __name__ == "__main__":
@@ -40,8 +43,8 @@ if __name__ == "__main__":
             run_netlist_file = "{}_{}_{}.net".format(netlist.netlist_file.stem, opamp, supply_voltage)
             runner.run(netlist, run_filename=run_netlist_file, callback=CallbackProc)
 
-    for results in runner:
-        print(results)
+    for result in runner:
+        print(result)  # Prints the result of the callback function
 
     netlist.reset_netlist()
     netlist.add_instructions(   # Adding additional instructions

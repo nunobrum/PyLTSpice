@@ -980,9 +980,9 @@ class SpiceEditor(SpiceCircuit):
                 finished = self._add_lines(lines)
                 if not finished:
                     raise SyntaxError("Netlist with missing .END or .ENDS statements")
-                else:
-                    for remainig_lines in lines:
-                        print("Ignoring %s" % remainig_lines)
+                # else:
+                #     for _ in lines:  # Consuming the rest of the file.
+                #         pass  # print("Ignoring %s" % _)
         else:
             self.logger.error("Netlist file not found")
 

@@ -153,6 +153,6 @@ def main():
             data.export_data(fname_out)
             data.export_data(fname_out)
 
-    # input("Press Enter to Continue")
 
-main()
+if __name__ == "__main__":
+    main()
