@@ -269,6 +269,10 @@ documentation is directly included in the source file docstrings.
 * Alternative contact : nuno.brum@gmail.com
 
 ## History ##
+* Version 4.0.3\
+  Fixing issue in elapsed time calculation.
+  Fixing issue with the import of LTSpiceLogReader from LTSteps.py
+
 * Version 4.0.2\
   Changing list of Library dependencies.
 
