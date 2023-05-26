@@ -358,7 +358,7 @@ class RawRead(object):
         'Frequency Response Analysis',
     )
 
-    def __init__(self, raw_filename: str, traces_to_read: Union[str, List[str], Tuple[str], None] = '*', **kwargs):
+    def __init__(self, raw_filename: str, traces_to_read: Union[str, List[str], Tuple[str, ...], None] = '*', **kwargs):
         self.verbose = kwargs.get('verbose', True)
         raw_filename = Path(raw_filename)
         if traces_to_read is not None:
