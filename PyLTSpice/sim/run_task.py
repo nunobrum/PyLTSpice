@@ -40,7 +40,7 @@ END_LINE_TERM = '\n'
 logging.basicConfig(filename='SpiceBatch.log', level=logging.INFO)
 
 if sys.version_info.major >= 3 and sys.version_info.minor >= 6:
-    clock_function = time.process_time
+    clock_function = time.perf_counter
 else:
     clock_function = time.clock
 
