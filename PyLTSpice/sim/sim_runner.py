@@ -96,13 +96,14 @@ __copyright__ = "Copyright 2020, Fribourg Switzerland"
 
 __all__ = ['SimRunner']
 
-import logging
 import os
 import shutil
 from pathlib import Path
 from time import sleep, thread_time as clock
 
 from typing import Callable, Union, Any, Type
+import logging
+_logger = logging.getLogger("PyLTSpice.SimRunner")
 
 from .process_callback import ProcessCallback
 from ..sim.run_task import RunTask
@@ -164,14 +165,7 @@ class SimRunner(object):
         # Create another logger for the SimRunner class
 
         # master_log_filename = self.circuit_radic + '.masterlog' TODO: create the JSON or YAML file
-        self.logger = logging.getLogger("SimRunner")
-        self.logger.setLevel(logging.INFO)
-        # redirect this logger to a file.
-        self.logger.addHandler(logging.FileHandler('SimRunner.log', mode='w'))
-        # if verbose is true, all log messages are also printed to the console
-        if verbose:
-            self.logger.addHandler(logging.StreamHandler())
-        self.logger.info("SimRunner started")
+        _logger.info("SimRunner started")
 
         self.runno = 0  # number of total runs
         self.failSim = 0  # number of failed simulations
@@ -191,9 +185,9 @@ class SimRunner(object):
 
     def __del__(self):
         """Class Destructor : Closes Everything"""
-        self.logger.debug("Waiting for all spawned sim_tasks to finish.")
+        _logger.debug("Waiting for all spawned sim_tasks to finish.")
         self.wait_completion(abort_all_on_timeout=True)  # Kill all pending simulations
-        self.logger.debug("Exiting SimCommander")
+        _logger.debug("Exiting SimCommander")
 
     def set_run_command(self, spice_tool: Union[str, Simulator]) -> None:
         """
@@ -276,10 +270,10 @@ class SimRunner(object):
             asc_file = Path(asc_file)
         if asc_file.suffix == '.asc':
             if self.verbose:
-                self.logger.info("Creating Netlist")
+                _logger.info("Creating Netlist")
             return self.simulator.create_netlist(asc_file)
         else:
-            self.logger.info("Unable to create the Netlist from %s" % asc_file)
+            _logger.warning("Unable to create the Netlist from %s" % asc_file)
             return None
 
     def _prepare_sim(self, netlist: Union[str, Path, SpiceEditor], run_filename: str):
@@ -357,9 +351,9 @@ class SimRunner(object):
                 return t  # Returns the task object
             sleep(0.1)  # Give Time for other simulations to end
         else:
-            self.logger.error("Timeout waiting for resources for simulation %d" % self.runno)
+            _logger.error("Timeout waiting for resources for simulation %d" % self.runno)
             if self.verbose:
-                self.logger.info("Timeout on launching simulation %d." % self.runno)
+                _logger.warning("Timeout on launching simulation %d." % self.runno)
             return None
 
     def run_now(self, netlist: Union[str, Path, SpiceEditor], *, switches=None, run_filename: str = None) -> (str, str):
@@ -437,7 +431,7 @@ class SimRunner(object):
             # check whether the process name matches
 
             if proc.name() == process_name:
-                self.logger.info("killing ngspice", proc.pid)
+                _logger.info("killing ngspice", proc.pid)
                 proc.kill()
 
     def wait_completion(self, timeout=None, abort_all_on_timeout=False) -> bool:
@@ -464,7 +458,7 @@ class SimRunner(object):
             if timeout is not None:
                 if sim_counters == (self.okSim, self.failSim):
                     timeout_counter += 1
-                    self.logger.info(timeout_counter, "timeout counter")
+                    _logger.info(timeout_counter, "timeout counter")
                 else:
                     timeout_counter = 0
 
@@ -487,22 +481,22 @@ class SimRunner(object):
                 # Delete the log file if exists
                 logfile = workfile.with_suffix('.log')
                 if logfile.exists():
-                    self.logger.info("Deleting..." + logfile.name)
+                    _logger.info("Deleting..." + logfile.name)
                     logfile.unlink()
                 # Delete the raw file if exists
                 rawfile = workfile.with_suffix('.raw')
                 if rawfile.exists():
-                    self.logger.info("Deleting..." + rawfile.name)
+                    _logger.info("Deleting..." + rawfile.name)
                     rawfile.unlink()
 
                 # Delete the op.raw file if exists
                 oprawfile = workfile.with_suffix('.op.raw')
                 if oprawfile.exists():
-                    self.logger.info("Deleting..." + oprawfile.name)
+                    _logger.info("Deleting..." + oprawfile.name)
                     oprawfile.unlink()
 
             # Delete the file
-            self.logger.info("Deleting..." + workfile.name)
+            _logger.info("Deleting..." + workfile.name)
             workfile.unlink()
 
     def __iter__(self):

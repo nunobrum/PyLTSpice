@@ -17,12 +17,13 @@
 # Created:     23-12-2016
 # Licence:     refer to the LICENSE file
 # -------------------------------------------------------------------------------
-import logging
 import sys
 import os
 
 from pathlib import Path
 from typing import Union
+import logging
+_logger = logging.getLogger("PyLTSpice.LTSpiceSimulator")
 
 from .simulator import Simulator, run_function
 
@@ -50,16 +51,16 @@ class LTspice(Simulator):
                 r"C:\Program Files (x86)\LTC\LTspiceIV\scad3.exe",  # Legacy LTspice IV
         ):
             if os.path.exists(exe):
-                print(f"Using LTspice installed in : '{exe}' ")
+                _logger.debug(f"Using LTspice installed in : '{exe}' ")
                 spice_exe = [exe]
                 break
         else:
             spice_exe = []
-            print("================== ALERT! ====================")
-            print("Unable to find a LTSpice executable.")
-            print("A specific location of the LTSPICE can be set")
-            print("using the create_from(<location>) class method")
-            print("==============================================")
+            _logger.error("================== ALERT! ====================")
+            _logger.error("Unable to find a LTSpice executable.")
+            _logger.error("A specific location of the LTSPICE can be set")
+            _logger.error("using the create_from(<location>) class method")
+            _logger.error("==============================================")
 
         process_name = "XVIIx64.exe"
 
@@ -170,7 +171,7 @@ class LTspice(Simulator):
         if error == 0:
             netlist = circuit_file.with_suffix('.net')
             if netlist.exists():
-                print("OK")
+                _logger.debug("OK")
                 return netlist
         msg = "Failed to create netlist"
         # print(msg)

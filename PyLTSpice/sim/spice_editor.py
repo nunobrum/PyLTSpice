@@ -21,6 +21,7 @@ from pathlib import Path
 import traceback
 import re
 import logging
+_logger = logging.getLogger("PyLTSpice.SpiceEditor")
 from math import log, floor
 from typing import Union, List, Callable, Any
 from ..utils.detect_encoding import detect_encoding
@@ -281,7 +282,6 @@ class SpiceCircuit(object):
     def __init__(self):
         self.subcircuits = {}
         self.netlist = []
-        self.logger = logging.getLogger("SpiceCircuit")
 
     def _getline_startingwith(self, substr: str) -> int:
         """Internal function. Do not use."""
@@ -295,7 +295,7 @@ class SpiceCircuit(object):
             if line_upcase == substr_upper:
                 return line_no
         error_msg = "line starting with '%s' not found in netlist" % substr
-        self.logger.error(error_msg)
+        _logger.error(error_msg)
         raise ComponentNotFoundError(error_msg)
 
     def _add_lines(self, line_iter):
@@ -420,8 +420,8 @@ class SpiceCircuit(object):
         regex = component_replace_regexs.get(prefix, None)  # Obtain RegX to make the update
 
         if regex is None:
-            print("Component must start with one of these letters:\n", ','.join(REPLACE_REGXES.keys()))
-            print("Got '{}'".format(component))
+            _logger.error("Component must start with one of these letters:\n", ','.join(REPLACE_REGXES.keys()))
+            _logger.error("Got '{}'".format(component))
             return
 
         if isinstance(value, (int, float)):
@@ -529,8 +529,8 @@ class SpiceCircuit(object):
         regex = component_replace_regexs.get(prefix, None)  # Obtain RegX to make the update
 
         if regex is None:
-            self.logger.warning("Component must start with one of these letters:\n", ','.join(REPLACE_REGXES.keys()))
-            self.logger.warning("Got '{}'".format(component))
+            _logger.warning("Component must start with one of these letters:\n", ','.join(REPLACE_REGXES.keys()))
+            _logger.warning("Got '{}'".format(component))
             raise NotImplementedError("Unsuported prefix {}".format(prefix))
 
         line_no = self._getline_startingwith(component)
@@ -538,7 +538,7 @@ class SpiceCircuit(object):
         m = regex.match(line)
         if m is None:
             error_msg = 'Unsupported line "{}"\nExpected format is "{}"'.format(line, REPLACE_REGXES[prefix])
-            self.logger.error(error_msg)
+            _logger.error(error_msg)
             raise UnrecognizedSyntaxError(line, REPLACE_REGXES[prefix])
 
         info = m.groupdict()
@@ -984,7 +984,7 @@ class SpiceEditor(SpiceCircuit):
                 #     for _ in lines:  # Consuming the rest of the file.
                 #         pass  # print("Ignoring %s" % _)
         else:
-            self.logger.error("Netlist file not found")
+            _logger.error("Netlist file not found")
 
     @staticmethod
     def find_subckt_in_lib(library, subckt_name) -> Union['SpiceCircuit', None]:

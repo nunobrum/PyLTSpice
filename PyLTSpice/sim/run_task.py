@@ -31,6 +31,9 @@ import time
 import traceback
 from time import sleep
 from typing import Callable, Union, Any, Tuple, Type
+import logging
+_logger = logging.getLogger("PyLTSpice.RunTask")
+
 from .process_callback import ProcessCallback
 
 from .simulator import Simulator
@@ -69,17 +72,13 @@ class RunTask(threading.Thread):
     def print_info(self, logger_fun, message):
         logger_fun(message)
         if self.verbose:
-            print(f"{time.asctime()} {logger_fun.__name__}: {message}", end=END_LINE_TERM)
+            _logger.info(f"{time.asctime()} {logger_fun.__name__}: {message}{END_LINE_TERM}")
 
     def run(self):
-        # Setting up
-        logger = logging.getLogger("sim%d" % self.runno)
-        logger.setLevel(logging.INFO)
-
         # Running the Simulation
 
         self.start_time = clock_function()
-        self.print_info(logger.info, ": Starting simulation %d" % self.runno)
+        self.print_info(_logger.info, ": Starting simulation %d" % self.runno)
 
         # start execution
         self.retcode = self.simulator.run(self.netlist_file, self.switches, self.timeout)
@@ -91,18 +90,18 @@ class RunTask(threading.Thread):
         # Cleanup everything
         if self.retcode == 0:
             # simulation successful
-            self.print_info(logger.info, "Simulation Successful. Time elapsed: %s" % sim_time)
+            self.print_info(_logger.info, "Simulation Successful. Time elapsed: %s" % sim_time)
             self.raw_file = self.netlist_file.with_suffix('.raw')
 
             if self.raw_file.exists() and self.log_file.exists():
                 if self.callback:
-                    self.print_info(logger.info, "Simulation Finished. Calling...{}(rawfile, logfile)".format(
+                    self.print_info(_logger.info, "Simulation Finished. Calling...{}(rawfile, logfile)".format(
                             self.callback.__name__))
                     try:
                         return_or_process = self.callback(self.raw_file, self.log_file)
                     except Exception as err:
                         error = traceback.format_tb(err.__traceback__)
-                        self.print_info(logger.error, error)
+                        self.print_info(_logger.error, error)
                     else:
                         if isinstance(return_or_process, ProcessCallback):
                             proc = return_or_process
@@ -112,12 +111,12 @@ class RunTask(threading.Thread):
                         else:
                             self.callback_return = return_or_process
                 else:
-                    self.print_info(logger.info, 'Simulation Finished. No Callback function given')
+                    self.print_info(_logger.info, 'Simulation Finished. No Callback function given')
             else:
-                self.print_info(logger.error, "Simulation Raw file or Log file were not found")
+                self.print_info(_logger.error, "Simulation Raw file or Log file were not found")
         else:
             # simulation failed
-            self.print_info(logger.warning, ": Simulation Failed. Time elapsed: %s" % sim_time)
+            self.print_info(_logger.warning, ": Simulation Failed. Time elapsed: %s" % sim_time)
             if self.log_file.exists():
                 self.log_file = self.log_file.replace(self.log_file.with_suffix('.fail'))
 

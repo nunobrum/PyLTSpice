@@ -20,6 +20,8 @@
 from typing import Tuple
 from xmlrpc.client import Binary
 from xmlrpc.server import SimpleXMLRPCServer
+import logging
+_logger = logging.getLogger("PyLTSpice.SimServer")
 
 import threading
 import zipfile
@@ -46,18 +48,18 @@ class SimServer():
         self.server_thread.start()
 
     def run(self, session_id, circuit_name, zip_data):
-        print("Run ", session_id, circuit_name)
+        _logger.info("Run ", session_id, circuit_name)
         if session_id not in self.sessions:
             return -1  # This indicates that no job is started
         # Create a buffer from the zip data
         zip_buffer = io.BytesIO(zip_data.data)
-        print("Created the buffer")
+        _logger.debug("Created the buffer")
         # Extract the contents of the zip file
         with zipfile.ZipFile(zip_buffer, 'r') as zip_file:
-            print(zip_file.namelist())
+            _logger.debug(zip_file.namelist())
             zip_file.extract(circuit_name, self.output_folder)
 
-        print(f"Running simulation of {circuit_name}")
+        _logger.info(f"Running simulation of {circuit_name}")
         runno = self.simulation_manager.add_simulation(circuit_name)
         if runno != -1:
             self.sessions[session_id].append(runno)
@@ -67,7 +69,7 @@ class SimServer():
         """Returns an unique key that represents the session. It will be later used to sort the sim_tasks belonging
         to the session."""
         session_id = str(uuid.uuid4())  # Needs to be a string, otherwise the rpc client can't handle it
-        print("Starting session ", session_id)
+        _logger.info("Starting session ", session_id)
         self.sessions[session_id] = []
         return session_id
 
@@ -83,15 +85,15 @@ class SimServer():
 
             * 'stop' - server time
         """
-        print("collecting status for ", session_id)
+        _logger.debug("collecting status for ", session_id)
         ret = []
         for task_info in self.simulation_manager.completed_tasks:
-            print(task_info)
+            _logger.debug(task_info)
             runno = task_info['runno']
             if runno in self.sessions[session_id]:
                 ret.append(runno)  # transfers the dictionary from the simulation_manager completed task
                 # to the return dictionary 
-        print("returning status", ret)
+        _logger.debug("returning status", ret)
         return ret
 
     def get_files(self, session_id, runno) -> Tuple[str, Binary]:
@@ -117,10 +119,10 @@ class SimServer():
         return True  # Needs to return always something. None is not supported
 
     def stop_server(self):
-        print("stopping...ServerInterface")
+        _logger.info("stopping...ServerInterface")
         self.simulation_manager.stop()
         self.server.shutdown()
-        print("stopped...ServerInterface")
+        _logger.info("stopped...ServerInterface")
         return True  # Needs to return always something. None is not supported
 
     def running(self):

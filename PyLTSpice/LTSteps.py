@@ -88,13 +88,13 @@ import os
 import sys
 
 from PyLTSpice.log.ltsteps import *
-
+import logging
+_logger = logging.getLogger("PyLTSpice.LTSteps")
 
 def main():
     """
     Main function for the LTSteps.py script
     """
-
     def valid_extension(filename):
         """A simple function to check if the filename has a valid extension"""
         return filename.endswith('.txt') or filename.endswith('.log') or filename.endswith('.mout')
@@ -102,8 +102,8 @@ def main():
     if len(sys.argv) > 1:
         filename = sys.argv[1]
         if not valid_extension(filename):
-            print("Invalid extension in filename '%s'" % filename)
-            print("This tool only supports the following extensions :'.txt','.log','.mout'")
+            _logger.error("Invalid extension in filename '%s'" % filename)
+            _logger.error("This tool only supports the following extensions :'.txt','.log','.mout'")
             exit(-1)
     else:
         filename = None
@@ -114,8 +114,8 @@ def main():
                 newer_date = date
                 filename = f
     if filename is None:
-        print("File not found")
-        print("This tool only supports the following extensions :'.txt','.log','.mout'")
+        _logger.error("File not found")
+        _logger.error("This tool only supports the following extensions :'.txt','.log','.mout'")
         exit(-1)
 
     fname_out = None
@@ -126,15 +126,15 @@ def main():
     elif filename.endswith('.mout'):
         fname_out = filename[:-len('mout')] + 'tmout'
     else:
-        print("Error in file type")
-        print("This tool only supports the following extensions :'.txt','.log','.mout'")
+        _logger.error("Error in file type")
+        _logger.error("This tool only supports the following extensions :'.txt','.log','.mout'")
         exit(-1)
 
     if fname_out is not None:
-        print("Processing File %s" % filename)
-        print("Creating File %s" % fname_out)
+        _logger.debug("Processing File %s" % filename)
+        _logger.debug("Creating File %s" % fname_out)
         if filename.endswith('txt'):
-            print("Processing Data File")
+            _logger.debug("Processing Data File")
             reformat_LTSpice_export(filename, fname_out)
         elif filename.endswith("log"):
             data = LTSpiceLogReader(filename)

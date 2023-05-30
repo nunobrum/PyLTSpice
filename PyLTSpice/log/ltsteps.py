@@ -83,7 +83,8 @@ import re
 from collections import OrderedDict
 from typing import Union, Iterable, List
 from ..utils.detect_encoding import detect_encoding
-
+import logging
+_logger = logging.getLogger("PyLTSpice.LTSteps")
 
 class LTComplex(object):
     """
@@ -207,7 +208,7 @@ def reformat_LTSpice_export(export_file: str, tabular_file: str):
                         header_keys.append(param.split('=')[0])
                     param_header = "\t".join(header_keys)
                     fout.write("Run\t%s\t%s" % (param_header, headers))
-                    print("Run\t%s\t%s" % (param_header, headers))
+                    _logger.debug("Run\t%s\t%s" % (param_header, headers))
                     go_header = False
                     # print("%s\t%s"% (run_no, param_values))
         else:
@@ -336,7 +337,7 @@ class LTSpiceLogReader(object):
                 r"^(?P<name>\w+)(:\s+.*)?=(?P<value>[\d\.E+\-\(\)dB,°]+)(( FROM (?P<from>[\d\.E+-]*) TO (?P<to>[\d\.E+-]*))|( at (?P<at>[\d\.E+-]*)))?",
                 re.IGNORECASE)
 
-        print("Processing LOG file", log_filename)
+        _logger.debug("Processing LOG file", log_filename)
         with open(log_filename, 'r', encoding=self.encoding) as fin:
             line = fin.readline()
 
@@ -470,14 +471,14 @@ class LTSpiceLogReader(object):
                     if dataname:  # If previous measurement was saved
                         # store the info
                         if len(measurements):
-                            print("Storing Measurement %s (count %d)" % (dataname, len(measurements)))
+                            _logger.debug("Storing Measurement %s (count %d)" % (dataname, len(measurements)))
                             self.measure_count += len(measurements)
                             for k, title in enumerate(headers):
                                 self.dataset[title] = [line[k] for line in measurements]
                         headers = []
                         measurements = []
                     dataname = line[13:]  # text which is after "Measurement: ". len("Measurement: ") -> 13
-                    print("Reading Measurement %s" % line[13:])
+                    _logger.debug("Reading Measurement %s" % line[13:])
                 else:
                     tokens = line.split("\t")
                     if len(tokens) >= 2:
@@ -494,20 +495,20 @@ class LTSpiceLogReader(object):
                             headers = [dataname] + tokens[2:]
                             measurements = []
                     else:
-                        print("->", line)
+                        _logger.debug("->", line)
 
                 line = fin.readline()  # advance to the next line
 
             # storing the last data into the dataset
             if dataname:
-                print("Storing Measurement %s (count %d)" % (dataname, len(measurements)))
+                _logger.debug("Storing Measurement %s (count %d)" % (dataname, len(measurements)))
             if len(measurements):
                 self.measure_count += len(measurements)
                 for k, title in enumerate(headers):
                     self.dataset[title] = [line[k] for line in measurements]
 
-            print("%d measurements" % len(self.dataset))
-            print("Identified %d steps, read %d measurements" % (self.step_count, self.measure_count))
+            _logger.debug("%d measurements" % len(self.dataset))
+            _logger.info("Identified %d steps, read %d measurements" % (self.step_count, self.measure_count))
 
     def __getitem__(self, key):
         """
@@ -643,7 +644,7 @@ class LTSpiceLogReader(object):
             mode = 'a'  # Appends an existing file
 
         if len(self.dataset) == 0:
-            print("Empty data set. Exiting without writing file.")
+            _logger.warning("Empty data set. Exiting without writing file.")
             return
 
         fout = open(export_file, mode, encoding=self.encoding)

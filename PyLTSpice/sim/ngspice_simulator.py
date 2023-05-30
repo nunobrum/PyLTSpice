@@ -19,6 +19,8 @@
 # -------------------------------------------------------------------------------
 
 from pathlib import Path
+import logging
+_logger = logging.getLogger("PyLTSpice.NGSpiceSimulator")
 
 from .simulator import Simulator, run_function
 
@@ -76,7 +78,7 @@ class NGspiceSimulator(Simulator):
         ret = []  # This is an empty switch
         if switch in cls.ngspice_args:
             if switch in cls.default_run_switches:
-                print(f"Switch {switch} is already in the default switches")
+                _logger.info(f"Switch {switch} is already in the default switches")
                 return ret
             switch_list = cls.ngspice_args[switch]
             if len(switch_list) == 2:
@@ -86,11 +88,11 @@ class NGspiceSimulator(Simulator):
                 elif param_token == '<TERM>':
                     ret = [switch_list[0], parameter]
                 else:
-                    print(f"Invalid parameter {parameter} for switch '{switch}'")
+                    _logger.warning(f"Invalid parameter {parameter} for switch '{switch}'")
             else:
                 ret = switch_list
         else:
-            print(f"Invalid Switch {switch}")
+            _logger.warning(f"Invalid Switch {switch}")
         return ret
 
     @classmethod

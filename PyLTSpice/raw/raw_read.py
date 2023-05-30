@@ -218,7 +218,8 @@ from ..utils.detect_encoding import detect_encoding
 
 import numpy as np
 from numpy import zeros, complex128, float32, float64, frombuffer, angle
-
+import logging
+_logger = logging.getLogger("PyLTSpice.RawRead")
 
 def read_float64(f):
     """
@@ -379,7 +380,7 @@ class RawRead(object):
         else:
             raise RuntimeError("Unrecognized encoding")
         if self.verbose:
-            print("Reading the file with encoding ", self.encoding)
+            _logger.debug("Reading the file with encoding ", self.encoding)
         # Storing the filename as part of the dictionary
         self.raw_params = OrderedDict(Filename=raw_filename)  # Initializing the dict that contains all raw file info
         self.backannotations = []  # Storing backannotations
@@ -449,7 +450,7 @@ class RawRead(object):
             return
 
         if self.verbose:
-            print("File contains {} traces, reading {}".format(ivar,
+            _logger.info("File contains {} traces, reading {}".format(ivar,
                                                                len([trace for trace in self._traces
                                                                     if not isinstance(trace, DummyTrace)])))
 
@@ -483,7 +484,7 @@ class RawRead(object):
 
             if "fastaccess" in self.raw_params["Flags"]:
                 if self.verbose:
-                    print("Binary RAW file with Fast access")
+                    _logger.debug("Binary RAW file with Fast access")
                 # Fast access means that the traces are grouped together.
                 for i, var in enumerate(self._traces):
                     if isinstance(var, DummyTrace):
@@ -506,7 +507,7 @@ class RawRead(object):
 
             else:
                 if self.verbose:
-                    print("Binary RAW file with Normal access")
+                    _logger.debug("Binary RAW file with Normal access")
                 # This is the default save after a simulation where the traces are scattered
                 for point in range(self.nPoints):
                     for i, var in enumerate(self._traces):
@@ -516,7 +517,7 @@ class RawRead(object):
 
         elif self.raw_type == "Values:":
             if self.verbose:
-                print("ASCII RAW File")
+                _logger.debug("ASCII RAW File")
             # Will start the reading of ASCII Values
             for point in range(self.nPoints):
                 first_var = True
@@ -527,7 +528,7 @@ class RawRead(object):
                         s_point = line.split("\t", 1)[0]
 
                         if point != int(s_point):
-                            print("Error Reading File")
+                            _logger.error("Error Reading File")
                             break
                         value = line[len(s_point):-1]
                     else:
@@ -557,7 +558,7 @@ class RawRead(object):
             try:
                 self._load_step_information(raw_filename)
             except SpiceReadException:
-                print("LOG file not found or problems happened while reading it. Auto-detecting steps")
+                _logger.warning("LOG file not found or problems happened while reading it. Auto-detecting steps")
                 if has_axis:
                     number_of_steps = 0
                     for v in self.axis.data:

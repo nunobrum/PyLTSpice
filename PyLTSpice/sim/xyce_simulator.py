@@ -18,13 +18,13 @@
 # Licence:     refer to the LICENSE file
 # -------------------------------------------------------------------------------
 
-import logging
 import sys
 import os
 
 from pathlib import Path
 from typing import Union
-
+import logging
+_logger = logging.getLogger("PyLTSpice.XYCESimulator")
 from .simulator import Simulator, run_function
 
 
@@ -119,11 +119,11 @@ class XyceSimulator(Simulator):
                     else:
                         ret = [switch_list[0], parameter]
                 else:
-                    print(f"Invalid parameter {parameter} for switch '{switch}'")
+                    _logger.warning(f"Invalid parameter {parameter} for switch '{switch}'")
             else:
                 ret = switch_list
         else:
-            print(f"Invalid Switch {switch}")
+            _logger.error(f"Invalid Switch {switch}")
         return ret
 
     @classmethod

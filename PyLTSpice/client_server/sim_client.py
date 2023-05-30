@@ -25,7 +25,8 @@ import pathlib
 import time
 from collections import OrderedDict
 from dataclasses import dataclass
-
+import logging
+_logger = logging.getLogger("PyLTSpice.SimClient")
 
 class SimClientInvalidRunId(LookupError):
     """Raised when asking for a run_no that doesn't exist"""
@@ -104,7 +105,7 @@ class SimClient(object):
         self.server = xmlrpc.client.ServerProxy(f'{host_address}:{port}')
         # print(self.server.system.listMethods())
         self.session_id = self.server.start_session()
-        print("started ", self.session_id)
+        _logger.info("started ", self.session_id)
         self.started_jobs = OrderedDict()  # This list keeps track of started jobs on the server
         self.stored_jobs = OrderedDict()  # This list keeps track of finished simulations that haven't yet been transferred.
         self.completed_jobs = 0
@@ -112,7 +113,7 @@ class SimClient(object):
         self._last_server_call = time.clock()
 
     def __del__(self):
-        print("closing session ", self.session_id)
+        _logger.info("closing session ", self.session_id)
         self.server.close_session(self.session_id)
 
     def run(self, circuit):
@@ -147,7 +148,7 @@ class SimClient(object):
             self.started_jobs[job_info] = job_info
             return run_id
         else:
-            print(f"Circuit {circuit} doesn't exit")
+            _logger.error(f"Circuit {circuit} doesn't exit")
             return -1
         
     def get_runno_data(self, runno) -> str:

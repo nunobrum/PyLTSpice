@@ -95,7 +95,6 @@ simulation is finished.
 __author__ = "Nuno Canto Brum <nuno.brum@gmail.com>"
 __copyright__ = "Copyright 2020, Fribourg Switzerland"
 
-import logging
 import os
 import pathlib
 import threading
@@ -104,6 +103,8 @@ import traceback
 from time import sleep
 from typing import Callable, Union, Any, Tuple
 from warnings import warn
+import logging
+_logger = logging.getLogger("PyLTSpice.SimBatch")
 
 from .SpiceEditor import SpiceEditor
 from .simulator import clock_function, Simulator
@@ -133,10 +134,6 @@ class RunTask(threading.Thread):
         self.log_file = None
 
     def run(self):
-        # Setting up
-        logger = logging.getLogger("sim%d" % self.run_no)
-        logger.setLevel(logging.INFO)
-
         # Running the Simulation
 
         self.start_time = clock_function()
@@ -154,7 +151,7 @@ class RunTask(threading.Thread):
         # Cleanup everything
         if self.retcode == 0:
             # simulation successful
-            logger.info("Simulation Successful. Time elapsed: %s" % sim_time)
+            _logger.info("Simulation Successful. Time elapsed: %s" % sim_time)
             if self.verbose:
                 print(time.asctime() + ": Simulation Successful. Time elapsed %s:%s" % (sim_time, END_LINE_TERM))
 
@@ -168,16 +165,16 @@ class RunTask(threading.Thread):
                         self.callback(self.raw_file, self.log_file)
                     except Exception as err:
                         error = traceback.format_tb(err)
-                        logger.error(error)
+                        _logger.error(error)
                 else:
                     if self.verbose:
                         print('No Callback')
             else:
-                logger.error("Simulation Raw file or Log file were not found")
+                _logger.error("Simulation Raw file or Log file were not found")
         else:
             # simulation failed
 
-            logger.warning(time.asctime() + ": Simulation Failed. Time elapsed %s:%s" % (sim_time, END_LINE_TERM))
+            _logger.warning(time.asctime() + ": Simulation Failed. Time elapsed %s:%s" % (sim_time, END_LINE_TERM))
             if os.path.exists(self.log_file):
                 old_log_file = self.log_file
                 self.log_file = netlist_radic + '.fail'
