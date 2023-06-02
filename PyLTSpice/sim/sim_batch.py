@@ -97,10 +97,11 @@ simulation is finished.
 __author__ = "Nuno Canto Brum <nuno.brum@gmail.com>"
 __copyright__ = "Copyright 2020, Fribourg Switzerland"
 
-import logging
 import os
 from pathlib import Path
 from typing import Callable, Any, Union
+import logging
+_logger = logging.getLogger("PyLTSpice.SimBatch")
 
 from ..sim.spice_editor import SpiceEditor
 from ..sim.simulator import Simulator
@@ -218,13 +219,13 @@ if __name__ == "__main__":
         # LTC.runs_to_do = range(2)
         LTC.set_parameters(ANA=res)
         raw, log = LTC.run().wait_results()
-        print("Raw file '%s' | Log File '%s'" % (raw, log))
+        _logger.debug("Raw file '%s' | Log File '%s'" % (raw, log))
     # Sim Statistics
-    print('Successful/Total Simulations: ' + str(LTC.okSim) + '/' + str(LTC.runno))
+    _logger.info('Successful/Total Simulations: ' + str(LTC.okSim) + '/' + str(LTC.runno))
 
 
     def callback_function(raw_file, log_file):
-        print("Handling the simulation data of %s, log file %s" % (raw_file, log_file))
+        _logger.debug("Handling the simulation data of %s, log file %s" % (raw_file, log_file))
 
 
     LTC = SimCommander(meAbsPath + "\\test_files\\testfile.asc", parallel_sims=1)

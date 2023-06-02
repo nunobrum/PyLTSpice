@@ -22,6 +22,8 @@ import time
 from typing import Any, Callable, Union
 from pathlib import Path
 import zipfile
+import logging
+_logger = logging.getLogger("PyLTSpice.ServerSimRunner")
 
 from PyLTSpice.sim.sim_runner import SimRunner
 from PyLTSpice.sim.spice_editor import SpiceEditor
@@ -71,10 +73,10 @@ class ServerSimRunner(threading.Thread):
                         'start': task.start_time,
                         'stop': task.stop_time,
                     })
-                    print(task, "is finished")
+                    _logger.debug(task, "is finished")
                     del self.runner.sim_tasks[i]
-                    print(self.completed_tasks[-1])
-                    print(len(self.completed_tasks))
+                    _logger.debug(self.completed_tasks[-1])
+                    _logger.debug(len(self.completed_tasks))
 
             time.sleep(0.2)
             if self._stop is True:
@@ -84,13 +86,13 @@ class ServerSimRunner(threading.Thread):
 
     def add_simulation(self, netlist: Union[str, Path, SpiceEditor], *, timeout: float = 600) -> int:
         """"""
-        print("starting ", netlist)
+        _logger.debug("starting ", netlist)
         task = self.runner.run(netlist, wait_resource=True, timeout=timeout, callback=zip_files)
         if task is None:
-            print("Failed to start task ", netlist)
+            _logger.error("Failed to start task ", netlist)
             return -1
         else:
-            print("Started task ", netlist, " with job_id", task.runno)
+            _logger.info("Started task ", netlist, " with job_id", task.runno)
             return task.runno
 
     def _erase_files_and_info(self, pos):
@@ -114,7 +116,7 @@ class ServerSimRunner(threading.Thread):
             self._erase_files_and_info(0)
 
     def stop(self):
-        print("stopping...ServerSimRunner")
+        _logger.info("stopping...ServerSimRunner")
         self._stop = True
 
     def running(self):

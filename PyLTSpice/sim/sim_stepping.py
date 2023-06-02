@@ -27,6 +27,8 @@ from typing import Callable, Any, Union
 from typing import Iterable
 import pathlib
 from functools import wraps
+import logging
+_logger = logging.getLogger("PyLTSpice.SimStepper")
 from .spice_editor import SpiceEditor
 from .sim_runner import SimRunner
 
@@ -147,7 +149,7 @@ class SimStepper(object):
             if l:
                 total *= l
             else:
-                print(step, " is empty")
+                _logger.debug(step, " is empty")
         return total
 
     def run_all(self, callback: Callable[[str, str], Any] = None, use_loadbias='Auto'):

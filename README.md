@@ -262,6 +262,27 @@ Options:
 This module is used to read from LTSpice log files Semiconductor Devices Operating Point Information. A more detailed
 documentation is directly included in the source file docstrings.
 
+## Debug Logging
+The library uses the standard `logging` module. Three convenience functions have been added for easily changing logging 
+settings across the entire library. `PyLTSpice.all_loggers()` returns a list of all the logger's names, `PyLTSpice.set_log_level(logging.DEBUG)` 
+would set the library's logging level to debug, and `PyLTSpice.add_log_handler(my_handler)` would add `my_handler` as a handler for 
+all loggers.
+
+### Single Module Logging
+It is also possible to set the logging settings for a single module by using its name acquired from the `PyLTSpice.all_loggers()` 
+function. For example:
+
+```python
+import logging
+logging.basicConfig(level=logging.INFO)  # Set up the root logger first
+
+import PyLTSpice  # Import PyLTSpice to set the logging levels
+PyLTSpice.set_log_level(logging.DEBUG)  # Set PyLTSpice's global log level
+logging.getLogger("PyLTSpice.RawRead").level = logging.WARNING  # Set the log level for only RawRead to warning
+```
+Would set only `PyLTSpice.RawRead` file's logging level to warning while the other modules would remain at debug level. 
+_Make sure to initialize the root logger before importing the library to be able to see the logs._
+
 ## To whom do I talk to? ##
 
 * Tools website : [https://www.nunobrum.com/pyltspice.html](https://www.nunobrum.com/pyltspice.html)
