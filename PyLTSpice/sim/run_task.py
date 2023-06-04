@@ -48,6 +48,22 @@ else:
     clock_function = time.clock
 
 
+def format_time_difference(time_diff):
+    """Formats the time difference in a human readable format, stripping the hours or minutes if they are zero"""
+    seconds_difference = int(time_diff)
+    milliseconds = int((time_diff - seconds_difference) * 1000)
+    hours, remainder = divmod(seconds_difference, 3600)
+    minutes, seconds = divmod(remainder, 60)
+
+    if hours == 0:
+        if minutes == 0:
+            return f"{int(seconds):02d}.{milliseconds:04d} secs"
+        else:
+            return f"{int(minutes):02d}:{int(seconds):02d}.{milliseconds:04d}"
+    else:
+        return f"{int(hours):02d}:{int(minutes):02d}:{int(seconds):02d}.{milliseconds:04d}"
+
+
 class RunTask(threading.Thread):
     """This is an internal Class and should not be used directly by the User."""
 
@@ -70,9 +86,10 @@ class RunTask(threading.Thread):
         self.callback_return = None
 
     def print_info(self, logger_fun, message):
+        message = f"RunTask #{self.runno}:{message}"
         logger_fun(message)
         if self.verbose:
-            _logger.info(f"{time.asctime()} {logger_fun.__name__}: {message}{END_LINE_TERM}")
+            print(f"{time.asctime()} {logger_fun.__name__}: {message}{END_LINE_TERM}")
 
     def run(self):
         # Running the Simulation
@@ -83,8 +100,11 @@ class RunTask(threading.Thread):
         # start execution
         self.retcode = self.simulator.run(self.netlist_file, self.switches, self.timeout)
         self.stop_time = clock_function()
-        # print simulation time
-        sim_time = time.strftime("%H:%M:%S", time.gmtime(self.stop_time - self.start_time))
+        # print simulation time with format HH:MM:SS.mmmmmm
+
+        # Calculate the time difference
+        sim_time = format_time_difference(self.stop_time - self.start_time)
+        # Format the time difference
         self.log_file = self.netlist_file.with_suffix('.log')
 
         # Cleanup everything
@@ -110,6 +130,11 @@ class RunTask(threading.Thread):
                             proc.join()
                         else:
                             self.callback_return = return_or_process
+                    finally:
+                        callback_start_time = self.stop_time
+                        self.stop_time = clock_function()
+                        self.print_info(_logger.info, "Callback Finished. Time elapsed: %s" % format_time_difference(
+                                self.stop_time - callback_start_time))
                 else:
                     self.print_info(_logger.info, 'Simulation Finished. No Callback function given')
             else:
