@@ -291,7 +291,7 @@ _Make sure to initialize the root logger before importing the library to be able
 
 ## History ##
 * Version 4.0.4\
-  Improved usage of the logging library. \
+  Improved usage of the logging library. (Thanks TSprech@GitHub)\
   Included RunTask number in the log messages.\ 
   Included milliseconds in the time elapsed calculation.
 
