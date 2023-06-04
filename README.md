@@ -290,8 +290,13 @@ _Make sure to initialize the root logger before importing the library to be able
 * Alternative contact : nuno.brum@gmail.com
 
 ## History ##
+* Version 4.0.4\
+  Improved usage of the logging library. \
+  Included RunTask number in the log messages.\ 
+  Included milliseconds in the time elapsed calculation.
+
 * Version 4.0.3\
-  Fixing issue in elapsed time calculation.
+  Fixing issue in elapsed time calculation.\
   Fixing issue with the import of LTSpiceLogReader from LTSteps.py
 
 * Version 4.0.2\

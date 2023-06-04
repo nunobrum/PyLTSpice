@@ -6,7 +6,7 @@ requires = [
 build-backend = "setuptools.build_meta"
 [project]
 name = "PyLTSpice"
-version = "4.0.3"
+version = "4.0.4"
 authors = [
   { name="Nuno Brum", email="me@nunobrum.com" },
 ]
