@@ -1,4 +1,11 @@
+# coding=utf-8
+import logging
+from rich.logging import RichHandler
+import PyLTSpice
+
 from PyLTSpice import SimRunner, SpiceEditor
+PyLTSpice.set_log_level(logging.DEBUG)
+PyLTSpice.add_log_handler(RichHandler())
 
 from time import sleep
 from random import random
@@ -6,7 +13,7 @@ from random import random
 
 def processing_data(raw_file, log_file):
     print("Handling the simulation data of ""%s"", log file ""%s""" % (raw_file, log_file))
-    time_to_sleep = random( ) * 5
+    time_to_sleep = random() * 5
     print(f"Sleeping for {time_to_sleep} seconds")
     sleep(time_to_sleep)
     return "This is the result passed to the iterator"
