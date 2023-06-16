@@ -34,12 +34,27 @@ class LTspice(Simulator):
 
     """Searches on the any usual locations for a simulator"""
     if sys.platform == "linux":
-        if os.environ.get('LTSPICEFOLDER') is not None:
-            spice_exe = ["wine", os.environ['LTSPICEFOLDER'] + "/XVIIx64.exe"]
+        spice_folder = os.environ.get("LTSPICEFOLDER")
+        spice_executable = os.environ.get("LTSPICEEXECUTABLE")
+
+        if spice_folder and spice_executable:
+            spice_exe = ["wine", os.path.join(spice_folder, spice_executable)]
+            process_name = spice_executable
+        elif spice_folder:
+            spice_exe = ["wine", os.path.join(spice_folder, "/XVIIx64.exe")]
+            process_name = "XVIIx64.exe"
+        elif spice_executable:
+            default_folder = os.path.expanduser(
+                "~/.wine/drive_c/Program Files/LTC/LTspiceXVII"
+            )
+            spice_exe = ["wine", os.path.join(default_folder, spice_executable)]
+            process_name = spice_executable
         else:
-            spice_exe = ["wine",
-                           os.path.expanduser("~") + "/.wine/drive_c/Program Files/LTC/LTspiceXVII/XVIIx64.exe"]
-        process_name = "XVIIx64.exe"
+            default_folder = os.path.expanduser(
+                "~/.wine/drive_c/Program Files/LTC/LTspiceXVII"
+            )
+            spice_exe = ["wine", os.path.join(default_folder, "XVIIx64.exe")]
+            process_name = "XVIIx64.exe"
     elif sys.platform == "darwin":
         spice_exe = ['/Applications/LTspice.app/Contents/MacOS/LTspice']
         process_name = "XVIIx64"

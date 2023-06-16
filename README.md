@@ -290,6 +290,9 @@ _Make sure to initialize the root logger before importing the library to be able
 * Alternative contact : nuno.brum@gmail.com
 
 ## History ##
+* Version 4.0.5\
+  Accepting fixes from aanas-sayed@GitHub that fixes issues with running the LTSpice in Linux.
+
 * Version 4.0.4\
   Improved usage of the logging library. (Thanks TSprech@GitHub)\
   Included RunTask number in the log messages.\ 
