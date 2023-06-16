@@ -945,15 +945,15 @@ class SpiceEditor(SpiceCircuit):
 
         self.netlist.remove(instruction)
 
-    def write_netlist(self, run_netlist_file: 'Path') -> None:
+    def write_netlist(self, run_netlist_file: Union[str, 'Path']) -> None:
         """
         Writes the netlist will all the requested updates into a file named <run_netlist_file>.
 
         :param run_netlist_file: File name of the netlist file.
-        :type run_netlist_file: Path
+        :type run_netlist_file: Path or str
         :returns: Nothing
         """
-        with run_netlist_file.open('w', encoding=self.encoding) as f:
+        with open(run_netlist_file, 'w', encoding=self.encoding) as f:
             lines = iter(self.netlist)
             for line in lines:
                 if isinstance(line, SpiceCircuit):
