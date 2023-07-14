@@ -374,9 +374,10 @@ class SpiceCircuit(object):
         sub_circuit = None
         while line_no < len(self.netlist):
             line = self.netlist[line_no]
-            if isinstance(line, SpiceCircuit) and line.name() == subcircuit_name:
-                sub_circuit = line # The circuit was already found
-                break
+            if isinstance(line, SpiceCircuit):
+                if line.name() == subcircuit_name:
+                    sub_circuit = line  # The circuit was already found
+                    break
             else:
                 m = lib_inc_regex.match(line)
                 if m:     # For compatibility issues not using the walruss operator here
@@ -852,7 +853,7 @@ class SpiceEditor(SpiceCircuit):
             if modified_path in self.modified_subcircuits:  # See if this was already a modified subcircuit instance
                 sub_circuit = self.modified_subcircuits[modified_path]
             else:
-                sub_circuit_original = self._get_subcircuit(modified_path)  # If not will look of it.
+                sub_circuit_original = self._get_subcircuit(modified_path)  # If not will look for it.
                 if sub_circuit_original:
                     new_name = sub_circuit_original.name() + '_' + '_'.join(component_split[:-1])  # Creates a new name with the path appended
                     sub_circuit = sub_circuit_original.clone(new_name=new_name)
