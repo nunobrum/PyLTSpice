@@ -290,6 +290,10 @@ _Make sure to initialize the root logger before importing the library to be able
 * Alternative contact : nuno.brum@gmail.com
 
 ## History ##
+* Version 4.0.6\
+  Fixing issue with the write_netlist() function when receiving a string instead of a pathlib.Path object.\
+  Changing the regular expression for the resistor in order to accept the R= prefix on the values.
+
 * Version 4.0.5\
   Accepting fixes from aanas-sayed@GitHub that fixes issues with running the LTSpice in Linux.
 
