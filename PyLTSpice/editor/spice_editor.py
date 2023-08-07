@@ -25,7 +25,7 @@ from .base_editor import BaseEditor, format_eng, ComponentNotFoundError, Paramet
 
 _logger = logging.getLogger("PyLTSpice.SpiceEditor")
 from typing import Union, List, Callable, Any, Tuple
-from utils.detect_encoding import detect_encoding
+from ..utils.detect_encoding import detect_encoding
 
 __author__ = "Nuno Canto Brum <nuno.brum@gmail.com>"
 __copyright__ = "Copyright 2021, Fribourg Switzerland"
