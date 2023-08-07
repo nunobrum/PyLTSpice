@@ -38,3 +38,7 @@ jobs:
       - name: Test LTSpice_RawRead
         run: |
           python ./tests/unittest/test_pyltspice.py
+      - name: Test Asc_Editor
+        run: |
+          python ./tests/unittest/asc_editor_test.py
+         
