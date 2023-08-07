@@ -62,7 +62,7 @@ has_ltspice = has_ltspice_detect()
 skip_ltspice_tests = not has_ltspice
 print("skip_ltspice_tests", skip_ltspice_tests)
 test_dir = '../' if os.path.abspath(os.curdir).endswith('unittest') else './tests/'
-test_dir = os.path.abspath(test_dir)
+# test_dir = os.path.abspath(test_dir)
 print("test_dir", test_dir)
 # ------------------------------------------------------------------------------
 
