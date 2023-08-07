@@ -28,6 +28,7 @@ from dataclasses import dataclass
 import logging
 _logger = logging.getLogger("PyLTSpice.SimClient")
 
+
 class SimClientInvalidRunId(LookupError):
     """Raised when asking for a run_no that doesn't exist"""
     ...

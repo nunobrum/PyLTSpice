@@ -62,11 +62,13 @@ has_ltspice = has_ltspice_detect()
 skip_ltspice_tests = not has_ltspice
 print("skip_ltspice_tests", skip_ltspice_tests)
 test_dir = '../' if os.path.abspath(os.curdir).endswith('unittest') else './tests/'
+test_dir = os.path.abspath(test_dir)
 print("test_dir", test_dir)
 # ------------------------------------------------------------------------------
 
 # if has_ltspice:
 #    os.chdir(os.path.abspath((os.path.dirname(os.path.abspath(__file__)))))
+
 
 class test_pyltspice(unittest.TestCase):
     """Unnittesting PyLTSpice"""
@@ -94,9 +96,9 @@ class test_pyltspice(unittest.TestCase):
         # define simulation
         LTC.add_instructions(
                 "; Simulation settings",
-                ".param run = 0",
                 # ".step dec param freq 10k 1Meg 10",
         )
+        LTC.set_parameter("run", "0")
 
         for opamp in ('AD712', 'AD820'):
             LTC.set_element_model('XU1', opamp)
@@ -139,8 +141,8 @@ class test_pyltspice(unittest.TestCase):
         """Run command on SpiceEditor"""
         LTC = SimRunner()
         # select spice model
-        LTC.create_netlist("../../tests/testfile.asc")
-        netlist = SpiceEditor("../../tests/testfile.net")
+        LTC.create_netlist(test_dir + "testfile.asc")
+        netlist = SpiceEditor(test_dir + "testfile.net")
         # set default arguments
         netlist.set_parameters(res=0.001, cap=100e-6)
         # define simulation

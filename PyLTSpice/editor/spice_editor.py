@@ -642,6 +642,18 @@ class SpiceCircuit(BaseEditor):
                             circuit_nodes.append(node)
         return circuit_nodes
 
+    def reset_netlist(self) -> None:
+        pass
+
+    def write_netlist(self, run_netlist_file: Union[str, Path]) -> None:
+        pass
+
+    def add_instruction(self, instruction: str) -> None:
+        pass
+
+    def remove_instruction(self, instruction: str) -> None:
+        pass
+
 
 class SpiceEditor(SpiceCircuit):
     """

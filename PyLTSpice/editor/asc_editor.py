@@ -208,4 +208,10 @@ class AscEditor(BaseEditor):
         self._asc_file_lines.append("TEXT {} {} Left 2 !{}".format(x, y, instruction) + END_LINE_TERM)
         self._parse_asc_file()
 
-
+    def remove_instruction(self, instruction: str) -> None:
+        i = 0
+        while i < len(self._texts):
+            line_no, line = self._texts[i]
+            if instruction in line:
+                self._asc_file_lines[line_no] = ""
+                self._parse_asc_file()

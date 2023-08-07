@@ -98,7 +98,7 @@ class RunTask(threading.Thread):
         self.print_info(_logger.info, ": Starting simulation %d" % self.runno)
 
         # start execution
-        self.retcode = self.simulator.run(self.netlist_file, self.switches, self.timeout)
+        self.retcode = self.simulator.run(self.netlist_file.absolute().as_posix(), self.switches, self.timeout)
         self.stop_time = clock_function()
         # print simulation time with format HH:MM:SS.mmmmmm
 

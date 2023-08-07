@@ -20,9 +20,17 @@
 # -------------------------------------------------------------------------------
 
 from collections import OrderedDict
-from typing import Iterable
-from .sim_batch import SimCommander
-from .spice_editor import ComponentNotFoundError
+from pathlib import Path
+from typing import Iterable, Union, Optional, Protocol
+
+from ..editor.spice_editor import SpiceEditor
+from ..editor.base_editor import BaseEditor, ComponentNotFoundError
+from ..sim.simulator import Simulator
+
+
+class AnyRunner(Protocol):
+    def run(self, netlist: Union[str, Path, SpiceEditor]):
+        ...
 
 
 class SimAnalysis(object):
@@ -34,8 +42,21 @@ class SimAnalysis(object):
     will be possible, although, it seems that the later solution is less computing intense.
     """
 
-    def __init__(self, circuit_file: str, parallel_sims=4):
-        self.simulator = SimCommander(circuit_file, parallel_sims=parallel_sims)
+    def __init__(self, circuit_file: Union[str, BaseEditor], simulator: Optional[Simulator] = None,
+                 runner: Optional[AnyRunner] = None):
+        if isinstance(circuit_file, str):
+            from ..editor.spice_editor import SpiceEditor
+            self.editor = SpiceEditor(circuit_file)
+        else:
+            self.editor = circuit_file
+        if simulator is None:
+            from ..sim.ltspice_simulator import LTspice
+            self.simulator = LTspice()
+        else:
+            self.simulator = simulator
+        if runner is None:
+            from ..sim.sim_runner import SimRunner
+            self.runner = SimRunner(parallel_sims=1, timeout=None, verbose=False, output_folder=None)
         self.simulations = OrderedDict()
 
 
@@ -58,20 +79,21 @@ class FailureMode(SimAnalysis):
         * Integrated Circuits
             # The failure modes are defined by the user by using the add_failure_mode() method
     """
-    def __init__(self, circuit_file: str, parallel_sims=4):
-        SimAnalysis.__init__(self, circuit_file, parallel_sims=parallel_sims)
-        self.resistors = self.simulator.get_components('R')
-        self.capacitors = self.simulator.get_components('C')
-        self.inductors = self.simulator.get_components('L')
-        self.diodes = self.simulator.get_components('D')
-        self.bipolars = self.simulator.get_components('Q')
-        self.mosfets = self.simulator.get_components('M')
-        self.subcircuits = self.simulator.get_components('X')
+    def __init__(self, circuit_file: Union[str, BaseEditor], simulator: Optional[Simulator] = None,
+                 runner: Optional[AnyRunner] = None):
+        SimAnalysis.__init__(self, circuit_file, simulator, runner)
+        self.resistors = self.editor.get_components('R')
+        self.capacitors = self.editor.get_components('C')
+        self.inductors = self.editor.get_components('L')
+        self.diodes = self.editor.get_components('D')
+        self.bipolars = self.editor.get_components('Q')
+        self.mosfets = self.editor.get_components('M')
+        self.subcircuits = self.editor.get_components('X')
         self.user_failure_modes = OrderedDict()
 
     def add_failure_circuit(self, component, sub_circuit):
         if not component.startswith('X'):
-            raise RuntimeError("The failure modes addition only works with subcircuits")
+            raise RuntimeError("The failure modes addition only works with sub circuits")
         if component not in self.subcircuits:
             raise ComponentNotFoundError()
         raise NotImplementedError("TODO")  # TODO: Implement this
@@ -86,20 +108,20 @@ class FailureMode(SimAnalysis):
     def run_all(self):
         for resistor in self.resistors:
             # Short Circuit
-            self.simulator.set_component_value(resistor, '1f')  # replaces the resistor with a one femto-Ohm
+            self.editor.set_component_value(resistor, '1f')  # replaces the resistor with a one femto-Ohm
             self.simulations[f"{resistor}_S"] = self.simulator.run()
             # Open Circuit
-            self.simulator.remove_component(resistor)
+            self.editor.remove_component(resistor)
             self.simulations[f"{resistor}_O"] = self.simulator.run()
-            self.simulator.reset_netlist()
+            self.editor.reset_netlist()
 
         for two_pin_comps in (self.capacitors, self.inductors, self.diodes):
             for two_pin_component in two_pin_comps:
                 # Open Circuit
-                cinfo = self.simulator.get_component_info(two_pin_component)
-                self.simulator.remove_component(two_pin_component)
+                cinfo = self.editor.get_component_info(two_pin_component)
+                self.editor.remove_component(two_pin_component)
                 self.simulations[f"{two_pin_component}_O"] = self.simulator.run()
                 # Short Circuit
-                self.simulator.netlist[cinfo['line']] = f"Rfmea_short_{two_pin_component}{cinfo['nodes']} 1f"
+                self.editor.netlist[cinfo['line']] = f"Rfmea_short_{two_pin_component}{cinfo['nodes']} 1f"
                 self.simulations[f"{two_pin_component}_S"] = self.simulator.run()
-                self.simulator.reset_netlist()
+                self.editor.reset_netlist()

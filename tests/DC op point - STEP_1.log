@@ -1,9 +1,9 @@
-Circuit: * C:\sandbox\PyLTSpice_GitHub_nunobrum\tests\DC op point - STEP.asc
+Circuit: * C:\sandbox\PyLTSpice\tests\DC op point - STEP.asc
 
 Direct Newton iteration for .op point succeeded.
 
-Date: Sun Apr 23 19:23:34 2023
-Total elapsed time: 0.014 seconds.
+Date: Mon Aug  7 13:39:54 2023
+Total elapsed time: 0.103 seconds.
 
 tnom = 27
 temp = 27
@@ -16,6 +16,6 @@ rejected = 0
 matrix size = 7
 fillins = 0
 solver = Normal
-Avg thread counts: 8.0/0.0/8.0/8.0
+Avg thread counts: 16.0/0.0/16.0/16.0
 Matrix Compiler1: 268 bytes object code size
 Matrix Compiler2: 467 bytes object code size
