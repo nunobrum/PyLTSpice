@@ -1,5 +1,5 @@
 from PyLTSpice.sim.sim_runner import SimRunner
-from PyLTSpice.sim.spice_editor import SpiceEditor
+from PyLTSpice.editor.spice_editor import SpiceEditor
 from PyLTSpice.sim.ngspice_simulator import NGspiceSimulator
 from PyLTSpice.utils.sweep_iterators import sweep_log
 

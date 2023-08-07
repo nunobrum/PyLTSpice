@@ -103,7 +103,7 @@ from typing import Callable, Any, Union
 import logging
 _logger = logging.getLogger("PyLTSpice.SimBatch")
 
-from ..sim.spice_editor import SpiceEditor
+from ..editor.spice_editor import SpiceEditor
 from ..sim.simulator import Simulator
 from ..sim.run_task import RunTask
 from ..sim.sim_runner import SimRunner

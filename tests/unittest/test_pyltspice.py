@@ -47,7 +47,7 @@ sys.path.append(
 from PyLTSpice.log.ltsteps import LTSpiceLogReader
 from PyLTSpice.sim.sim_batch import SimCommander
 from PyLTSpice.raw.raw_read import RawRead
-from PyLTSpice.sim.spice_editor import SpiceEditor
+from PyLTSpice.editor.spice_editor import SpiceEditor
 from PyLTSpice.sim.sim_runner import SimRunner
 from PyLTSpice.sim.ltspice_simulator import LTspice
 

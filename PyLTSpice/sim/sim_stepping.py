@@ -22,14 +22,13 @@
 __author__ = "Nuno Canto Brum <nuno.brum@gmail.com>"
 __copyright__ = "Copyright 2017, Fribourg Switzerland"
 
-import functools
 from typing import Callable, Any, Union
 from typing import Iterable
 import pathlib
 from functools import wraps
 import logging
 _logger = logging.getLogger("PyLTSpice.SimStepper")
-from .spice_editor import SpiceEditor
+from ..editor.spice_editor import SpiceEditor
 from .sim_runner import SimRunner
 
 

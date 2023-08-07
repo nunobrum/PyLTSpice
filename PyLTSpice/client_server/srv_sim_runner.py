@@ -19,14 +19,14 @@
 # -------------------------------------------------------------------------------
 import threading
 import time
-from typing import Any, Callable, Union
+from typing import Union, List, Dict, Any
 from pathlib import Path
 import zipfile
 import logging
 _logger = logging.getLogger("PyLTSpice.ServerSimRunner")
 
 from PyLTSpice.sim.sim_runner import SimRunner
-from PyLTSpice.sim.spice_editor import SpiceEditor
+from PyLTSpice.editor.spice_editor import SpiceEditor
 
 
 def zip_files(raw_filename: Path, log_filename:Path):
@@ -51,7 +51,7 @@ class ServerSimRunner(threading.Thread):
     def __init__(self, parallel_sims: int = 4, timeout=None, verbose=True, output_folder: str = None, simulator=None):
         super().__init__(name="SimManager")
         self.runner = SimRunner(parallel_sims, timeout, verbose, output_folder, simulator)
-        self.completed_tasks = []
+        self.completed_tasks: List[Dict[str, Any]] = []
         self._stop = False
 
     def run(self) -> None:

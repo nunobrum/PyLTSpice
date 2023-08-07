@@ -96,7 +96,6 @@ __copyright__ = "Copyright 2020, Fribourg Switzerland"
 
 __all__ = ['SimRunner']
 
-import os
 import shutil
 from pathlib import Path
 from time import sleep, thread_time as clock
@@ -108,7 +107,7 @@ _logger = logging.getLogger("PyLTSpice.SimRunner")
 from .process_callback import ProcessCallback
 from ..sim.run_task import RunTask
 from ..sim.simulator import Simulator
-from ..sim.spice_editor import SpiceEditor
+from ..editor.spice_editor import SpiceEditor
 
 END_LINE_TERM = '\n'
 
