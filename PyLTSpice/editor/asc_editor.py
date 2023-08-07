@@ -50,17 +50,20 @@ class AscEditor(BaseEditor):
 
     def write_netlist(self, run_netlist_file: Union[str, Path]) -> None:
         with open(run_netlist_file, 'w') as asc_file:
+            _logger.info(f"Writing ASC file {run_netlist_file}")
             asc_file.writelines(self._asc_file_lines)
 
     def reset_netlist(self):
         with open(self._asc_file_path, 'r') as asc_file:
+            _logger.info(f"Reading ASC file {self._asc_file_path}")
             self._asc_file_lines = asc_file.readlines()
         self._parse_asc_file()
 
     def _parse_asc_file(self):
         symbol_attributes = {}
-        self._symbols = {}
-        self._texts = []
+        self._symbols.clear()
+        self._texts.clear()
+        _logger.debug("Parsing ASC file")
         for line_no, line in enumerate(self._asc_file_lines):
             if line.startswith("SYMBOL"):
                 tokens = line.split()
@@ -82,6 +85,9 @@ class AscEditor(BaseEditor):
 
     def get_component_info(self, component) -> dict:
         """Returns the component information as a dictionary"""
+        if component not in self._symbols:
+            _logger.error(f"Component {component} not found in ASC file")
+            raise ComponentNotFoundError(f"Component {component} not found in ASC file")
         return self._symbols[component]
 
     def _get_line_matching(self, command, search_expression: re.Pattern) -> Tuple[int, Union[re.Match, None]]:
@@ -106,19 +112,26 @@ class AscEditor(BaseEditor):
         param_regex = re.compile(PARAM_REGEX % param, re.IGNORECASE)
         line_no, match = self._get_line_matching(".PARAM", param_regex)
         if match:
+            _logger.debug(f"Parameter {param} found in ASC file, updating it")
             value_str = format_eng(value)
             line: str = self._asc_file_lines[line_no]
-            match = param_regex.search(line)  # repeating the search so we update the correct start/stop parameter
+            match = param_regex.search(line)  # repeating the search, so we update the correct start/stop parameter
             start, stop = match.span(param_regex.groupindex['replace'])
             self._asc_file_lines[line_no] = line[:start] + "{}={}".format(param, value_str) + line[stop:]
+            _logger.info(f"Parameter {param} updated to {value_str}")
+            _logger.debug(f"Line:{line_no + 1} Updated to: {self._asc_file_lines[line_no]}")
         else:
             # Was not found so we need to add it,
+            _logger.debug(f"Parameter {param} not found in ASC file, adding it")
             x, y = self._get_text_space()
             self._asc_file_lines.append("TEXT {} {} Left 2 !.param {}={}".format(x, y, param, value) + END_LINE_TERM)
+            _logger.info(f"Parameter {param} added with value {value}")
+            _logger.debug(f"Line:{len(self._asc_file_lines)} Added: {self._asc_file_lines[-1]}")
         self._parse_asc_file()
 
     def set_component_value(self, device: str, value: Union[str, int, float]) -> None:
-        start = self._symbols[device]['line']
+        comp_info = self.get_component_info(device)
+        start = comp_info['line']
         for offset, line in enumerate(self._asc_file_lines[start:]):
             if line.startswith("SYMATTR Value"):
                 if isinstance(value, str):
@@ -126,34 +139,39 @@ class AscEditor(BaseEditor):
                 else:
                     value_str = format_eng(value)
                 self._asc_file_lines[start + offset] = "SYMATTR Value {}".format(value_str) + END_LINE_TERM
+                _logger.info(f"Component {device} updated to {value_str}")
+                _logger.debug(f"Line:{start + offset + 1} Updated to: {self._asc_file_lines[start + offset]}")
                 self._parse_asc_file()
                 break
         else:
-            raise ComponentNotFoundError(f"Component {device} not found in ASC file")
+            _logger.error(f"Component {device} does not have a Value attribute")
+            raise ComponentNotFoundError(f"Component {device} does not have a Value attribute")
 
     def set_element_model(self, element: str, model: str) -> None:
         self.set_component_value(element, model)
 
     def get_component_value(self, element: str) -> str:
-        if element not in self._symbols:
-            raise ComponentNotFoundError(f"Component {element} not found in ASC file")
-        return self.get_component_info(element)["Value"]
+        comp_info = self.get_component_info(element)
+        if "Value" not in comp_info:
+            _logger.error(f"Component {element} does not have a Value attribute")
+            raise ComponentNotFoundError(f"Component {element} does not have a Value attribute")
+        return comp_info["Value"]
 
     def get_components(self, prefixes='*') -> list:
-        """Returns a list of components with the given prefix"""
         if prefixes == '*':
             return list(self._symbols.keys())
-        return [k for k in self._symbols.keys() if k.startswith(prefixes)]
+        return [k for k in self._symbols.keys() if k[0] in prefixes]
 
     def remove_component(self, designator: str):
-        if designator not in self._symbols:
-            raise ComponentNotFoundError(f"Component {designator} not found in ASC file")
-        line_start = self._symbols[designator]['line']
-        for line_no in self._asc_file_lines[line_start:]:
-            if line_no.startswith("SYMBOL") or line_no.startswith("WINDOW") or line_no.startswith("SYMATTR"):
-                self._asc_file_lines[line_no] = ""  # removes the line without touching the line number
+        comp_info = self.get_component_info(designator)
+        line_end = line_start = comp_info['line']
+        for offset, line in enumerate(self._asc_file_lines[line_start:]):
+            if line.startswith("SYMBOL") or line.startswith("WINDOW") or line.startswith("SYMATTR"):
+                continue
             else:
+                line_end = line_start + offset
                 break  # If another line is found, then it is the start of another component
+        del self._asc_file_lines[line_start:line_end]
         self._parse_asc_file()
 
     def _get_text_space(self):
@@ -188,7 +206,7 @@ class AscEditor(BaseEditor):
                 min_y = min(min_y, y1)
                 max_y = max(max_y, y1)
 
-        return min_x, max_y + 24
+        return min_x, max_y + 24  # Setting the text in the bottom left corner of the canvas
 
     def add_instruction(self, instruction: str) -> None:
         instruction = instruction.strip()  # Clean any end of line terminators
@@ -218,5 +236,10 @@ class AscEditor(BaseEditor):
         while i < len(self._texts):
             line_no, line = self._texts[i]
             if instruction in line:
-                self._asc_file_lines[line_no] = ""
+                del self._asc_file_lines[line_no]
                 self._parse_asc_file()
+                return  # Job done, can exit this method
+            i += 1
+
+        _logger.error(f'Instruction "{instruction}" not found')
+        raise RuntimeError(f'Instruction "{instruction}" not found')
