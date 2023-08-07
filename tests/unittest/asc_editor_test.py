@@ -1,9 +1,13 @@
 import os
+import sys
 import unittest
 import PyLTSpice
 
+sys.path.append(
+    os.path.abspath((os.path.dirname(os.path.abspath(__file__)) + "/../../")))  # add project root to lib search path
+
 test_dir = '../' if os.path.abspath(os.curdir).endswith('unittest') else './tests/'
-# test_dir = os.path.abspath(test_dir)
+
 
 class ASC_Editor_Test(unittest.TestCase):
 
