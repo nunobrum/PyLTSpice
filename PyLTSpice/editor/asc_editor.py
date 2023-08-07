@@ -110,10 +110,11 @@ class AscEditor(BaseEditor):
             line: str = self._asc_file_lines[line_no]
             match = param_regex.search(line)  # repeating the search so we update the correct start/stop parameter
             start, stop = match.span(param_regex.groupindex['replace'])
-            self._asc_file_lines[line_no] = line[:start] + "{}={}".format(param, value) + line[stop:]
+            self._asc_file_lines[line_no] = line[:start] + "{}={}".format(param, value_str) + line[stop:]
         else:
             # Was not found so we need to add it,
-            self.add_instruction('TEXT 296 488 Left 2 !.param temp = 0'.format(param, value) + END_LINE_TERM)
+            x, y = self._get_text_space()
+            self._asc_file_lines.append("TEXT {} {} Left 2 !.param {}={}".format(x, y, param, value) + END_LINE_TERM)
         self._parse_asc_file()
 
     def set_component_value(self, device: str, value: Union[str, int, float]) -> None:
@@ -159,15 +160,15 @@ class AscEditor(BaseEditor):
         """
         Returns the coordinate on the Schematic File canvas where a text can be appended.
         """
-        min_x = 0
+        min_x = 100000  # High enough to be sure it will be replaced
         max_x = 0
-        min_y = 0
+        min_y = 100000  # High enough to be sure it will be replaced
         max_y = 0
         for line in self._asc_file_lines:
             if line.startswith("SHEET"):
                 x, y = line.split()[2:4]
-                min_x = max_x = int(x)
-                min_y = max_y = int(y)
+                min_x = int(x)
+                min_y = int(y)
             elif line.startswith("WIRE"):
                 x1, y1, x2, y2 = [int(x) for x in line.split()[1:5]]
                 min_x = min(min_x, x1, x2)
@@ -177,13 +178,17 @@ class AscEditor(BaseEditor):
             elif line.startswith("FLAG") or line.startswith("TEXT"):
                 x1, y1 = [int(x) for x in line.split()[1:3]]
                 min_x = min(min_x, x1)
+                max_x = max(max_x, x1)
                 min_y = min(min_y, y1)
+                max_y = max(max_y, y1)
             elif line.startswith("SYMBOL"):
                 x1, y1 = [int(x) for x in line.split()[2:4]]
                 min_x = min(min_x, x1)
+                max_x = max(max_x, x1)
                 min_y = min(min_y, y1)
+                max_y = max(max_y, y1)
 
-        return min_x, max_y + 100
+        return min_x, max_y + 24
 
     def add_instruction(self, instruction: str) -> None:
         instruction = instruction.strip()  # Clean any end of line terminators
