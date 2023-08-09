@@ -30,9 +30,10 @@ if __name__ == "__main__":
     netlist.set_component_value('XU1:C2', 20e-12)  # modifying a
     # define simulation
     netlist.add_instructions(
-            "; Simulation settings",
-            ".param run = 0"
+        "; Simulation settings",
+        ";.param run = 0"
     )
+    netlist.set_parameter('run', 0)
 
     for opamp in ('AD712', 'AD820'):
         netlist.set_element_model('XU1', opamp)

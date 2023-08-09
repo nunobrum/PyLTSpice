@@ -68,40 +68,40 @@ def test_axis_sync():  # Test axis sync
 
 def test_write_ac():
     LW = RawWrite()
-    LR = RawRead("..\\tests\\PI_Filter.raw")
-    LR1 = RawRead("..\\tests\\PI_Filter_resampled.raw")
+    LR = RawRead("\\PI_Filter.raw")
+    LR1 = RawRead("\\PI_Filter_resampled.raw")
     LW.add_traces_from_raw(LR, ('V(N002)',))
     LW.add_traces_from_raw(LR1, 'V(N002)', rename_format='N002_resampled', force_axis_alignment=True)
     LW.flag_fastaccess = False
-    LW.save("..\\tests\\PI_filter_rewritten.raw")
+    LW.save("..\\examples\\PI_filter_rewritten.raw")
     LW.flag_fastaccess = True
-    LW.save("..\\tests\\PI_filter_rewritten_fast.raw")
+    LW.save("..\\examples\\PI_filter_rewritten_fast.raw")
 
 
 def test_write_tran():
-    LR = RawRead("..\\tests\\TRAN - STEP.raw")
+    LR = RawRead("\\TRAN - STEP.raw")
     LW = RawWrite()
     LW.add_traces_from_raw(LR, ('V(out)', 'I(C1)'))
     LW.flag_fastaccess = False
-    LW.save("..\\tests\\TRAN - STEP0_normal.raw")
+    LW.save("..\\examples\\TRAN - STEP0_normal.raw")
     LW.flag_fastaccess = True
-    LW.save("..\\tests\\TRAN - STEP0_fast.raw")
+    LW.save("..\\examples\\TRAN - STEP0_fast.raw")
 
 
 def test_combine_tran():
     LW = RawWrite()
     for tag, raw in (
-            ("AD820_15", "../tests/Batch_Test_AD820_15.raw"),
-            # ("AD820_10", "../tests/Batch_Test_AD820_10.raw"),
-            ("AD712_15", "../tests/Batch_Test_AD712_15.raw"),
-            # ("AD712_10", "../tests/Batch_Test_AD712_10.raw"),
-            # ("AD820_5", "../tests/Batch_Test_AD820_5.raw"),
-            # ("AD712_5", "../tests/Batch_Test_AD712_5.raw"),
+            ("AD820_15", "../examples/Batch_Test_AD820_15.raw"),
+            # ("AD820_10", "../examples/Batch_Test_AD820_10.raw"),
+            ("AD712_15", "../examples/Batch_Test_AD712_15.raw"),
+            # ("AD712_10", "../examples/Batch_Test_AD712_10.raw"),
+            # ("AD820_5", "../examples/Batch_Test_AD820_5.raw"),
+            # ("AD712_5", "../examples/Batch_Test_AD712_5.raw"),
     ):
         LR = RawRead(raw)
         LW.add_traces_from_raw(LR, ("V(out)", "I(R1)"), rename_format="{}_{tag}", tag=tag, force_axis_alignment=True)
     LW.flag_fastaccess = False
-    LW.save("../tests/Batch_Test_Combine.raw")
+    LW.save("../examples/Batch_Test_Combine.raw")
 
 
 # test_readme_snippet()

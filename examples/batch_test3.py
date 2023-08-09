@@ -31,9 +31,10 @@ netlist.set_element_model('V3', "SINE(0 1 3k 0 0 0)")  # Modifying the
 netlist.set_component_value('XU1:C2', 20e-12)  # modifying a
 # define simulation
 netlist.add_instructions(
-        "; Simulation settings",
-        ".param run = 0"
+    "; Simulation settings",
+    ";.param run = 0"
 )
+netlist.set_parameter('run', 0)
 
 use_run_now = False
 

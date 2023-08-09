@@ -18,20 +18,27 @@ PyLTSpice is a toolchain of python utilities design to interact with LTSpice and
   A python script that uses numpy and matplotlib to create an histogram and calculate the sigma deviations. This is
   useful for Monte-Carlo analysis.
 
-* __sim_batch.py__
-  This is a script to launch Spice Simulations. This is useful because:
+* __spice_editor.py and asc_editor.py__
+  Scripts that can update spice netlists. The following methods are available to manipulate the component values,
+  parameters as well as the simulation commands. These methods allow to update a netlist without having to open the
+  schematic in LTSpice. The simulations can then be run in batch mode (see sim_runner.py).
+
+    - `set_element_model('D1', '1N4148') # Replaces the Diode D1 with the model 1N4148 `
+    - `set_component_value('R2', '33k') # Replaces the value of R2 by 33k`
+    - `set_parameters(run=1, TEMP=80) # Creates or updates the netlist to have .PARAM run=1 or .PARAM TEMP=80`
+    - `add_instructions(".STEP run -1 1023 1", ".dc V1 -5 5") `
+    - `remove_instruction(".STEP run -1 1023 1")  # Removes previously added instruction`
+    - `reset_netlist() # Resets all edits done to the netlist.`
+
+* __sim_runner.py__
+  A python script that can be used to run LTSpice simulations in batch mode without having to open the LTSpice GUI.
+  This in cooperation with the classes defined in spice_editor.py or asc_editor.py is useful because:
 
     - Can overcome the limitation of only stepping 3 parameters
     - Different types of simulations .TRAN .AC .NOISE can be run in a single batch
     - The RAW Files are smaller and easier to treat
     - When used with the RawRead.py and LTSteps.py, validation of the circuit can be done automatically.
     - Different models can be simulated in a single batch, by using the following instructions:
-        - `set_element_model('D1', '1N4148') # Replaces the Diode D1 with the model 1N4148 `
-        - `set_component_value('R2', '33k') # Replaces the value of R2 by 33k`
-        - `set_parameters(run=1, TEMP=80) # Creates or updates the netlist to have .PARAM run=1 or .PARAM TEMP=80`
-        - `add_instructions(".STEP run -1 1023 1", ".dc V1 -5 5") `
-        - `remove_instruction(".STEP run -1 1023 1")  # Removes previously added instruction`
-        - `reset_netlist() # Resets all edits done to the netlist.`
 
   Note: It was only tested with Windows based installations.
 
@@ -63,7 +70,7 @@ More comprehensive documentation can be found in https://pyltspice.readthedocs.i
 GNU V3 License
 (refer to the LICENSE file)
 
-### raw_read.py ###
+### RawRead ###
 
 The example below reads the data from a Spice Simulation called
 "TRAN - STEP.raw" and displays all steps of the "I(R1)" trace in a matplotlib plot
@@ -89,7 +96,7 @@ plt.legend()  # order a legend
 plt.show()
  ```   
 
-### raw_write.py ###
+### RawWrite ###
 
 The following example writes a RAW file with a 3 milliseconds transient simulation sine with a 10kHz and a cosine with
 9.997kHz
@@ -108,7 +115,7 @@ LW.add_trace(vz)
 LW.save("teste_snippet1.raw")
  ```   
 
-### sim_batch.py ###
+### SpiceEditor, AscEditor and SimRunner.py ###
 
 This module is used to launch LTSPice simulations. Results then can be processed with either the RawRead or with the
 LTSteps module to read the log file which can contain .MEAS results.
@@ -127,14 +134,14 @@ LTC = SimRunner(output_folder='./temp')
 LTC.create_netlist('Batch_Test.asc')
 netlist = SpiceEditor('Batch_Test.net')
 # set default arguments
-netlist.set_parameters(res=0, cap=100e-6)
+netlist.set_parameters(res=0, cap=100e-6, run=-1)
 netlist.set_component_value('R2', '2k')  # Modifying the value of a resistor
 netlist.set_component_value('R1', '4k')
 netlist.set_element_model('V3', "SINE(0 1 3k 0 0 0)")  # Modifying the
 netlist.set_component_value('XU1:C2', 20e-12)  # modifying a define simulation
 netlist.add_instructions(
-        "; Simulation settings",
-        ".param run = 0"
+    "; Simulation settings",
+    ".save V(Vin) I(R1)",
 )
 
 for opamp in ('AD712', 'AD820'):
@@ -154,10 +161,10 @@ for raw, log in LTC:
 
 netlist.reset_netlist()
 netlist.add_instructions(
-        "; Simulation settings",
-        ".ac dec 30 10 1Meg",
-        ".meas AC Gain MAX mag(V(out)) ; find the peak response and call it ""Gain""",
-        ".meas AC Fcut TRIG mag(V(out))=Gain/sqrt(2) FALL=last"
+    "; Simulation settings",
+    ".ac dec 30 10 1Meg",
+    ".meas AC Gain MAX mag(V(out)) ; find the peak response and call it ""Gain""",
+    ".meas AC Fcut TRIG mag(V(out))=Gain/sqrt(2) FALL=last"
 )
 
 # Sim Statistics
@@ -166,9 +173,18 @@ print('Successful/Total Simulations: ' + str(LTC.okSim) + '/' + str(LTC.runno))
 enter = input("Press enter to delete created files")
 if enter == '':
     LTC.file_cleanup()
+```
 
-# Sim Statistics
-print('Successful/Total Simulations: ' + str(LTC.okSim) + '/' + str(LTC.runno))
+The example above is using the SpiceEditor to create and modify a spice netlist, but it is also possible to use the
+AscEditor to directly modify the .asc file. The edited .asc file can then be opened by the LTSpice GUI and the
+simulation can be run from there.
+
+The example below uses can be used o modify the .asc file to prepare for a Monte Carlo simulation.
+The simulation is then run from the LTSpice GUI.
+
+```python
+from PyLTSpice import SimRunner
+from PyLTSpice import AscEditor
 ```
 
 ### LTSteps.py ###
@@ -198,13 +214,17 @@ print("Total number of measures found :", data.measure_count)
 ```
 
 The second possibility is to use the module directly on the command line
-`python -m PyLTSpice.LTSteps <filename> `
+
+# Command Line Interface #
+
+### ltsteps.exe ###
+
 The <filename> can be either be a log file (.log), a data export file (.txt) or a measurement output file (.meas)
 This will process all the data and export it automatically into a text file with the extension (tlog, tsv, tmeas)
 where the data read is formatted into a more convenient tab separated format. In case the <logfile> is not provided, the
 script will scan the directory and process the newest log, txt or out file found.
 
-### Histogram.py ###
+### histogram.exe ###
 
 This module uses the data inside on the filename to produce an histogram image.
 
@@ -263,24 +283,32 @@ This module is used to read from LTSpice log files Semiconductor Devices Operati
 documentation is directly included in the source file docstrings.
 
 ## Debug Logging
-The library uses the standard `logging` module. Three convenience functions have been added for easily changing logging 
-settings across the entire library. `PyLTSpice.all_loggers()` returns a list of all the logger's names, `PyLTSpice.set_log_level(logging.DEBUG)` 
-would set the library's logging level to debug, and `PyLTSpice.add_log_handler(my_handler)` would add `my_handler` as a handler for 
+
+The library uses the standard `logging` module. Three convenience functions have been added for easily changing logging
+settings across the entire library. `PyLTSpice.all_loggers()` returns a list of all the logger's
+names, `PyLTSpice.set_log_level(logging.DEBUG)`
+would set the library's logging level to debug, and `PyLTSpice.add_log_handler(my_handler)` would add `my_handler` as a
+handler for
 all loggers.
 
 ### Single Module Logging
-It is also possible to set the logging settings for a single module by using its name acquired from the `PyLTSpice.all_loggers()` 
+
+It is also possible to set the logging settings for a single module by using its name acquired from
+the `PyLTSpice.all_loggers()`
 function. For example:
 
 ```python
 import logging
+
 logging.basicConfig(level=logging.INFO)  # Set up the root logger first
 
 import PyLTSpice  # Import PyLTSpice to set the logging levels
+
 PyLTSpice.set_log_level(logging.DEBUG)  # Set PyLTSpice's global log level
 logging.getLogger("PyLTSpice.RawRead").level = logging.WARNING  # Set the log level for only RawRead to warning
 ```
-Would set only `PyLTSpice.RawRead` file's logging level to warning while the other modules would remain at debug level. 
+
+Would set only `PyLTSpice.RawRead` file's logging level to warning while the other modules would remain at debug level.
 _Make sure to initialize the root logger before importing the library to be able to see the logs._
 
 ## To whom do I talk to? ##
@@ -290,144 +318,151 @@ _Make sure to initialize the root logger before importing the library to be able
 * Alternative contact : nuno.brum@gmail.com
 
 ## History ##
+
+* Version 4.1.0 *(requires Python 3.8 or higher)*
+    * Adding a new class to manipulate directly the .asc files.
+    * Modifying all the other classes in order to use the new class.
+    * Adding classes to perform Montecarlo and worst case analysis.
+    * Removing the deprecated LTSpice_RawRead.py, LTSpice_RawWrite.py and LTSpiceBatch.py files and respective classes.
+
 * Version 4.0.6\
-  Fixing issue with the write_netlist() function when receiving a string instead of a pathlib.Path object.\
-  Changing the regular expression for the resistor in order to accept the R= prefix on the values.
+    * Fixing issue with the write_netlist() function when receiving a string instead of a pathlib.Path object.
+    * Changing the regular expression for the resistor in order to accept the R= prefix on the values.
 
 * Version 4.0.5\
-  Accepting fixes from aanas-sayed@GitHub that fixes issues with running the LTSpice in Linux.
+    * Accepting fixes from aanas-sayed@GitHub that fixes issues with running the LTSpice in Linux.
 
 * Version 4.0.4\
-  Improved usage of the logging library. (Thanks TSprech@GitHub)\
-  Included RunTask number in the log messages.\ 
-  Included milliseconds in the time elapsed calculation.
+    * Improved usage of the logging library. (Thanks TSprech@GitHub)
+    * Included RunTask number in the log messages.
+    * Included milliseconds in the time elapsed calculation.
 
 * Version 4.0.3\
-  Fixing issue in elapsed time calculation.\
-  Fixing issue with the import of LTSpiceLogReader from LTSteps.py
+    * Fixing issue in elapsed time calculation.
+    * Fixing issue with the import of LTSpiceLogReader from LTSteps.py
 
-* Version 4.0.2\
-  Changing list of Library dependencies.
+* Version 4.0.2
+    * Changing list of Library dependencies.
 
-* Version 4.0.1\
-  Bug fix on CLI for the Histogram.py and LTSteps.py
+* Version 4.0.1
+    * Bug fix on CLI for the Histogram.py and LTSteps.py
 
-* Version 4.0.0\
-  Separating the SimCommander into two separate classes, one for the spice netlist editing (SpiceEditor) and another for
-  the simulation execution (SimRunner).\
-  Implementing simulation server to allow for remote simulation execution and the respective client.\
-  Supporting Wiggler element in the new LTSpiceXVII.\
-  Renaming all files into lowercase.\
-  Creating Error classes for better error handling.\
-  Adding support for other simulators (ex: ngspice) where the simulator is defined by a class. This
-  support class needs to be a subclass of the abstract class Simulator.\
-  Enormous improvement in the documentation of the code.  
+* Version 4.0.0
+    * Separating the SimCommander into two separate classes, one for the spice netlist editing (SpiceEditor) and another
+      for the simulation execution (SimRunner).
+    * Implementing simulation server to allow for remote simulation execution and the respective client.
+    * Supporting Wiggler element in the new LTSpiceXVII.
+    * Renaming all files into lowercase.
+    * Creating Error classes for better error handling.
+    * Adding support for other simulators (ex: ngspice) where the simulator is defined by a class. This
+      support class needs to be a subclass of the abstract class Simulator.
+    * Enormous improvement in the documentation of the code.
 
-* Version 3.0\
-  Eliminating the LTSpice prefixes from files and classes.\
-  Adopting the lowercase convention for filenames.
+* Version 3.0
+    * Eliminating the LTSpice prefixes from files and classes.
+    * Adopting the lowercase convention for filenames.
 
-* Version 2.3.1\
-  Bug fix on the parameter replacement
+* Version 2.3.1
+    * Bug fix on the parameter replacement.
 
-* Version 2.3\
-  Supporting the creation of RAW Noise Analysis\
-  Bug Fixes (See GitHub Log)
+* Version 2.3
+    * Supporting the creation of RAW Noise Analysis
+    * Bug Fixes (See GitHub Log)
 
-* Version 2.2\
-  Making numpy as an requirement and eliminating all code that avoided the use of numpy\
-  Using new packaging tool\
-  Fixes on the LTSpice_RawWrite\
-  Fixes in the handling of stepped operating point simulations
+* Version 2.2
+    * Making numpy as an requirement and eliminating all code that avoided the use of numpy
+    * Using new packaging tool
+    * Fixes on the LTSpice_RawWrite
+    * Fixes in the handling of stepped operating point simulations
 
-* Version 2.1\
-  Adopting minimum python version 3.7\
-  Starting to use unit tests to validate all modules and improving testbenches\
-  Compatibility with NGSpice\
-  Avoiding the use of setup.py as per PEP517 and PEP518\
-  Bug Fixes (See GitHub log for more information)\
-  Improvements on the management of stepped data in the LTSpice_RawRead.py
+* Version 2.1
+    * Adopting minimum python version 3.7
+    * Starting to use unit tests to validate all modules and improving testbenches
+    * Compatibility with NGSpice
+    * Avoiding the use of setup.py as per PEP517 and PEP518
+    * Bug Fixes (See GitHub log for more information)
+    * Improvements on the management of stepped data in the LTSpice_RawRead.py
 
-* Version 2.0.2\
-  Improvements on Encoding detection
+* Version 2.0.2
+    * Improvements on Encoding detection
 
-* Version 2.0\
-  International Support using the correct encoding when loading log files.\
-  Code Optimizations on the LTSpice_RawReader that allow faster data loading.\
-  Improving the functionality on the LTSpice_RawWriter.py\
-  Adding support to editing components inside subcircuits (.subckt)\
-  Supporting resistors with Model Definitions\
-  Fixing problem with LTSpiceLogReader that would return messed up data\
-  Fixing problem with replacing the file extension in certain names\
-  Correcting problem with deprecations on the numpy functions used by the Histogram.py\
-  Adding back the README.md that somehow was deleted
+* Version 2.0
+    * International Support using the correct encoding when loading log files.
+    * Code Optimizations on the LTSpice_RawReader that allow faster data loading.
+    * Improving the functionality on the LTSpice_RawWriter.py
+    * Adding support to editing components inside subcircuits (.subckt)
+    * Supporting resistors with Model Definitions
+    * Fixing problem with LTSpiceLogReader that would return messed up data
+    * Fixing problem with replacing the file extension in certain names
+    * Correcting problem with deprecations on the numpy functions used by the Histogram.py
+    * Adding back the README.md that somehow was deleted
 
-* Version 1.9\
-  Adding support for µ character in the SpiceEditor.\
-  Adding get_component_floatvalue() method in the netlist manipulating class that handles the conversion of numeric
-  fields into a float. This function takes into account the engineering qualifiers 'k' for kilos, 'm' or milis,
-  'u' or 'µ' for microns, 'n' for nanos, 'f' for femtos and 'Meg' for Megas.
+* Version 1.9
+    * Adding support for µ character in the SpiceEditor.
+    * Adding get_component_floatvalue() method in the netlist manipulating class that handles the conversion of numeric
+      fields into a float. This function takes into account the engineering qualifiers 'k' for kilos, 'm' or milis,
+      'u' or 'µ' for microns, 'n' for nanos, 'f' for femtos and 'Meg' for Megas.
 
-* Version 1.8\
-  Uniforming License reference across files and improvements on the documentation\
-  An enormous and wholehearted thanks to Logan Herrera (lpherr) <logan.herrera.github@gmail.com> for the improvements in
-  the documentation.\
-  Bugfix on the add_LTspiceRunCmdLineSwitches() ; Supporting .param name value format\
-  Allowing the LTSpiceRawRead to proceed when the log file can't be found or when there are problems reading it.
-* Version 1.7\
-  Running in Linux under wine is now possible
+* Version 1.8
+    * Uniforming License reference across files and improvements on the documentation
+    * An enormous and wholehearted thanks to Logan Herrera (lpherr) <logan.herrera.github@gmail.com> for the
+      improvements in
+      the documentation.
+    * Bugfix on the add_LTspiceRunCmdLineSwitches() ; Supporting .param name value format
+    * Allowing the LTSpiceRawRead to proceed when the log file can't be found or when there are problems reading it.
+* Version 1.7
+    * Running in Linux under wine is now possible
 
-* Version 1.6\
-  Adding LTSpice_RawWrite. Adding documentation.
+* Version 1.6
+    * Adding LTSpice_RawWrite. Adding documentation.
 
-* Version 1.5\
-  Small fixes and improvements on the class usage. No added features
+* Version 1.5
+    * Small fixes and improvements on the class usage. No added features
 
-* Version 1.4 \
-  Adding the LTSpice_SemiDevOpReader module\
-  Re-enabling the Histogram functions which where disabled by mistake.
+* Version 1.4
+    * Adding the LTSpice_SemiDevOpReader module
+    * Re-enabling the Histogram functions which where disabled by mistake.
 
-* Version 1.3 \
-  Bug fixes on the SpiceEditor Class
+* Version 1.3
+    * Bug fixes on the SpiceEditor Class
 
-* Version 1.2 \
-  README.md:
-  Adding link to readthedocs documentation\
-  All files:
-  Comprehensive documentation on how to use each module
+* Version 1.2
+    * README.md:
+      Adding link to readthedocs documentation
+    * All files:
+      Comprehensive documentation on how to use each module
 
-* Version 1.1\
-  README.md:
-  Updated the description\
-  LTSpiceBatch.py:
-  Corrected the name of the returned raw file.\
-  Added comments throughout the code and cleanup
+* Version 1.1
+    * README.md:
+      Updated the description
+    * LTSpiceBatch.py:
+      Corrected the name of the returned raw file.
+    * Added comments throughout the code and cleanup
 
-* Version 1.0\
-  LTSpiceBatch.py:
-  Implemented an new approach (NOT BACKWARDS COMPATIBLE), that avoids the usage of the sim_settings.inc file. And allows
-  to modify not only parameters, but also models and even the simulation commands.\
-  LTSpice_RawRead.py:
-  Added the get_time_axis method to the RawRead class to avoid the problems with negative values on time axis, when 2nd
-  order compression is enabled in LTSpice.\
-  LTSteps.py:
-  Modified the LTSteps so it can also read measurements on log files without any steps done.
+* Version 1.0
+    * LTSpiceBatch.py:\
+      Implemented an new approach (NOT BACKWARDS COMPATIBLE), that avoids the usage of the sim_settings.inc file.
+      And allows to modify not only parameters, but also models and even the simulation commands.
+    * LTSpice_RawRead.py:\
+      Added the get_time_axis method to the RawRead class to avoid the problems with negative values on time axis,
+      when 2nd order compression is enabled in LTSpice.
+    * LTSteps.py:\
+      Modified the LTSteps so it can also read measurements on log files without any steps done.
 
+* Version 0.6
+  * Histogram.py now has an option to make the histogram directly from values stored in the clipboard
 
-* Version 0.6\
-  Histogram.py now has an option to make the histogram directly from values stored in the clipboard
+* Version 0.5
+  * The LTSpice_RawReader.py now uses the struc.unpack function for a faster execution
 
-* Version 0.5\
-  The LTSpice_RawReader.py now uses the struc.unpack function for a faster execution
+* Version 0.4
+  * Added LTSpiceBatch.py to the collection of tools
 
-* Version 0.4\
-  Added LTSpiceBatch.py to the collection of tools
+* Version 0.3
+  * A version of LTSteps that can be imported to use in a higher level script
 
-* Version 0.3\
-  A version of LTSteps that can be imported to use in a higher level script
+* Version 0.2
+  * Adding LTSteps.py and Histogram.py
 
-* Version 0.2\
-  Adding LTSteps.py and Histogram.py
-
-* Version 0.1 \
-  First commit to the bitbucket repository.
+* Version 0.1 
+  * First commit to the bitbucket repository.

@@ -16,8 +16,9 @@ netlist.set_element_model('V3', "SINE(0 1 3k 0 0 0)")  # Modifying the
 netlist.set_component_value('XU1:C2', 20e-12)  # modifying a define simulation
 netlist.add_instructions(
     "; Simulation settings",
-    ".param run = 0"
+    ";.param run = 0"
 )
+netlist.set_parameter('run', 0)
 
 for opamp in ('AD712', 'AD820'):
     netlist.set_element_model('XU1', opamp)

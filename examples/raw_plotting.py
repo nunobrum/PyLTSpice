@@ -24,7 +24,7 @@ if len(sys.argv) > 1:
     if len(trace_names) == 0:
         trace_names = '*'
 else:
-    test_directory = pathjoin(pathsplit(directory)[0], 'tests')
+    test_directory = pathjoin(pathsplit(directory)[0], 'examples')
     # filename = 'DC sweep.raw'
     # filename = 'tran.raw'
     # filename = 'tran - step.raw'

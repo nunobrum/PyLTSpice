@@ -7,7 +7,7 @@ sys.path.append(
 
 import PyLTSpice
 
-test_dir = '../' if os.path.abspath(os.curdir).endswith('unittest') else './tests/'
+test_dir = '../' if os.path.abspath(os.curdir).endswith('unittests') else './tests/'
 
 
 class ASC_Editor_Test(unittest.TestCase):
