@@ -34,11 +34,11 @@ jobs:
           pip install numpy
       - name: Test sweep_iterators.py
         run: |
-          python ./tests/unittest/sweep_iterators/sweep_iterators_unittest.py
+          python ./unittests/sweep_iterators/sweep_iterators_unittest.py
       - name: Test LTSpice_RawRead
         run: |
-          python ./tests/unittest/test_pyltspice.py
+          python ./unittests/test_pyltspice.py
       - name: Test Asc_Editor
         run: |
-          python ./tests/unittest/asc_editor_test.py
+          python ./unittests/asc_editor_test.py
          
