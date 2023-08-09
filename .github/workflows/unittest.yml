@@ -34,7 +34,7 @@ jobs:
           pip install numpy
       - name: Test sweep_iterators.py
         run: |
-          python ./unittests/sweep_iterators/sweep_iterators_unittest.py
+          python ./unittests/sweep_iterators_unittest.py
       - name: Test LTSpice_RawRead
         run: |
           python ./unittests/test_pyltspice.py
