@@ -91,6 +91,7 @@ from PyLTSpice.log.ltsteps import *
 import logging
 _logger = logging.getLogger("PyLTSpice.LTSteps")
 
+
 def main():
     """
     Main function for the LTSteps.py script
@@ -101,10 +102,7 @@ def main():
 
     if len(sys.argv) > 1:
         filename = sys.argv[1]
-        if not valid_extension(filename):
-            _logger.error("Invalid extension in filename '%s'" % filename)
-            _logger.error("This tool only supports the following extensions :'.txt','.log','.mout'")
-            exit(-1)
+        print("Using filename:", filename)
     else:
         filename = None
         newer_date = 0
@@ -113,9 +111,15 @@ def main():
             if date > newer_date and valid_extension(f):
                 newer_date = date
                 filename = f
+
     if filename is None:
-        _logger.error("File not found")
-        _logger.error("This tool only supports the following extensions :'.txt','.log','.mout'")
+        print("File not found")
+        print("This tool only supports the following extensions :'.txt','.log','.mout'")
+        exit(-1)
+        
+    if not valid_extension(filename):
+        print("Invalid extension in filename '%s'" % filename)
+        print("This tool only supports the following extensions :'.txt','.log','.mout'")
         exit(-1)
 
     fname_out = None
@@ -126,13 +130,12 @@ def main():
     elif filename.endswith('.mout'):
         fname_out = filename[:-len('mout')] + 'tmout'
     else:
-        _logger.error("Error in file type")
-        _logger.error("This tool only supports the following extensions :'.txt','.log','.mout'")
+        print("Error in file type")
+        print("This tool only supports the following extensions :'.txt','.log','.mout'")
         exit(-1)
 
     if fname_out is not None:
-        _logger.debug("Processing File %s" % filename)
-        _logger.debug("Creating File %s" % fname_out)
+        print("Creating File %s" % fname_out)
         if filename.endswith('txt'):
             _logger.debug("Processing Data File")
             reformat_LTSpice_export(filename, fname_out)
@@ -155,4 +158,5 @@ def main():
 
 
 if __name__ == "__main__":
+    _logger.setLevel(logging.INFO)
     main()

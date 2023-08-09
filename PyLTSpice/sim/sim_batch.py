@@ -103,14 +103,13 @@ from typing import Callable, Any, Union
 import logging
 _logger = logging.getLogger("PyLTSpice.SimBatch")
 
-from ..sim.spice_editor import SpiceEditor
+from ..editor.spice_editor import SpiceEditor
 from ..sim.simulator import Simulator
 from ..sim.run_task import RunTask
 from ..sim.sim_runner import SimRunner
 
 END_LINE_TERM = '\n'
 
-logging.basicConfig(filename='SpiceBatch.log', level=logging.INFO)
 
 
 class SimCommander(SpiceEditor):
@@ -130,7 +129,7 @@ class SimCommander(SpiceEditor):
             from ..sim.ltspice_simulator import LTspice  # In case no simulator is given
             simulator = LTspice
         netlist_file = Path(netlist_file)
-        self.circuit_file = netlist_file  # Legacy property
+        self.netlist_file = netlist_file  # Legacy property
         if netlist_file.suffix == '.asc':
             netlist_file = simulator.create_netlist(netlist_file)
         super().__init__(netlist_file, encoding)

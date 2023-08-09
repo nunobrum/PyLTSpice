@@ -4,11 +4,11 @@
 #  @credits:    AKAE
 #
 #  @license:    GPLv3
-#  @maintainer: Andreas Kaeberlein
-#  @email:      andreas.kaeberlein@web.de
+#  @maintainer: Nuno Brum
+#  @email:      me@nunobrum.com
 #
 #  @file:       unittest.yml
-#  @date:       2021-01-09
+#  @date:       2023-08-09
 #
 #  @brief:      runs unit test
 #
@@ -23,10 +23,10 @@ jobs:
   Unittest:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-python@v1
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
         with:
-          python-version: '3.7' # Version range or exact version of a Python version to use, using semvers version range syntax.
+          python-version: '3.8' # Version range or exact version of a Python version to use, using semvers version range syntax.
           architecture: 'x64'   # optional x64 or x86. Defaults to x64 if not specified
       - name: Install dependencies
         run: |
@@ -34,7 +34,11 @@ jobs:
           pip install numpy
       - name: Test sweep_iterators.py
         run: |
-          python ./tests/unittest/sweep_iterators/sweep_iterators_unittest.py
+          python ./unittests/sweep_iterators_unittest.py
       - name: Test LTSpice_RawRead
         run: |
-          python ./tests/unittest/test_pyltspice.py
+          python ./unittests/test_pyltspice.py
+      - name: Test Asc_Editor
+        run: |
+          python ./unittests/test_asc_editor.py
+         

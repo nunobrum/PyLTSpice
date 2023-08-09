@@ -1,0 +1,63 @@
+Circuit: * C:\sandbox\PyLTSpice\examples\testfiles\TRAN - STEP.asc
+
+.OP point found by inspection.
+.step vin=1 r1=1000
+.step vin=10 r1=1000
+.step vin=1 r1=10000
+.step vin=10 r1=10000
+
+
+Measurement: t1
+  step	v(out)	at
+     1	0.632016	0.001
+     2	6.31901	0.001
+     3	0.094948	0.001
+     4	0.950013	0.001
+
+Measurement: t2
+  step	v(out)	at
+     1	0.864411	0.002
+     2	8.64432	0.002
+     3	0.180818	0.002
+     4	1.81244	0.002
+
+Measurement: t3
+  step	v(out)	at
+     1	0.950097	0.003
+     2	9.50098	0.003
+     3	0.258697	0.003
+     4	2.58607	0.003
+
+Measurement: t4
+  step	v(out)	at
+     1	0.981639	0.004
+     2	9.81665	0.004
+     3	0.329238	0.004
+     4	3.28877	0.004
+
+Measurement: t5
+  step	v(out)	at
+     1	0.993262	0.005
+     2	9.93262	0.005
+     3	0.393469	0.005
+     4	3.93469	0.005
+
+
+Date: Wed Aug  9 23:29:11 2023
+Total elapsed time: 0.357 seconds.
+
+tnom = 27
+temp = 27
+method = modified trap
+totiter = 2162
+traniter = 2162
+tranpoints = 1082
+accept = 1081
+rejected = 1
+matrix size = 3
+fillins = 0
+solver = Normal
+Avg thread counts: 3.7/6.4/6.4/3.7
+Matrix Compiler1:       3 opcodes  0.1/[0.0]/0.1
+Matrix Compiler2: off  [0.0]/0.1/0.1
+

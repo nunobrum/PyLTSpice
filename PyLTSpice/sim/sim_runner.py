@@ -96,29 +96,30 @@ __copyright__ = "Copyright 2020, Fribourg Switzerland"
 
 __all__ = ['SimRunner']
 
-import os
 import shutil
 from pathlib import Path
 from time import sleep, thread_time as clock
 
-from typing import Callable, Union, Any, Type
+from typing import Callable, Union, Any, Type, Protocol
 import logging
 _logger = logging.getLogger("PyLTSpice.SimRunner")
 
 from .process_callback import ProcessCallback
 from ..sim.run_task import RunTask
 from ..sim.simulator import Simulator
-from ..sim.spice_editor import SpiceEditor
+from ..editor.base_editor import BaseEditor
 
 END_LINE_TERM = '\n'
-
-
-# logging.basicConfig(filename='SpiceBatch.log', level=logging.INFO)
 
 
 class SimRunnerTimeoutError(TimeoutError):
     """Timeout Error class"""
     ...
+
+
+class AnyRunner(Protocol):
+    def run(self, netlist: Union[str, Path, BaseEditor], **kwargs) -> None:
+        ...
 
 
 class SimRunner(object):
@@ -276,14 +277,14 @@ class SimRunner(object):
             _logger.warning("Unable to create the Netlist from %s" % asc_file)
             return None
 
-    def _prepare_sim(self, netlist: Union[str, Path, SpiceEditor], run_filename: str):
+    def _prepare_sim(self, netlist: Union[str, Path, BaseEditor], run_filename: str):
         """Internal function"""
         # update number of simulation
         self.runno += 1  # Incrementing internal simulation number
         # Harmonize the netlist into a Path object pointing to a netlist file on the right output folder
-        if isinstance(netlist, SpiceEditor):
+        if isinstance(netlist, BaseEditor):
             if run_filename is None:
-                run_filename = self._run_file_name(netlist.netlist_file)
+                run_filename = self._run_file_name(netlist.circuit_file)
 
             # Calculates the path where to store the new netlist.
             run_netlist_file = self._on_output_folder(run_filename).with_suffix('.net')
@@ -301,7 +302,7 @@ class SimRunner(object):
         self.workfiles.append(run_netlist_file)
         return run_netlist_file
 
-    def run(self, netlist: Union[str, Path, SpiceEditor], *, wait_resource: bool = True,
+    def run(self, netlist: Union[str, Path, BaseEditor], *, wait_resource: bool = True,
             callback: Union[Type[ProcessCallback], Callable[[Path, Path], Any]] = None, switches=None,
             timeout: float = 600, run_filename: str = None) -> Union[RunTask, None]:
         """
@@ -356,7 +357,7 @@ class SimRunner(object):
                 _logger.warning("Timeout on launching simulation %d." % self.runno)
             return None
 
-    def run_now(self, netlist: Union[str, Path, SpiceEditor], *, switches=None, run_filename: str = None) -> (str, str):
+    def run_now(self, netlist: Union[str, Path, BaseEditor], *, switches=None, run_filename: str = None) -> (str, str):
         """
         Executes a simulation run with the conditions set by the user.
         Conditions are set by the set_parameter, set_component_value or add_instruction functions.

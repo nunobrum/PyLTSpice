@@ -512,7 +512,7 @@ class RawRead(object):
                 for point in range(self.nPoints):
                     for i, var in enumerate(self._traces):
                         value = scan_functions[i](raw_file)
-                        if value is not None:
+                        if value is not None and not isinstance(var, DummyTrace):
                             var.data[point] = value
 
         elif self.raw_type == "Values:":
@@ -558,7 +558,8 @@ class RawRead(object):
             try:
                 self._load_step_information(raw_filename)
             except SpiceReadException:
-                _logger.warning("LOG file not found or problems happened while reading it. Auto-detecting steps")
+                _logger.warning("LOG file for ""%s"" not found or problems happened while reading it.\n"
+                                " Auto-detecting steps" % raw_filename)
                 if has_axis:
                     number_of_steps = 0
                     for v in self.axis.data:

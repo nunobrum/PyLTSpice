@@ -3,7 +3,8 @@
 # Convenience direct imports
 from .raw.raw_read import RawRead, SpiceReadException
 from .raw.raw_write import RawWrite, Trace
-from .sim.spice_editor import SpiceEditor, SpiceCircuit
+from .editor.spice_editor import SpiceEditor, SpiceCircuit
+from .editor.asc_editor import AscEditor
 from .sim.sim_runner import SimRunner
 from .sim.sim_batch import SimCommander
 
@@ -30,7 +31,10 @@ def all_loggers():
         "PyLTSpice.SimStepper",
         "PyLTSpice.SpiceEditor",
         "PyLTSpice.XYCESimulator",
-        "PyLTSpice.SimBatch"]
+        "PyLTSpice.SimBatch",
+        "PyLTSpice.AscEditor",
+        "PyLTSpice.LTSpiceSimulator",
+    ]
 
 
 def set_log_level(level):

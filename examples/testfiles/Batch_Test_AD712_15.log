@@ -1,0 +1,48 @@
+Circuit: * C:\sandbox\PyLTSpice\examples\testfiles\Batch_Test.asc
+
+Direct Newton iteration failed to find .op point.  (Use ".option noopiter" to skip.)
+Starting Gmin stepping
+Gmin = 10
+Gmin = 1.07374
+Gmin = 0.115292
+Gmin = 0.0123794
+Gmin = 0.00132923
+Gmin = 0.000142725
+Gmin = 1.5325e-05
+Gmin = 1.6455e-06
+Gmin = 1.76685e-07
+Gmin = 1.89714e-08
+Gmin = 2.03704e-09
+Gmin = 2.18725e-10
+Gmin = 2.34854e-11
+Gmin = 2.52173e-12
+Gmin = 2.70769e-13
+Gmin = 0
+Gmin stepping succeeded in finding the operating point.
+
+
+vout_rms: RMS(v(out))=1.0606 FROM 0 TO 0.001
+vin_rms: RMS(v(in))=0.707129 FROM 0 TO 0.001
+gain: vout_rms/vin_rms=1.49987
+vout1m: v(out)=-0.00129426 at 0.001
+period: time=0.00033338 at 0.00033338
+
+
+Date: Wed Aug  9 23:19:59 2023
+Total elapsed time: 0.210 seconds.
+
+tnom = 27
+temp = 27
+method = modified trap
+totiter = 2458
+traniter = 2092
+tranpoints = 1047
+accept = 1046
+rejected = 1
+matrix size = 11
+fillins = 2
+solver = Normal
+Avg thread counts: 3.8/6.6/6.6/3.8
+Matrix Compiler1: 566 bytes object code size  0.4/0.3/[0.2]
+Matrix Compiler2: 1.10 KB object code size  0.4/0.5/[0.1]
+
