@@ -112,9 +112,6 @@ from ..editor.spice_editor import SpiceEditor
 END_LINE_TERM = '\n'
 
 
-# logging.basicConfig(filename='SpiceBatch.log', level=logging.INFO)
-
-
 class SimRunnerTimeoutError(TimeoutError):
     """Timeout Error class"""
     ...

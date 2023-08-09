@@ -110,7 +110,6 @@ from ..sim.sim_runner import SimRunner
 
 END_LINE_TERM = '\n'
 
-logging.basicConfig(filename='SpiceBatch.log', level=logging.INFO)
 
 
 class SimCommander(SpiceEditor):

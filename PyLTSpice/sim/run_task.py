@@ -23,7 +23,6 @@ Internal classes not to be used directly by the user
 __author__ = "Nuno Canto Brum <nuno.brum@gmail.com>"
 __copyright__ = "Copyright 2023, Fribourg Switzerland"
 
-import logging
 from pathlib import Path
 import sys
 import threading
@@ -35,12 +34,9 @@ import logging
 _logger = logging.getLogger("PyLTSpice.RunTask")
 
 from .process_callback import ProcessCallback
-
 from .simulator import Simulator
 
 END_LINE_TERM = '\n'
-
-logging.basicConfig(filename='SpiceBatch.log', level=logging.INFO)
 
 if sys.version_info.major >= 3 and sys.version_info.minor >= 6:
     clock_function = time.perf_counter

@@ -190,5 +190,5 @@ class LTspice(Simulator):
                 return netlist
         msg = "Failed to create netlist"
         # print(msg)
-        logging.error(msg)
+        _logger.error(msg)
         raise RuntimeError(msg)
