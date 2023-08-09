@@ -40,5 +40,5 @@ jobs:
           python ./unittests/test_pyltspice.py
       - name: Test Asc_Editor
         run: |
-          python ./unittests/asc_editor_test.py
+          python ./unittests/test_asc_editor.py
          
