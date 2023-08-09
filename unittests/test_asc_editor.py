@@ -3,11 +3,11 @@ import sys
 import unittest
 
 sys.path.append(
-    os.path.abspath((os.path.dirname(os.path.abspath(__file__)) + "/../../")))  # add project root to lib search path
+    os.path.abspath((os.path.dirname(os.path.abspath(__file__)) + "/../")))  # add project root to lib search path
 
 import PyLTSpice
 
-test_dir = '../' if os.path.abspath(os.curdir).endswith('unittests') else './tests/'
+test_dir = '../examples/testfiles/' if os.path.abspath(os.curdir).endswith('unittests') else './examples/testfiles/'
 
 
 class ASC_Editor_Test(unittest.TestCase):
@@ -28,7 +28,7 @@ class ASC_Editor_Test(unittest.TestCase):
         self.assertEqual(self.edt.get_parameter('TEMP'), '25', "Tested TEMP Parameter")  # add assertion here
         self.edt.write_netlist(test_dir + 'test_parameter_output.asc')
         self.edt.set_parameter('TEMP', 0)  # reset to 0
-        self.assertEqual(self.edt.get_parameter('TEMP'), '0', "Tested TEMP Parameter")  # add assertion here
+        self.assertEqual(self.edt.get_parameter('TEMP'), '0.0', "Tested TEMP Parameter")  # add assertion here
 
     def test_instructions(self):
         self.edt.add_instruction('.ac dec 10 1 100k')

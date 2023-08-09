@@ -43,7 +43,7 @@ import unittest  # performs test
 # Module libs
 
 sys.path.append(
-    os.path.abspath((os.path.dirname(os.path.abspath(__file__)) + "/../../")))  # add project root to lib search path
+    os.path.abspath((os.path.dirname(os.path.abspath(__file__)) + "/../")))  # add project root to lib search path
 from PyLTSpice.log.ltsteps import LTSpiceLogReader
 from PyLTSpice.sim.sim_batch import SimCommander
 from PyLTSpice.raw.raw_read import RawRead
@@ -61,7 +61,7 @@ def has_ltspice_detect():
 has_ltspice = has_ltspice_detect()
 skip_ltspice_tests = not has_ltspice
 print("skip_ltspice_tests", skip_ltspice_tests)
-test_dir = '../' if os.path.abspath(os.curdir).endswith('unittests') else './tests/'
+test_dir = '../examples/testfiles/' if os.path.abspath(os.curdir).endswith('unittests') else './examples/testfiles/'
 # test_dir = os.path.abspath(test_dir)
 print("test_dir", test_dir)
 # ------------------------------------------------------------------------------
@@ -139,7 +139,7 @@ class test_pyltspice(unittest.TestCase):
     @unittest.skipIf(skip_ltspice_tests, "Skip if not in windows environment")
     def test_run_from_spice_editor(self):
         """Run command on SpiceEditor"""
-        LTC = SimRunner()
+        LTC = SimRunner(output_folder=test_dir + "temp/")
         # select spice model
         LTC.create_netlist(test_dir + "testfile.asc")
         netlist = SpiceEditor(test_dir + "testfile.net")
@@ -168,8 +168,8 @@ class test_pyltspice(unittest.TestCase):
         def callback_function(raw_file, log_file):
             print("Handling the simulation data of %s, log file %s" % (raw_file, log_file))
 
-        LTC = SimRunner()
-        SE = SpiceEditor("../../tests/testfile.net")
+        LTC = SimRunner(output_folder=test_dir + "temp/")
+        SE = SpiceEditor(test_dir + "testfile.net")
         #, parallel_sims=1)
         tstart = 0
         for tstop in (2, 5, 8, 10):
@@ -179,7 +179,7 @@ class test_pyltspice(unittest.TestCase):
                 SE.add_instruction(".loadbias {}".format(bias_file))
                 # Put here your parameter modifications
                 # LTC.set_parameters(param1=1, param2=2, param3=3)
-            bias_file = "sim_loadbias_%d.txt" % tstop
+            bias_file = test_dir + "sim_loadbias_%d.txt" % tstop
             SE.add_instruction(".savebias {} internal time={}".format(bias_file, tduration))
             tstart = tstop
             LTC.run(SE, callback=callback_function)
@@ -336,7 +336,7 @@ class test_pyltspice(unittest.TestCase):
             ]
         }
         if has_ltspice:
-            LTC = SimCommander("../../tests/Batch_Test.asc")
+            LTC = SimCommander(test_dir + "Batch_Test.asc")
             raw_file, log_file = LTC.run().wait_results()
             print(raw_file, log_file)
         else:
@@ -354,7 +354,7 @@ class test_pyltspice(unittest.TestCase):
     def test_operating_point(self):
         """Operating Point Simulation Test"""
         if has_ltspice:
-            LTC = SimCommander("../../tests/DC op point.asc")
+            LTC = SimCommander(test_dir + "DC op point.asc")
             raw_file, log_file = LTC.run().wait_results()
         else:
             raw_file = test_dir + "DC op point_1.raw"
@@ -368,14 +368,14 @@ class test_pyltspice(unittest.TestCase):
     def test_operating_point_step(self):
         """Operating Point Simulation with Steps """
         if has_ltspice:
-            LTC = SimCommander("../../tests/DC op point - STEP.asc")
+            LTC = SimCommander(test_dir + "DC op point - STEP.asc")
             raw_file, log_file = LTC.run().wait_results()
         else:
             raw_file = test_dir + "DC op point - STEP_1.raw"
         raw = RawRead(raw_file)
         vin = raw.get_trace('V(in)')
 
-        for i, b in enumerate(('V(in)', 'V(b4)', 'V(b3)', 'V(b2)', 'V(b1)', 'V(b0)'),):
+        for i, b in enumerate(('V(in)', 'V(b4)', 'V(b3)', 'V(b2)', 'V(b1)', 'V(out)'),):
             meas = raw.get_trace(b)
             for step in range(raw.nPoints):
                 self.assertEqual(meas[step], vin[step] * 2**-i)
@@ -384,7 +384,7 @@ class test_pyltspice(unittest.TestCase):
     def test_transient(self):
         """Transient Simulation test """
         if has_ltspice:
-            LTC = SimCommander("../../tests/TRAN.asc")
+            LTC = SimCommander(test_dir + "TRAN.asc")
             raw_file, log_file = LTC.run().wait_results()
         else:
             raw_file = test_dir + "TRAN_1.raw"
@@ -404,7 +404,7 @@ class test_pyltspice(unittest.TestCase):
     def test_transient_steps(self):
         """Transient simulation with stepped data."""
         if has_ltspice:
-            LTC = SimCommander("../../tests/TRAN - STEP.asc")
+            LTC = SimCommander(test_dir + "TRAN - STEP.asc")
             raw_file, log_file = LTC.run().wait_results()
         else:
             raw_file = test_dir + "TRAN - STEP_1.raw"
@@ -428,7 +428,7 @@ class test_pyltspice(unittest.TestCase):
         """AC Analysis Test"""
         from numpy import pi, angle
         if has_ltspice:
-            LTC = SimCommander("../../tests/AC.asc")
+            LTC = SimCommander(test_dir + "AC.asc")
             raw_file, log_file = LTC.run().wait_results()
             R1 = LTC.get_component_floatvalue('R1')
             C1 = LTC.get_component_floatvalue('C1')
@@ -457,7 +457,7 @@ class test_pyltspice(unittest.TestCase):
         """AC Analysis Test with steps"""
         from numpy import pi, angle
         if has_ltspice:
-            LTC = SimCommander("../../tests/AC - STEP.asc")
+            LTC = SimCommander(test_dir + "AC - STEP.asc")
             raw_file, log_file = LTC.run().wait_results()
             C1 = LTC.get_component_floatvalue('C1')
         else:

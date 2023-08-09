@@ -129,7 +129,7 @@ class SimCommander(SpiceEditor):
             from ..sim.ltspice_simulator import LTspice  # In case no simulator is given
             simulator = LTspice
         netlist_file = Path(netlist_file)
-        self.circuit_file = netlist_file  # Legacy property
+        self.netlist_file = netlist_file  # Legacy property
         if netlist_file.suffix == '.asc':
             netlist_file = simulator.create_netlist(netlist_file)
         super().__init__(netlist_file, encoding)

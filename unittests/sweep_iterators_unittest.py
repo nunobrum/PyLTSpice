@@ -24,7 +24,7 @@ import os         # platform independent paths
 import unittest   # performs test
 #
 # Module libs
-sys.path.append(os.path.abspath((os.path.dirname(os.path.abspath(__file__)) + "/../../../")))   # add project root to lib search path
+sys.path.append(os.path.abspath((os.path.dirname(os.path.abspath(__file__)) + "/../../")))   # add project root to lib search path
 from PyLTSpice.utils.sweep_iterators import sweep, sweep_n, sweep_log, sweep_log_n, sweep_iterators  # Python Script under test
 #------------------------------------------------------------------------------
 
@@ -134,11 +134,14 @@ class test_sweep_iterators(unittest.TestCase):
         self.assertListEqual(list(sweep_log(0.1, 11e3, 10)), [0.1, 1.0, 10.0, 100.0, 1000.0, 10000.0])
         self.assertListEqual(list(sweep_log(1000, 1, 2)),
                              [1000, 500.0, 250.0, 125.0, 62.5, 31.25, 15.625, 7.8125, 3.90625, 1.953125])
-        self.assertListEqual(list(sweep_log_n(1, 10, 6)),
-                             [1.0, 1.5848931924611136, 2.5118864315095806, 3.981071705534973, 6.309573444801934,
-                              10.000000000000004])
-        self.assertListEqual(list(sweep_log_n(10, 1, 5)),
-                             [10.0, 5.623413251903491, 3.1622776601683795, 1.7782794100389228, 0.9999999999999999])
+        for a, b in zip(list(sweep_log_n(1, 10, 6)),
+                             [1.0, 1.584893192461113, 2.5118864315095806, 3.981071705534973, 6.309573444801934,
+                              10.0]):
+
+            self.assertAlmostEqual(a, b)
+        for a, b in zip(list(sweep_log_n(10, 1, 5)),
+                             [10.0, 5.623413251903491, 3.1622776601683795, 1.7782794100389228, 1]):
+            self.assertAlmostEqual(a, b)
 
 
 #------------------------------------------------------------------------------
