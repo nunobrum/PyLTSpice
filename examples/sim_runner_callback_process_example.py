@@ -21,7 +21,7 @@ if __name__ == "__main__":
     runner = SimRunner(output_folder='./temp_batch4', simulator=LTspice)  # Configures the simulator to use and output
     # folder
 
-    netlist = SpiceEditor("Batch_Test.asc")  # Open the Spice Model, and creates the .net
+    netlist = SpiceEditor("./testfiles/Batch_Test.asc")  # Open the Spice Model, and creates the .net
     # set default arguments
     netlist.set_parameters(res=0, cap=100e-6)
     netlist.set_component_value('R2', '2k')  # Modifying the value of a resistor

@@ -1,7 +1,6 @@
-
-
 import numpy as np
 from PyLTSpice import RawRead, Trace, RawWrite
+
 
 def test_readme_snippet():
     LW = RawWrite(fastacces=False)
@@ -11,10 +10,11 @@ def test_readme_snippet():
     LW.add_trace(tx)
     LW.add_trace(vy)
     LW.add_trace(vz)
-    LW.save("teste_snippet1.raw")
+    LW.save("./testfiles/teste_snippet1.raw")
+
 
 def test_trc2raw():  # Convert Teledyne-Lecroy trace files to raw files
-    f = open(r"Current_Lock_Front_Right_8V.trc")
+    f = open(r"./testfiles/Current_Lock_Front_Right_8V.trc")
     raw_type = ''  # Initialization of parameters that need to be overridden by the file header
     wave_size = 0
     for line in f:
@@ -43,10 +43,10 @@ def test_axis_sync():  # Test axis sync
     LW.add_trace(tx)
     LW.add_trace(vy)
     LW.add_trace(vz)
-    LW.save("teste_w.raw")
-    LR = RawRead("testfile.raw")
+    LW.save("./testfiles/teste_w.raw")
+    LR = RawRead("./testfiles/testfile.raw")
     LW.add_traces_from_raw(LR, ('V(out)',), force_axis_alignment=True)
-    LW.save("merge.raw")
+    LW.save("./testfiles/merge.raw")
     test = """
     equal = True
     for ii in range(len(tx)):
@@ -65,40 +65,43 @@ def test_axis_sync():  # Test axis sync
     print(max_error)
     """
 
+
 def test_write_ac():
     LW = RawWrite()
-    LR = RawRead("PI_Filter.raw")
-    LR1 = RawRead("PI_Filter_resampled.raw")
+    LR = RawRead("./testfiles/PI_Filter.raw")
+    LR1 = RawRead("./testfiles/PI_Filter_resampled.raw")
     LW.add_traces_from_raw(LR, ('V(N002)',))
     LW.add_traces_from_raw(LR1, 'V(N002)', rename_format='N002_resampled', force_axis_alignment=True)
     LW.flag_fastaccess = False
-    LW.save("PI_filter_rewritten.raw")
+    LW.save("./testfiles/PI_filter_rewritten.raw")
     LW.flag_fastaccess = True
-    LW.save("PI_filter_rewritten_fast.raw")
+    LW.save("./testfiles/PI_filter_rewritten_fast.raw")
+
 
 def test_write_tran():
-    LR = RawRead("TRAN - STEP.raw")
+    LR = RawRead("./testfiles/TRAN - STEP.raw")
     LW = RawWrite()
     LW.add_traces_from_raw(LR, ('V(out)', 'I(C1)'))
     LW.flag_fastaccess = False
-    LW.save("TRAN - STEP0_normal.raw")
+    LW.save("./testfiles/TRAN - STEP0_normal.raw")
     LW.flag_fastaccess = True
-    LW.save("TRAN - STEP0_fast.raw")
+    LW.save("./testfiles/TRAN - STEP0_fast.raw")
+
 
 def test_combine_tran():
     LW = RawWrite()
     for tag, raw in (
-        ("AD820_15", "Batch_Test_AD820_15.raw"),
-        # ("AD820_10", "Batch_Test_AD820_10.raw"),
-        ("AD712_15", "Batch_Test_AD712_15.raw"),
-        # ("AD712_10", "Batch_Test_AD712_10.raw"),
-        # ("AD820_5", "Batch_Test_AD820_5.raw"),
-        # ("AD712_5", "Batch_Test_AD712_5.raw"),
+            ("AD820_15", "./testfiles/Batch_Test_AD820_15.raw"),
+            # ("AD820_10", "./testfiles/Batch_Test_AD820_10.raw"),
+            ("AD712_15", "./testfiles/Batch_Test_AD712_15.raw"),
+            # ("AD712_10", "./testfiles/Batch_Test_AD712_10.raw"),
+            # ("AD820_5", "./testfiles/Batch_Test_AD820_5.raw"),
+            # ("AD712_5", "./testfiles/Batch_Test_AD712_5.raw"),
     ):
         LR = RawRead(raw)
         LW.add_traces_from_raw(LR, ("V(out)", "I(R1)"), rename_format="{}_{tag}", tag=tag, force_axis_alignment=True)
     LW.flag_fastaccess = False
-    LW.save("Batch_Test_Combine.raw")
+    LW.save("./testfiles/Batch_Test_Combine.raw")
 
 
 test_readme_snippet()

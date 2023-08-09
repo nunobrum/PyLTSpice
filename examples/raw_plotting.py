@@ -24,20 +24,16 @@ if len(sys.argv) > 1:
     if len(trace_names) == 0:
         trace_names = '*'
 else:
-    test_directory = pathjoin(pathsplit(directory)[0], 'examples')
+    test_directory = './testfiles'
     # filename = 'DC sweep.raw'
-    # filename = 'tran.raw'
-    # filename = 'tran - step.raw'
-    # filename = 'ac.raw'
+    # filename = 'TRAN.raw'
+    # filename = 'TRAN - STEP.raw'
+    # filename = 'AC.raw'
     # filename = 'AC - STEP.raw'
-    # filename = 'PI_Filter_tf.raw'
-    # filename = 'DC op point - STEP_1.raw'
-    # filename = 'Noise.raw'
-    # filename = "test2_gs_000.raw"
-    filename = 'fra_eg1.fra_1.raw'
-    filename = 'LTC6241_Noise.raw'
-    # trace_names = ("run", "V(out)", "V(err)")
-    trace_names = 'V(onoise)', 'V(inoise)'
+    # filename = 'DC op point - STEP.raw'
+    trace_names = ("V(out)",)
+    filename = 'Noise.raw'
+    trace_names = ("V(onoise)",)
     raw_filename = pathjoin(test_directory, filename)
 
 LTR = RawRead(raw_filename, trace_names, verbose=True)

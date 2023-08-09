@@ -10,7 +10,7 @@ def processing_data(raw_file, log_file):
 
 # select spice model
 LTC = SimRunner(output_folder='./temp', simulator=NGspiceSimulator.create_from('C:/Apps/NGSpice64/bin/ngspice.exe'))
-netlist = SpiceEditor('testfile_ngspice.net')
+netlist = SpiceEditor('./testfiles/testfile_ngspice.net')
 # set default arguments
 netlist.set_component_value('R1', '4k')
 netlist.set_element_model('V1', "SINE(0 1 3k 0 0 0)")  # Modifying the

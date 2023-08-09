@@ -1,0 +1,62 @@
+Circuit: * C:\sandbox\PyLTSpice\examples\testfiles\Batch_Test.asc
+
+Direct Newton iteration failed to find .op point.  (Use ".option noopiter" to skip.)
+Starting Gmin stepping
+Gmin = 10
+Gmin = 1.07374
+Gmin = 0.115292
+Gmin = 0.0123794
+Gmin = 0.00132923
+Gmin = 0.000142725
+Gmin = 1.5325e-05
+Gmin = 1.6455e-06
+Gmin = 1.76685e-07
+vernier = 0.5
+vernier = 0.25
+Gmin = 6.41063e-08
+vernier = 0.125
+vernier = 0.166667
+Gmin = 4.96015e-08
+vernier = 0.222222
+vernier = 0.296296
+Gmin = 2.86472e-08
+vernier = 0.395061
+Gmin = 1.22325e-08
+vernier = 0.526748
+vernier = 0.702331
+Gmin = 3.04891e-09
+vernier = 0.936441
+vernier = 1
+Gmin = 3.99664e-10
+Gmin = 4.29136e-11
+Gmin = 4.60781e-12
+Gmin = 4.9476e-13
+Gmin = 0
+Gmin stepping succeeded in finding the operating point.
+
+
+vout_rms: RMS(v(out))=1.0606 FROM 0 TO 0.001
+vin_rms: RMS(v(in))=0.707131 FROM 0 TO 0.001
+gain: vout_rms/vin_rms=1.49987
+vout1m: v(out)=-0.00322356 at 0.001
+period: time=4.30399e-11 at 4.30399e-11
+
+
+Date: Wed Aug  9 23:20:03 2023
+Total elapsed time: 0.163 seconds.
+
+tnom = 27
+temp = 27
+method = modified trap
+totiter = 2952
+traniter = 2098
+tranpoints = 1050
+accept = 1048
+rejected = 2
+matrix size = 20
+fillins = 14
+solver = Normal
+Avg thread counts: 3.8/6.6/6.6/3.8
+Matrix Compiler1: 1.46 KB object code size  0.5/0.3/[0.2]
+Matrix Compiler2: 2.13 KB object code size  0.3/0.3/[0.2]
+
