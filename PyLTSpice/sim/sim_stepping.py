@@ -28,8 +28,8 @@ import pathlib
 from functools import wraps
 import logging
 _logger = logging.getLogger("PyLTSpice.SimStepper")
-from ..editor.spice_editor import SpiceEditor
-from .sim_runner import SimRunner
+from ..editor.base_editor import BaseEditor
+from .sim_runner import AnyRunner, SimRunner
 
 
 class StepInfo(object):
@@ -46,81 +46,79 @@ class StepInfo(object):
 
 
 class SimStepper(object):
+    """This class is intended to be used for simulations with many parameter sweeps. This provides a more
+    user-friendly interface than the SpiceEditor/SimRunner class when there are many parameters to be stepped.
 
-    def __init__(self, spice_file: str, parallel_sims=4, output_folder=None):
-        """This class is intended to be used for simulations with many parameter sweeps. This provides a more
-        user-friendly interface than the SpiceEditor/SimRunner class when there are many parameters to be stepped.
+    Using the SpiceEditor/SimRunner classes a loop needs to be added for each dimension of the simulations.
+    A typical usage would be as follows:
+    ```
+    netlist = SpiceEditor("my_circuit.asc")
+    runner = SimRunner(parallel_sims=4)
+    for dmodel in ("BAT54", "BAT46WJ")
+        netlist.set_element_model("D1", model)  # Sets the Diode D1 model
+        for res_value1 in sweep(2.2, 2,4, 0.2):  # Steps from 2.2 to 2.4 with 0.2 increments
+            netlist.set_component_value('R1', res_value1)  # Updates the resistor R1 value to be 3.3k
+            for temperature in sweep(0, 80, 20):  # Makes temperature step from 0 to 80 degrees in 20 degree steps
+                netlist.set_parameters(temp=80)  # Sets the simulation temperature to be 80 degrees
+                for res_value2 in (10, 25, 32):
+                    netlist.set_component_value('R2', res_value2)  # Updates the resistor R2 value to be 3.3k
+                    runner.run(netlist)
 
-        Using the SpiceEditor/SimRunner classes a loop needs to be added for each dimension of the simulations.
-        A typical usage would be as follows:
-        ```
-        netlist = SpiceEditor("my_circuit.asc")
-        runner = SimRunner(parallel_sims=4)
-        for dmodel in ("BAT54", "BAT46WJ")
-            netlist.set_element_model("D1", model)  # Sets the Diode D1 model
-            for res_value1 in sweep(2.2, 2,4, 0.2):  # Steps from 2.2 to 2.4 with 0.2 increments
-                netlist.set_component_value('R1', res_value1)  # Updates the resistor R1 value to be 3.3k
-                for temperature in sweep(0, 80, 20):  # Makes temperature step from 0 to 80 degrees in 20 degree steps
-                    netlist.set_parameters(temp=80)  # Sets the simulation temperature to be 80 degrees
-                    for res_value2 in (10, 25, 32):
-                        netlist.set_component_value('R2', res_value2)  # Updates the resistor R2 value to be 3.3k
-                        runner.run(netlist)
+    runner.wait_completion()  # Waits for the LTSpice simulations to complete
+    ```
 
-        runner.wait_completion()  # Waits for the LTSpice simulations to complete
-        ```
+    With SimStepper the same thing can be done as follows, resulting in a cleaner code.
 
-        With SimStepper the same thing can be done as follows, resulting in a more cleaner code.
+    ```
+    netlist = SpiceEditor("my_circuit.asc")
+    Stepper = SimStepper(netlist, SimRunner(parallel_sims=4, output_folder="./output"))
+    Stepper.add_model_sweep('D1', "BAT54", "BAT46WJ")
+    Stepper.add_component_sweep('R1', sweep(2.2, 2,4, 0.2))  # Steps from 2.2 to 2.4 with 0.2 increments
+    Stepper.add_parameter_sweep('temp', sweep(0, 80, 20))  # Makes temperature step from 0 to 80 degrees in 20
+                                                           # degree steps
+    Stepper.add_component_sweep('R2', (10, 25, 32)) #  Updates the resistor R2 value to be 3.3k
+    Stepper.run_all()
 
-        ```
-        Stepper = SimStepper("my_circuit.asc", parallel_sims=4)
-        Stepper.add_model_sweep('D1', "BAT54", "BAT46WJ")
-        Stepper.add_component_sweep('R1', sweep(2.2, 2,4, 0.2))  # Steps from 2.2 to 2.4 with 0.2 increments
-        Stepper.add_parameter_sweep('temp', sweep(0, 80, 20))  # Makes temperature step from 0 to 80 degrees in 20
-                                                               # degree steps
-        Stepper.add_component_sweep('R2', (10, 25, 32)) #  Updates the resistor R2 value to be 3.3k
-        Stepper.run_all()
+    ```
 
-        ```
+    Another advantage of using SimStepper is that it can optionally use the .SAVEBIAS in the first simulation and
+    then use the .LOADBIAS command at the subsequent ones to speed up the simulation times.
+    """
 
-        Another advantage of using SimStepper is that it can optionally use the .SAVEBIAS in the first simulation and
-        then use the .LOADBIAS command at the subsequent ones to speed up the simulation times.
-        """
-        spice_file = pathlib.Path(spice_file)
-        if output_folder is None:
-            output_folder = spice_file.parent
-        self.runner = SimRunner(parallel_sims=parallel_sims, output_folder=output_folder)
-        self.netlist = SpiceEditor(spice_file)
+    def __init__(self, circuit: BaseEditor, runner: AnyRunner):
+        self.runner = runner
+        self.netlist = circuit
         self.iter_list = []
 
-    @wraps(SpiceEditor.add_instruction)
+    @wraps(BaseEditor.add_instruction)
     def add_instruction(self, instruction: str):
         self.netlist.add_instruction(instruction)
 
-    @wraps(SpiceEditor.add_instructions)
+    @wraps(BaseEditor.add_instructions)
     def add_instructions(self, *instructions) -> None:
         self.netlist.add_instructions(*instructions)
 
-    @wraps(SpiceEditor.remove_instruction)
+    @wraps(BaseEditor.remove_instruction)
     def remove_instruction(self, instruction) -> None:
         self.netlist.remove_instruction(instruction)
 
-    @wraps(SpiceEditor.set_parameters)
+    @wraps(BaseEditor.set_parameters)
     def set_parameters(self, **kwargs):
         self.netlist.set_parameters(**kwargs)
 
-    @wraps(SpiceEditor.set_parameter)
+    @wraps(BaseEditor.set_parameter)
     def set_parameter(self, param: str, value: Union[str, int, float]) -> None:
         self.netlist.set_parameter(param, value)
 
-    @wraps(SpiceEditor.set_component_values)
+    @wraps(BaseEditor.set_component_values)
     def set_component_values(self, **kwargs):
         self.netlist.set_component_values(**kwargs)
 
-    @wraps(SpiceEditor.set_component_value)
+    @wraps(BaseEditor.set_component_value)
     def set_component_value(self, device: str, value: Union[str, int, float]) -> None:
         self.netlist.set_component_value(device, value)
 
-    @wraps(SpiceEditor.set_element_model)
+    @wraps(BaseEditor.set_element_model)
     def set_element_model(self, element: str, model: str) -> None:
         self.netlist.set_element_model(element, model)
 
@@ -151,7 +149,7 @@ class SimStepper(object):
                 _logger.debug(step, " is empty")
         return total
 
-    def run_all(self, callback: Callable[[str, str], Any] = None, use_loadbias='Auto'):
+    def run_all(self, callback: Callable[[str, str], Any] = None, use_loadbias='Auto', wait_completion=True):
         assert use_loadbias in ('Auto', 'Yes', 'No'), "use_loadbias argument must be 'Auto', 'Yes' or 'No'"
         if (use_loadbias == 'Auto' and self.total_number_of_simulations() > 10) or use_loadbias == 'Yes':
             # It will choose to use .SAVEBIAS/.LOADBIAS if the number of simulaitons is higher than 10
@@ -181,8 +179,9 @@ class SimStepper(object):
                 break
             self.runner.run(self.netlist, callback=callback)  # Like this a recursion is avoided
             iter_no = len(self.iter_list) - 1  # Resets the counter to start next iteration
-        # Now waits for the simulations to end
-        self.runner.wait_completion()
+        if wait_completion:
+            # Now waits for the simulations to end
+            self.runner.wait_completion()
 
     def run(self):
         """Rather uses run_all instead"""

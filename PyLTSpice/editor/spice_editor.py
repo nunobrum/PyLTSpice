@@ -654,6 +654,11 @@ class SpiceCircuit(BaseEditor):
     def remove_instruction(self, instruction: str) -> None:
         pass
 
+    @property
+    def circuit_file(self) -> Path:
+        """This is only here to avoid breaking compatibility with the BaseEditor superclass. It will always return ''"""
+        return Path('')
+
 
 class SpiceEditor(SpiceCircuit):
     """
@@ -680,6 +685,10 @@ class SpiceEditor(SpiceCircuit):
         else:
             self.encoding = encoding
         self.reset_netlist()
+
+    @property
+    def circuit_file(self) -> Path:
+        return self.netlist_file
 
     def _set_model_and_value(self, component, value):
         prefix = component[0]  # Using the first letter of the component to identify what is it

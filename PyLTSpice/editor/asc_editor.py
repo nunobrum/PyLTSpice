@@ -48,6 +48,10 @@ class AscEditor(BaseEditor):
         # read the file into memory
         self.reset_netlist()
 
+    @property
+    def circuit_file(self) -> Path:
+        return self._asc_file_path
+
     def write_netlist(self, run_netlist_file: Union[str, Path]) -> None:
         with open(run_netlist_file, 'w') as asc_file:
             _logger.info(f"Writing ASC file {run_netlist_file}")

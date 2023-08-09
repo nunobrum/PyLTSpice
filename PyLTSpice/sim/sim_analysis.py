@@ -20,17 +20,11 @@
 # -------------------------------------------------------------------------------
 
 from collections import OrderedDict
-from pathlib import Path
-from typing import Iterable, Union, Optional, Protocol
+from typing import Iterable, Union, Optional
 
-from ..editor.spice_editor import SpiceEditor
+from .sim_runner import AnyRunner
 from ..editor.base_editor import BaseEditor, ComponentNotFoundError
 from ..sim.simulator import Simulator
-
-
-class AnyRunner(Protocol):
-    def run(self, netlist: Union[str, Path, SpiceEditor]):
-        ...
 
 
 class SimAnalysis(object):

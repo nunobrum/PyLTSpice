@@ -25,8 +25,8 @@ import zipfile
 import logging
 _logger = logging.getLogger("PyLTSpice.ServerSimRunner")
 
-from PyLTSpice.sim.sim_runner import SimRunner
-from PyLTSpice.editor.spice_editor import SpiceEditor
+from ..sim.sim_runner import SimRunner
+from ..editor.base_editor import BaseEditor
 
 
 def zip_files(raw_filename: Path, log_filename:Path):
@@ -84,7 +84,7 @@ class ServerSimRunner(threading.Thread):
         self.runner.wait_completion()
         self.runner.file_cleanup()
 
-    def add_simulation(self, netlist: Union[str, Path, SpiceEditor], *, timeout: float = 600) -> int:
+    def add_simulation(self, netlist: Union[str, Path, BaseEditor], *, timeout: float = 600) -> int:
         """"""
         _logger.debug("starting ", netlist)
         task = self.runner.run(netlist, wait_resource=True, timeout=timeout, callback=zip_files)

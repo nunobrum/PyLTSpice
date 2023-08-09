@@ -154,6 +154,12 @@ class BaseEditor(ABC):
     classes.
     """
 
+    @property
+    @abstractmethod
+    def circuit_file(self) -> Path:
+        """Returns the netlist as a string"""
+        ...
+
     @abstractmethod
     def reset_netlist(self) -> None:
         """Resets the netlist to the original state"""
