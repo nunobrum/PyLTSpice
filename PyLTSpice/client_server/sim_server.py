@@ -32,7 +32,7 @@ import uuid
 
 class SimServer():
 
-    def __init__(self, simulator, parallel_sims=4, output_folder='./temp1', port=9000):
+    def __init__(self, simulator, parallel_sims=4, output_folder='./temp', port=9000):
         self.output_folder = output_folder
         self.simulation_manager = ServerSimRunner(parallel_sims=parallel_sims, timeout=5 * 60, verbose=True,
                                                   output_folder=output_folder, simulator=simulator)
@@ -114,6 +114,7 @@ class SimServer():
 
     def close_session(self, session_id):
         """Cleans all the pending sim_tasks with """
+        _logger.info("Closing session ", session_id)
         for runno in self.sessions[session_id]:
             self.simulation_manager.erase_files_of_runno(runno)
         return True  # Needs to return always something. None is not supported
