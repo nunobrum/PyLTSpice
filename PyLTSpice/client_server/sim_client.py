@@ -26,6 +26,8 @@ import time
 from collections import OrderedDict
 from dataclasses import dataclass
 import logging
+from typing import Union
+
 _logger = logging.getLogger("PyLTSpice.SimClient")
 
 
@@ -37,7 +39,7 @@ class SimClientInvalidRunId(LookupError):
 class JobInformation:
     """Contains information about pending simulation jobs"""
     run_number: int  # The run id that is returned by the Server and which identifies the server
-    file_dir : pathlib.Path
+    file_dir: pathlib.Path
 
 # class RunIterator(object):
 #
@@ -111,11 +113,10 @@ class SimClient(object):
         self.stored_jobs = OrderedDict()  # This list keeps track of finished simulations that haven't yet been transferred.
         self.completed_jobs = 0
         self.minimum_time_between_server_calls = 0.2  # Minimum time between server calls
-        self._last_server_call = time.clock()
+        self._last_server_call = time.time()
 
     def __del__(self):
-        _logger.info("closing session ", self.session_id)
-        self.server.close_session(self.session_id)
+        self.close_session()
 
     def run(self, circuit):
         """
@@ -146,13 +147,13 @@ class SimClient(object):
 
             run_id = self.server.run(self.session_id, circuit_name, zip_data)
             job_info = JobInformation(run_number=run_id, file_dir=circuit_path.parent)
-            self.started_jobs[job_info] = job_info
+            self.started_jobs[run_id] = job_info
             return run_id
         else:
             _logger.error(f"Circuit {circuit} doesn't exit")
             return -1
         
-    def get_runno_data(self, runno) -> str:
+    def get_runno_data(self, runno) -> Union[str, None]:
         """
         Returns the simulation output data inside a zip file name.
 
@@ -165,10 +166,12 @@ class SimClient(object):
         job = self.stored_jobs.pop(runno)  # Removes it from stored jobs
         self.completed_jobs += 1
         if zip_filename != '':
-            store_path = job.file_dir
-            with open(store_path / zip_filename, 'wb') as f:
+            store_path = job.file_dir / zip_filename
+            with open(store_path, 'wb') as f:
                 f.write(zipdata.data)
-        return zip_filename
+            return store_path
+        else:
+            return None
 
     def __iter__(self):
         return self
@@ -182,7 +185,7 @@ class SimClient(object):
                 # is added to the stored jobs
                 return runno
             else:
-                now = time.clock()
+                now = time.time()
                 delta = self.minimum_time_between_server_calls - (now - self._last_server_call)
                 if delta > 0:
                     time.sleep(delta)  # Go asleep for a sec
@@ -190,20 +193,7 @@ class SimClient(object):
 
         # when there are no pending jobs left, exit the iterator    
         raise StopIteration
-        
 
-if __name__ == "__main__":
-
-    server = SimClient('http://localhost', 9000)
-    print(server.session_id)
-    runid = server.run("../../tests/testfile.net")
-    print("Got Job id", runid)
-    for runid in server:  # Ma
-        zip_filename = server.get_runno_data(runid)
-        print(f"Received {zip_filename} from runid {runid}")
-        with zipfile.ZipFile(zip_filename, 'r') as zipf:  # Extract the contents of the zip file
-            print(zipf.namelist())  # Debug printing the contents of the zip file
-            zipf.extract(zipf.namelist()[0])  # Normally the raw file comes first
-
-    print("Finished")
-    server.server.stop_server()  # This will terminate the server
+    def close_session(self):
+        _logger.info("closing session ", self.session_id)
+        self.server.close_session(self.session_id)

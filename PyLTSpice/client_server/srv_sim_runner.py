@@ -29,7 +29,7 @@ from ..sim.sim_runner import SimRunner
 from ..editor.base_editor import BaseEditor
 
 
-def zip_files(raw_filename: Path, log_filename:Path):
+def zip_files(raw_filename: Path, log_filename: Path):
     zip_filename = raw_filename.with_suffix('.zip')
     with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zip_file:
         zip_file.write(raw_filename)
@@ -67,6 +67,7 @@ class ServerSimRunner(threading.Thread):
                     self.completed_tasks.append({
                         'runno': task.runno,
                         'retcode': task.retcode,
+                        'circuit': task.netlist_file,
                         'raw': task.raw_file,
                         'log': task.log_file,
                         'zipfile': zip_filename,
@@ -97,9 +98,10 @@ class ServerSimRunner(threading.Thread):
 
     def _erase_files_and_info(self, pos):
         task = self.completed_tasks[pos]
-        for filename in ('log', 'raw', 'zipfile'):
+        for filename in ('circuit', 'log', 'raw', 'zipfile'):
             f = task[filename]
             if f.exists():
+                _logger.info("deleting ", f)
                 f.unlink()
         del self.completed_tasks[pos]
 
