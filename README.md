@@ -185,6 +185,23 @@ The simulation is then run from the LTSpice GUI.
 ```python
 from PyLTSpice import SimRunner
 from PyLTSpice import AscEditor
+from PyLTSpice.sim.tookit.montecarlo import Montecarlo
+
+# Force another simulatior
+simulator = r"C:\Users\nunob\AppData\Local\Programs\ADI\LTspice\LTspice.exe"
+
+# select spice model
+LTC = SimRunner(output_folder='./temp', simulator=simulator)
+sallenkey = AscEditor("./testfiles/salenkey.asc")
+
+mc = Montecarlo(sallenkey, runner=LTC)
+
+mc.set_tolerance('R', 0.01)  # 1% tolerance
+mc.set_tolerance('C', 0.1)  # 10% tolerance
+mc.set_tolerance('V', 0.1)  # 10% tolerance
+
+mc.set_parameter_deviation('Vos', 3e-4, 5e-3, 'uniform')
+mc.save_netlist('./testfiles/salenkey_mc.net')
 ```
 
 ### LTSteps.py ###
@@ -211,6 +228,29 @@ for i in range(data.step_count):
     print(' '.join([f"{data[name][i]:15}" for name in meas_names]), end='\n')  # Print Header
 
 print("Total number of measures found :", data.measure_count)
+```
+Simlarly, a worst case analysis can also be setup by using the class WorstCaseAnalysis
+
+```python
+from PyLTSpice import SimRunner
+from PyLTSpice import AscEditor
+from PyLTSpice.sim.tookit.worst_case import WorstCaseAnalysis
+
+# Force another simulatior
+simulator = r"C:\Users\nunob\AppData\Local\Programs\ADI\LTspice\LTspice.exe"
+
+# select spice model
+LTC = SimRunner(output_folder='./temp', simulator=simulator)
+sallenkey = AscEditor("./testfiles/salenkey.asc")
+
+mc = WorstCaseAnalysis(sallenkey, runner=LTC)
+
+mc.set_tolerance('R', 0.01)  # 1% tolerance
+mc.set_tolerance('C', 0.1)  # 10% tolerance
+mc.set_tolerance('V', 0.1)  # 10% tolerance
+
+mc.set_parameter_deviation('Vos', 3e-4, 5e-3, 'uniform')
+mc.save_netlist('./testfiles/salenkey_wc.asc') 
 ```
 
 The second possibility is to use the module directly on the command line
