@@ -8,7 +8,7 @@ sys.path.append(
 import PyLTSpice
 
 test_dir = '../examples/testfiles/' if os.path.abspath(os.curdir).endswith('unittests') else './examples/testfiles/'
-
+golden_dir = './golden/' if os.path.abspath(os.curdir).endswith('unittests') else './unittests/golden/'
 
 class ASC_Editor_Test(unittest.TestCase):
 
