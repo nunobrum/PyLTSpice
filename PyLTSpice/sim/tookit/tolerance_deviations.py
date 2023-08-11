@@ -34,14 +34,14 @@ class DeviationType(Enum):
 @dataclass
 class ComponentDeviation:
     """Class to store the deviation of a component"""
-    min_val: float
     max_val: float
+    min_val: float = 0.0
     typ: DeviationType = DeviationType.tolerance
     distribution: str = 'uniform'
 
     @classmethod
     def from_tolerance(cls, tolerance: float, distribution: str = 'uniform'):
-        return cls(-tolerance, tolerance, DeviationType.tolerance, distribution)
+        return cls(tolerance, -tolerance, DeviationType.tolerance, distribution)
 
     @classmethod
     def from_min_max(cls, min_val: float, max_val: float, distribution: str = 'uniform'):
@@ -54,13 +54,7 @@ class ToleranceDeviations(SimAnalysis):
 
     def __init__(self, circuit_file: Union[str, BaseEditor], runner: Optional[AnyRunner] = None):
         super().__init__(circuit_file, runner)
-        self.default_tolerance = {
-            'R': 0.01,
-            'C': 0.1,
-            'L': 0.1,
-            'V': 0,
-            'I': 0,
-        }
+        self.default_tolerance = {prefix: ComponentDeviation(0) for prefix in self.devices_with_deviation_allowed}
         self.device_deviations: Dict[str, ComponentDeviation] = {}
         self.parameter_deviations: Dict[str, ComponentDeviation] = {}
         self.testbench_prepared = False
