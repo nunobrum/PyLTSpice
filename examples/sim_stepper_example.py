@@ -3,15 +3,15 @@ import os
 from PyLTSpice import SpiceEditor, SimRunner
 from PyLTSpice.sim.sim_stepping import SimStepper
 
-def processing_data(raw_file, log_file):
-    print("Handling the simulation data of %s" % log_file )
 
-# get script absolute path
-meAbsPath = os.path.dirname(os.path.realpath(__file__))
+def processing_data(raw_file, log_file):
+    print("Handling the simulation data of %s" % log_file)
+
+
 # select spice model
 
 runner = SimRunner(parallel_sims=4, output_folder='./temp2')
-Stepper = SimStepper(SpiceEditor(meAbsPath + "\\Batch_Test.asc"), runner)
+Stepper = SimStepper(SpiceEditor("./testfiles/Batch_Test.asc"), runner)
 # set default arguments
 Stepper.set_parameters(res=0, cap=100e-6)
 Stepper.set_component_value('R2', '2k')

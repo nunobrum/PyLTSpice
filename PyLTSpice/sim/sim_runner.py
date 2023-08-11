@@ -177,10 +177,10 @@ class SimRunner(object):
         if simulator is None:
             from ..sim.ltspice_simulator import LTspice  # Used for defaults
             self.simulator = LTspice
-        elif issubclass(simulator, Simulator):
-            self.simulator = simulator
         elif isinstance(simulator, (str, Path)):
             self.simulator = Simulator.create_from(simulator)
+        elif issubclass(simulator, Simulator):
+            self.simulator = simulator
         else:
             raise TypeError("Invalid simulator type.")
 

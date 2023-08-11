@@ -20,6 +20,7 @@
 # -------------------------------------------------------------------------------
 
 from collections import OrderedDict
+from functools import wraps
 from typing import Union, Optional
 
 from ...sim.sim_runner import AnyRunner
@@ -36,21 +37,35 @@ class SimAnalysis(object):
     will be possible, although, it seems that the later solution is less computing intense.
     """
 
-    def __init__(self, circuit_file: Union[str, BaseEditor], simulator: Optional[Simulator] = None,
-                 runner: Optional[AnyRunner] = None):
+    def __init__(self, circuit_file: Union[str, BaseEditor], runner: Optional[AnyRunner] = None):
         if isinstance(circuit_file, str):
-            from ..editor.spice_editor import SpiceEditor
+            from ...editor.spice_editor import SpiceEditor
             self.editor = SpiceEditor(circuit_file)
         else:
             self.editor = circuit_file
-        if simulator is None:
-            from ..sim.ltspice_simulator import LTspice
-            self.simulator = LTspice()
-        else:
-            self.simulator = simulator
-        if runner is None:
-            from ..sim.sim_runner import SimRunner
-            self.runner = SimRunner(parallel_sims=1, timeout=None, verbose=False, output_folder=None)
-        self.simulations = OrderedDict()
+        self._runner = runner
+        self.simulations = []
+        self.num_runs = 0
 
+    @property
+    def runner(self):
+        if self._runner is None:
+            from ...sim.sim_runner import SimRunner
+            self._runner = SimRunner()
+        return self._runner
 
+    @runner.setter
+    def runner(self, new_runner: AnyRunner):
+        self._runner = new_runner
+
+    def run(self, **kwargs):
+        """
+        Runs the simulations. See runner.run for details on keyword arguments.
+        """
+        sim = self.runner.run(self.editor, **kwargs)
+        self.simulations.append(sim)
+
+    @wraps(BaseEditor.reset_netlist)
+    def reset_netlist(self):
+        self.editor.reset_netlist()
+        self.num_runs = 0

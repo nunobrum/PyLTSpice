@@ -6,8 +6,8 @@ simulator = r"C:\Program Files\LTC\LTspiceXVII\XVIIx64.exe"
 
 # select spice model
 LTC = SimRunner(output_folder='./temp')
-LTC.create_netlist('Batch_Test.asc')
-netlist = SpiceEditor('Batch_Test.net')
+LTC.create_netlist('./testfiles/Batch_Test.asc')
+netlist = SpiceEditor('./testfiles/Batch_Test.net')
 # set default arguments
 netlist.set_parameters(res=0, cap=100e-6)
 netlist.set_component_value('R2', '2k')  # Modifying the value of a resistor

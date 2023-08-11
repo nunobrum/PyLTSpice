@@ -22,9 +22,7 @@ from collections import OrderedDict
 from typing import Union, Optional, Iterable
 
 from editor.base_editor import BaseEditor, ComponentNotFoundError
-from .sim_analysis import SimAnalysis
-from sim.sim_runner import AnyRunner
-from sim.simulator import Simulator
+from .sim_analysis import SimAnalysis, AnyRunner, Simulator
 
 
 class FailureMode(SimAnalysis):
