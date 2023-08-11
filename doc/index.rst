@@ -11,7 +11,9 @@ Welcome to PyLTSpice's documentation!
    :caption: Contents:
    
    modules/modules
-   classes/classes
+   classes/editor_classes
+   classes/simulation_classes
+   classes/raw_classes
    utilities/utilities
    varia/varia
 

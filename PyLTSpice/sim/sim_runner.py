@@ -177,10 +177,10 @@ class SimRunner(object):
         if simulator is None:
             from ..sim.ltspice_simulator import LTspice  # Used for defaults
             self.simulator = LTspice
-        elif issubclass(simulator, Simulator):
-            self.simulator = simulator
         elif isinstance(simulator, (str, Path)):
             self.simulator = Simulator.create_from(simulator)
+        elif issubclass(simulator, Simulator):
+            self.simulator = simulator
         else:
             raise TypeError("Invalid simulator type.")
 
@@ -263,7 +263,7 @@ class SimRunner(object):
     def _run_file_name(self, netlist):
         if not isinstance(netlist, Path):
             netlist = Path(netlist)
-        return "%s_%i.net" % (netlist.stem, self.runno)
+        return "%s_%i%s" % (netlist.stem, self.runno, netlist.suffix)
 
     def create_netlist(self, asc_file: Union[str, Path]):
         """Creates a .net from an .asc using the LTSpice -netlist command line"""
@@ -287,7 +287,7 @@ class SimRunner(object):
                 run_filename = self._run_file_name(netlist.circuit_file)
 
             # Calculates the path where to store the new netlist.
-            run_netlist_file = self._on_output_folder(run_filename).with_suffix('.net')
+            run_netlist_file = self._on_output_folder(run_filename)
             netlist.write_netlist(run_netlist_file)
 
         elif isinstance(netlist, (Path, str)):
@@ -478,7 +478,7 @@ class SimRunner(object):
         self.updated_stats()
         while len(self.workfiles):
             workfile = self.workfiles.pop(0)
-            if workfile.suffix == '.net':
+            if workfile.suffix == '.net' or workfile.suffix == '.asc':
                 # Delete the log file if exists
                 logfile = workfile.with_suffix('.log')
                 if logfile.exists():
@@ -497,8 +497,9 @@ class SimRunner(object):
                     oprawfile.unlink()
 
             # Delete the file
-            _logger.info("Deleting..." + workfile.name)
-            workfile.unlink()
+            if workfile.exists():
+                _logger.info("Deleting..." + workfile.name)
+                workfile.unlink()
 
     def __iter__(self):
         return self

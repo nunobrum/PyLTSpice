@@ -53,6 +53,9 @@ class AscEditor(BaseEditor):
         return self._asc_file_path
 
     def write_netlist(self, run_netlist_file: Union[str, Path]) -> None:
+        if isinstance(run_netlist_file, str):
+            run_netlist_file = Path(run_netlist_file)
+        run_netlist_file = run_netlist_file.with_suffix(".asc")
         with open(run_netlist_file, 'w') as asc_file:
             _logger.info(f"Writing ASC file {run_netlist_file}")
             asc_file.writelines(self._asc_file_lines)
@@ -117,7 +120,10 @@ class AscEditor(BaseEditor):
         line_no, match = self._get_line_matching(".PARAM", param_regex)
         if match:
             _logger.debug(f"Parameter {param} found in ASC file, updating it")
-            value_str = format_eng(value)
+            if isinstance(value, (int, float)):
+                value_str = format_eng(value)
+            else:
+                value_str = value
             line: str = self._asc_file_lines[line_no]
             match = param_regex.search(line)  # repeating the search, so we update the correct start/stop parameter
             start, stop = match.span(param_regex.groupindex['replace'])

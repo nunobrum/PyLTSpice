@@ -1,5 +1,6 @@
-SimServer (Under development)
-=============================
+=========
+SimServer
+=========
 
 .. autoclass:: PyLTSpice.client_server.sim_server.SimServer
    :members:

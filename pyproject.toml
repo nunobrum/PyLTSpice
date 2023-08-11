@@ -19,7 +19,8 @@ dependencies = [
     "scipy",
     "psutil",
     "clipboard",
-    "matplotlib"
+    "matplotlib",
+    "keyboard",
 ]
 classifiers=[
     "Programming Language :: Python :: 3",
@@ -40,6 +41,7 @@ ltsteps = "PyLTSpice.LTSteps:main"
 histogram = "PyLTSpice.Histogram:main"
 rawplot = "PyLTSpice.rawplot:main"
 rawconvert = "PyLTSpice.raw.raw_convert:main"
+run_server = "PyLTSpice.run_server:main"
 
 [project.urls]
 "Homepage" = "https://github.com/nunobrum/PyLTSpice"
