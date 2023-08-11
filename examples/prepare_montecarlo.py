@@ -15,9 +15,6 @@ mc.set_tolerance('R', 0.01)  # 1% tolerance
 mc.set_tolerance('C', 0.1)  # 10% tolerance
 mc.set_tolerance('V', 0.1)  # 10% tolerance
 
-mc.set_parameter_deviation('V1', 3, 5)
+mc.set_parameter_deviation('Vos', 3e-4, 5e-3, 'uniform')
 mc.save_netlist('./testfiles/salenkey_mc.net')
 
-enter = input("Press enter to delete created files")
-if enter == '':
-    LTC.file_cleanup()

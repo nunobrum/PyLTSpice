@@ -50,6 +50,7 @@ class ComponentDeviation:
 
 class ToleranceDeviations(SimAnalysis):
     """Class to automate Monte-Carlo simulations"""
+    devices_with_deviation_allowed = ('R', 'C', 'L', 'V', 'I')
 
     def __init__(self, circuit_file: Union[str, BaseEditor], runner: Optional[AnyRunner] = None):
         super().__init__(circuit_file, runner)
@@ -57,9 +58,12 @@ class ToleranceDeviations(SimAnalysis):
             'R': 0.01,
             'C': 0.1,
             'L': 0.1,
+            'V': 0,
+            'I': 0,
         }
         self.device_deviations: Dict[str, ComponentDeviation] = {}
         self.parameter_deviations: Dict[str, ComponentDeviation] = {}
+        self.testbench_prepared = False
         self.num_runs = 0
 
     def set_tolerance(self, ref: str, new_tolerance: float, distribution: str = 'uniform'):
@@ -67,7 +71,7 @@ class ToleranceDeviations(SimAnalysis):
         Sets the tolerance for a given component. If only the prefix is given, the tolerance is set for all.
         The valid prefixes that can be used are: R, C, L, V, I
         """
-        if ref in ('R', 'C', 'L', 'V', 'I'):
+        if ref in self.devices_with_deviation_allowed:
             self.default_tolerance[ref] = ComponentDeviation.from_tolerance(new_tolerance, distribution)
         else:
             if ref in self.editor.get_components(ref[0]):
@@ -90,10 +94,16 @@ class ToleranceDeviations(SimAnalysis):
         self.device_deviations[ref] = ComponentDeviation.from_min_max(min_val, max_val, distribution)
 
     def get_components(self, prefix: str):
+        if prefix == '*':
+            return (cmp for cmp in self.editor.get_components() if cmp[0] in self.devices_with_deviation_allowed)
         return self.editor.get_components(prefix)
 
     def get_component_value_deviation_type(self, ref: str) -> (float, ComponentDeviation):
+        if ref[0] not in self.devices_with_deviation_allowed:
+            raise ValueError("The reference must be a valid component type")
         value = self.editor.get_component_value(ref)
+        if len(value) == 0:  # This covers empty strings
+            return value, ComponentDeviation.from_tolerance(0.0)
         if ref in self.device_deviations:
             return value, self.device_deviations[ref]
         elif ref[0] in self.default_tolerance:
@@ -112,9 +122,11 @@ class ToleranceDeviations(SimAnalysis):
         return value, self.parameter_deviations[param]
 
     def save_netlist(self, filename: str):
+        if self.testbench_prepared is False:
+            self.prepare_testbench()
         self.editor.write_netlist(filename)
 
-    def prepare_testbench(self, *args, **kwargs):
+    def prepare_testbench(self):
         raise RuntimeError("This method should be implemented in the derived class")
 
     def run(self, max_runs_per_sim: int = 512,  **kwargs):

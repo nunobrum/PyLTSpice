@@ -26,7 +26,7 @@ from .tolerance_deviations import ToleranceDeviations, DeviationType
 class Montecarlo(ToleranceDeviations):
     """Class to automate Monte-Carlo simulations"""
 
-    def prepare_simulation(self, num_runs: int = 1000):
+    def prepare_testbench(self, num_runs: int = 1000):
         """Prepares the simulation by setting the tolerances for the components"""
         min_max_uni_func = False
         min_max_norm_func = False
@@ -36,19 +36,19 @@ class Montecarlo(ToleranceDeviations):
             val, dev = self.get_component_value_deviation_type(ref)  # get there present value
             new_val = val
             if dev.typ == DeviationType.tolerance:
-                tolstr = ('%f' % dev.max_value).rstrip('0').rstrip('.')
-                if dev.dist == 'uniform':
+                tolstr = ('%f' % dev.max_val).rstrip('0').rstrip('.')
+                if dev.distribution == 'uniform':
                     new_val = "{utol(%s,%s)}" % (val, tolstr)  # calculate expression for new value
                     tol_uni_func = True
-                elif dev.dist == 'normal':
+                elif dev.distribution == 'normal':
                     new_val = "{ntol(%s,%s)}" % (val, tolstr)
                     tol_norm_func = True
             elif dev.typ == DeviationType.minmax:
-                if dev.dist == 'uniform':
-                    new_val = "{urng(%s, %s,%s)}" % (val, dev.min_value, dev.max_value)  # calculate expression for new value
+                if dev.distribution == 'uniform':
+                    new_val = "{urng(%s, %s,%s)}" % (val, dev.min_val, dev.max_val)  # calculate expression for new value
                     min_max_uni_func = True
-                elif dev.dist == 'normal':
-                    new_val = "{nrng(%s,%s,%s)}" % (val, dev.min_value, dev.max_value)
+                elif dev.distribution == 'normal':
+                    new_val = "{nrng(%s,%s,%s)}" % (val, dev.min_val, dev.max_val)
                     min_max_norm_func = True
 
             if new_val != val:  # Only update the value if it has changed
@@ -56,35 +56,38 @@ class Montecarlo(ToleranceDeviations):
 
         for param in self.parameter_deviations:
             val, dev = self.get_parameter_value_deviation_type(param)
+            new_val = val
             if dev.typ == DeviationType.tolerance:
-                tolstr = ('%f' % dev.max_value).rstrip('0').rstrip('.')
-                if dev.dist == 'uniform':
-                    new_val = "{utol(%s,%s)}" % (val, tolstr)
+                if dev.distribution == 'uniform':
+                    new_val = "{utol(%s,%f)}" % (val, dev.max_val)
                     tol_uni_func = True
-                elif dev.dist == 'normal':
-                    new_val = "{ntol(%s,%s)}" % (val, tolstr)
+                elif dev.distribution == 'normal':
+                    new_val = "{ntol(%f,%f)}" % (val, dev.max_val)
                     tol_norm_func = True
             elif dev.typ == DeviationType.minmax:
-                if dev.dist == 'uniform':
-                    new_val = "{urng(%s, %s,%s)}" % (val, dev.min_value, dev.max_value)
+                if dev.distribution == 'uniform':
+                    new_val = "{urng(%s,%f,%f)}" % (val, (dev.max_val+dev.min_val)/2, (dev.max_val-dev.min_val)/2)
                     min_max_uni_func = True
-                elif dev.dist == 'normal':
-                    new_val = "{nrng(%s,%s,%s)}" % (val, dev.min_value, dev.max_value)
+                elif dev.distribution == 'normal':
+                    new_val = "{nrng(%s,%f,%f)}" % (val, (dev.max_val+dev.min_val)/2, (dev.max_val-dev.min_val)/6)
                     min_max_norm_func = True
+            else:
+                continue
             self.editor.set_parameter(param, new_val)
 
         if tol_uni_func:
-            self.editor.add_instruction(".function utol(nom,tol) {}")
+            self.editor.add_instruction(".function utol(nom,tol) if(run<0, nom, mc(nom,tol))")
 
         if tol_norm_func:
             self.editor.add_instruction(".function ntol(nom,tol) if(run<0, nom, nom*(1+gauss(tol/3)))")
 
         if min_max_uni_func:
-            self.editor.add_instruction(".function urng(nom,min,max) {}")
+            self.editor.add_instruction(".function urng(nom,mean,df2) if(run<0, nom, mean*flat(df2))")
 
         if min_max_norm_func:
-            self.editor.add_instruction(".function nrng(nom,min,max) {}")
+            self.editor.add_instruction(".function nrng(nom,mean,df23) if(run<0, nom, mean*(1+gauss(df2)))")
 
         self.num_runs = num_runs
         self.editor.add_instruction(".step param run 0 %d 1" % num_runs)
         self.editor.set_parameter('run', -1)
+        self.testbench_prepared = True
