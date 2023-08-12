@@ -17,7 +17,7 @@ use the following command:
 
 .. code-block:: bash
 
-    python -m pyltspice.run_server --port 9000 --parallel 4 --output ./temp
+    python -m PyLTSpice.run_server --port 9000 --parallel 4 --output ./temp
 
 Make sure that each machine is on the same network and that the port is open.
 If port is not specified, the default port is 9000.
