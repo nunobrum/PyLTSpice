@@ -88,6 +88,6 @@ class Montecarlo(ToleranceDeviations):
             self.editor.add_instruction(".function nrng(nom,mean,df23) if(run<0, nom, mean*(1+gauss(df2)))")
 
         self.num_runs = num_runs
-        self.editor.add_instruction(".step param run 0 %d 1" % num_runs)
+        self.editor.add_instruction(".step param run -1 %d 1" % num_runs)
         self.editor.set_parameter('run', -1)
         self.testbench_prepared = True
