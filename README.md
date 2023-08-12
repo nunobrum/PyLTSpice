@@ -14,10 +14,6 @@ PyLTSpice is a toolchain of python utilities design to interact with LTSpice and
 * __raw_write.py__
   A class to write RAW files that can be read by LTSpice Wave Application.
 
-* __Histogram.py__
-  A python script that uses numpy and matplotlib to create an histogram and calculate the sigma deviations. This is
-  useful for Monte-Carlo analysis.
-
 * __spice_editor.py and asc_editor.py__
   Scripts that can update spice netlists. The following methods are available to manipulate the component values,
   parameters as well as the simulation commands. These methods allow to update a netlist without having to open the
@@ -41,6 +37,15 @@ PyLTSpice is a toolchain of python utilities design to interact with LTSpice and
     - Different models can be simulated in a single batch, by using the following instructions:
 
   Note: It was only tested with Windows based installations.
+
+* __Analysis Toolkit__
+  A set of tools that prepare an LTSpice netlist for a Montecarlo or Worst Case Analysis. The device tolerances are set
+  by the user and the netlist is updated accordingly. The netlist can then be used with the sim_runner.py to run a 
+  batch of simulations or with the LTSpice GUI.
+
+* __Histogram.py__
+  A python script that uses numpy and matplotlib to create a histogram and calculate the sigma deviations. This is
+  useful for Monte-Carlo analysis.
 
 ## How to Install ##
 
@@ -179,30 +184,101 @@ The example above is using the SpiceEditor to create and modify a spice netlist,
 AscEditor to directly modify the .asc file. The edited .asc file can then be opened by the LTSpice GUI and the
 simulation can be run from there.
 
-The example below uses can be used o modify the .asc file to prepare for a Monte Carlo simulation.
-The simulation is then run from the LTSpice GUI.
+### Simulation Analysis Toolkit ###
+
+The AscEditor can be used with the Simulation Analysis Toolkit to perform Monte Carlo or Wost Case simulations.
+These simulations can either be done on the LTSpice GUI or using the Runner Class described above.
+
+Let's consider the following circuit:
+
+![Sallen-Key Amplifier](./doc/media/sallenkey.png "Sallen-Key Amplifier")
+
+When performing a Monte Carlo simulation on this circuit, we need to manually modify the value of each component, 
+and then add the .step command for making several runs on the same circuit. 
+To simplify this process, the AscEditor class can be used as exemplified below:
 
 ```python
-from PyLTSpice import SimRunner
-from PyLTSpice import AscEditor
-from PyLTSpice.sim.tookit.montecarlo import Montecarlo
+from PyLTSpice import AscEditor  # Imports the class that manipulates the asc file
+from PyLTSpice.sim.tookit.montecarlo import Montecarlo  # Imports the Montecarlo toolkit class
 
-# Force another simulatior
-simulator = r"C:\Users\nunob\AppData\Local\Programs\ADI\LTspice\LTspice.exe"
+sallenkey = AscEditor("./testfiles/sallenkey.asc")  # Reads the asc file into memory
 
-# select spice model
-LTC = SimRunner(output_folder='./temp', simulator=simulator)
-sallenkey = AscEditor("./testfiles/salenkey.asc")
+mc = Montecarlo(sallenkey)  # Instantiates the Montecarlo class, with the asc file already in memory
 
-mc = Montecarlo(sallenkey, runner=LTC)
+# The following lines set the default tolerances for the components
+mc.set_tolerance('R', 0.01)  # 1% tolerance, default distribution is uniform
+mc.set_tolerance('C', 0.1, distribution='uniform')  # 10% tolerance, explicit uniform distribution
+mc.set_tolerance('V', 0.1, distribution='normal')  # 10% tolerance, but using a normal distribution
 
-mc.set_tolerance('R', 0.01)  # 1% tolerance
-mc.set_tolerance('C', 0.1)  # 10% tolerance
-mc.set_tolerance('V', 0.1)  # 10% tolerance
+# Some components can have a different tolerance
+mc.set_tolerance('R1', 0.05)  # 5% tolerance for R1 only. This only overrides the default tolerance for R1
 
-mc.set_parameter_deviation('Vos', 3e-4, 5e-3, 'uniform')
-mc.save_netlist('./testfiles/salenkey_mc.net')
+# Tolerances can be set for parameters as well
+mc.set_parameter_deviation('Vos', 3e-4, 5e-3, 'uniform')  # The keyword 'distribution' is optional
+mc.prepare_testbench(1000)  # Prepares the testbench for 1000 simulations
+
+# Finally the netlist is saved to a file
+mc.save_netlist('./testfiles/sallenkey_mc.net')
 ```
+When opening the created sallenkey_mc.net file, we can see that the following circuit.
+
+![Sallen-Key Amplifier with Montecarlo](./doc/media/sallenkey_mc.png "Sallen-Key Amplifier with Montecarlo")
+
+The following updates were made to the circuit:
+- The value of each component was replaced by a function that generates a random value within the specified tolerance.
+- The .step param run command was added to the netlist. Starts at -1 which it's the nominal value simulation, and 
+finishes that the number of simulations specified in the prepare_testbench() method.
+- A default value for the run parameter was added. This is useful if the .step param run is commented out.
+- The R1 tolerance is different from the other resistors. This is because the tolerance was explicitly set for R1.
+- The Vos parameter was added to the .param list. This is because the parameter was explicitly set using the
+set_parameter_deviation method.
+- Functions utol, ntol and urng were added to the .func list. These functions are used to generate random values.
+Uniform distributions use the LTSpice built-in mc(x, tol) and flat(x) functions, while normal distributions use the 
+gauss(x) function.
+
+Similarly, the worst case analysis can also be setup by using the class WorstCaseAnalysis, as exemplified below:
+
+```python
+from PyLTSpice import AscEditor  # Imports the class that manipulates the asc file
+from PyLTSpice.sim.tookit.worst_case import WorstCaseAnalysis
+
+sallenkey = AscEditor("./testfiles/sallenkey.asc")  # Reads the asc file into memory
+
+wca = WorstCaseAnalysis(sallenkey)  # Instantiates the Worst Case Analysis class
+
+# The following lines set the default tolerances for the components
+wca.set_tolerance('R', 0.01)  # 1% tolerance
+wca.set_tolerance('C', 0.1)  # 10% tolerance
+wca.set_tolerance('V', 0.1)  # 10% tolerance. For Worst Case analysis, the distribution is irrelevant
+
+# Some components can have a different tolerance
+wca.set_tolerance('R1', 0.05)  # 5% tolerance for R1 only. This only overrides the default tolerance for R1
+
+# Tolerances can be set for parameters as well.
+wca.set_parameter_deviation('Vos', 3e-4, 5e-3)
+
+# Finally the netlist is saved to a file
+wca.save_netlist('./testfiles/sallenkey_wc.asc')
+```
+When opening the created sallenkey_wc.net file, we can see that the following circuit.
+
+![Sallen-Key Amplifier with WCA](./doc/media/sallenkey_wc.png "Sallen-Key Amplifier with WCA")
+
+The following updates were made to the circuit:
+- The value of each component was replaced by a function that generates a nominal, minimum and maximum value depending
+on the run parameter and is assigned a unique index number. (R1=0, Vos=1, R2=2, ... V2=7, VIN=8)
+The unique number corresponds to the bit position of the run parameter. Bit 0 corresponds to the minimum value and
+bit 1 corresponds to the maximum value. Calculating all possible permutations of maximum and minimum values for each
+component, we get 2**9 = 512 possible combinations. This maps into a 9 bit binary number, which is the run parameter.
+- The .step param run command was added to the netlist. It starts at -1 which it's the nominal value simulation, then 0
+which corresponds to the minimum value for each component, then it makes all combinations of minimum and maximum values 
+until 511, which is the simulation with all maximum values.
+- A default value for the run parameter was added. This is useful if the .step param run is commented out.
+- The R1 tolerance is different from the other resistors. This is because the tolerance was explicitly set for R1.
+- The wc() function is added to the circuit. This function is used to calculate the worst case value for each component,
+given a tolerance value and its respective index.
+- The wc1() function is added to the circuit. This function is used to calculate the worst case value for each component,
+given a minimum and maximum value and its respective index.
 
 ### LTSteps.py ###
 
@@ -229,29 +305,6 @@ for i in range(data.step_count):
 
 print("Total number of measures found :", data.measure_count)
 ```
-Simlarly, a worst case analysis can also be setup by using the class WorstCaseAnalysis
-
-```python
-from PyLTSpice import SimRunner
-from PyLTSpice import AscEditor
-from PyLTSpice.sim.tookit.worst_case import WorstCaseAnalysis
-
-# Force another simulatior
-simulator = r"C:\Users\nunob\AppData\Local\Programs\ADI\LTspice\LTspice.exe"
-
-# select spice model
-LTC = SimRunner(output_folder='./temp', simulator=simulator)
-sallenkey = AscEditor("./testfiles/salenkey.asc")
-
-mc = WorstCaseAnalysis(sallenkey, runner=LTC)
-
-mc.set_tolerance('R', 0.01)  # 1% tolerance
-mc.set_tolerance('C', 0.1)  # 10% tolerance
-mc.set_tolerance('V', 0.1)  # 10% tolerance
-
-mc.set_parameter_deviation('Vos', 3e-4, 5e-3, 'uniform')
-mc.save_netlist('./testfiles/salenkey_wc.asc') 
-```
 
 The second possibility is to use the module directly on the command line
 
@@ -266,7 +319,7 @@ script will scan the directory and process the newest log, txt or out file found
 
 ### histogram.exe ###
 
-This module uses the data inside on the filename to produce an histogram image.
+This module uses the data inside on the filename to produce a histogram image.
 
  ```
 Usage: Histogram.py [options] LOG_FILE TRACE
@@ -362,8 +415,10 @@ _Make sure to initialize the root logger before importing the library to be able
 * Version 4.1.0 *(requires Python 3.8 or higher)*
     * Adding a new class to manipulate directly the .asc files.
     * Modifying all the other classes in order to use the new class.
-    * Adding classes to perform Montecarlo and worst case analysis.
+    * Adding classes to perform Montecarlo and worst case analysis (Thanks to @mvanriet for his starting this).
     * Removing the deprecated LTSpice_RawRead.py, LTSpice_RawWrite.py and LTSpiceBatch.py files and respective classes.
+    * Restructured the folder structure to be more in line with the Python standards.
+    * Added an Examples folder with some examples on how to use the library.
 
 * Version 4.0.6\
     * Fixing issue with the write_netlist() function when receiving a string instead of a pathlib.Path object.
@@ -373,7 +428,7 @@ _Make sure to initialize the root logger before importing the library to be able
     * Accepting fixes from aanas-sayed@GitHub that fixes issues with running the LTSpice in Linux.
 
 * Version 4.0.4\
-    * Improved usage of the logging library. (Thanks TSprech@GitHub)
+    * Improved usage of the logging library. (Thanks @TSprech for vastly improving the logging)
     * Included RunTask number in the log messages.
     * Included milliseconds in the time elapsed calculation.
 
@@ -410,7 +465,7 @@ _Make sure to initialize the root logger before importing the library to be able
     * Bug Fixes (See GitHub Log)
 
 * Version 2.2
-    * Making numpy as an requirement and eliminating all code that avoided the use of numpy
+    * Making numpy as a requirement and eliminating all code that avoided the use of numpy
     * Using new packaging tool
     * Fixes on the LTSpice_RawWrite
     * Fixes in the handling of stepped operating point simulations
@@ -445,9 +500,7 @@ _Make sure to initialize the root logger before importing the library to be able
 
 * Version 1.8
     * Uniforming License reference across files and improvements on the documentation
-    * An enormous and wholehearted thanks to Logan Herrera (lpherr) <logan.herrera.github@gmail.com> for the
-      improvements in
-      the documentation.
+    * An enormous and wholehearted thanks to @lpherr for the improvements in the documentation.
     * Bugfix on the add_LTspiceRunCmdLineSwitches() ; Supporting .param name value format
     * Allowing the LTSpiceRawRead to proceed when the log file can't be found or when there are problems reading it.
 * Version 1.7
@@ -481,19 +534,19 @@ _Make sure to initialize the root logger before importing the library to be able
 
 * Version 1.0
     * LTSpiceBatch.py:\
-      Implemented an new approach (NOT BACKWARDS COMPATIBLE), that avoids the usage of the sim_settings.inc file.
+      Implemented a new approach (NOT BACKWARDS COMPATIBLE), that avoids the usage of the sim_settings.inc file.
       And allows to modify not only parameters, but also models and even the simulation commands.
     * LTSpice_RawRead.py:\
       Added the get_time_axis method to the RawRead class to avoid the problems with negative values on time axis,
       when 2nd order compression is enabled in LTSpice.
     * LTSteps.py:\
-      Modified the LTSteps so it can also read measurements on log files without any steps done.
+      Modified the LTSteps, so it can also read measurements on log files without any steps done.
 
 * Version 0.6
   * Histogram.py now has an option to make the histogram directly from values stored in the clipboard
 
 * Version 0.5
-  * The LTSpice_RawReader.py now uses the struc.unpack function for a faster execution
+  * The LTSpice_RawReader.py now uses the `struct.unpack` function for a faster execution
 
 * Version 0.4
   * Added LTSpiceBatch.py to the collection of tools

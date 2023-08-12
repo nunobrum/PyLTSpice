@@ -5,6 +5,6 @@ from PyLTSpice.client_server.sim_server import SimServer
 
 a = SimServer(ltsim.LTspice, port=9000)
 while a.running():
-    time.sleep(1)
+    time.sleep(0.2)
 
 print("stopping...SimServer")

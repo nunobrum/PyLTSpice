@@ -1,0 +1,10 @@
+* C:\sandbox\PyLTSpice\examples\testfiles\testfile.asc
+V1 in 0 PULSE(-1 1 1u 1n 1n 2m 1m 1)
+R1 out in {res}
+C1 out 0 {cap}
+C2 out in {cap}
+.tran 3m
+.param cap=1n res=1k
+.step dec param cap 1p 10u 1
+.backanno
+.end
