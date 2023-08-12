@@ -756,7 +756,7 @@ class RawRead(object):
         :param columns: List of traces to use as columns. Default is all traces
         :type columns: list
         :param kwargs: Additional arguments to pass to the pandas.DataFrame constructor
-        :type kwargs: **dict
+        :type kwargs: \*\*dict
         :return: A pandas DataFrame
         :rtype: pandas.DataFrame
         """
@@ -801,7 +801,7 @@ class RawRead(object):
         :param columns: List of traces to use as columns. Default is all traces
         :type columns: list
         :param kwargs: Additional arguments to pass to the pandas.DataFrame constructor
-        :type kwargs: **dict
+        :type kwargs: \*\*dict
         :return: A pandas DataFrame
         :rtype: pandas.DataFrame
         """
@@ -827,7 +827,7 @@ class RawRead(object):
         :param separator: separator to use in the CSV file
         :type separator: str
         :param kwargs: Additional arguments to pass to the pandas.DataFrame.to_csv function
-        :type kwargs: **dict
+        :type kwargs: \*\*dict
         """
         try:
             import pandas as pd
@@ -858,7 +858,7 @@ class RawRead(object):
         :param step: Step number to retrieve. If not given, it
         :type step: int
         :param kwargs: Additional arguments to pass to the pandas.DataFrame.to_excel function
-        :type kwargs: **dict
+        :type kwargs: \*\*dict
         """
         try:
             import pandas as pd

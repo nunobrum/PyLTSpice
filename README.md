@@ -191,7 +191,7 @@ These simulations can either be done on the LTSpice GUI or using the Runner Clas
 
 Let's consider the following circuit:
 
-![Sallen-Key Amplifier](./doc/media/sallenkey.png "Sallen-Key Amplifier")
+![Sallen-Key Amplifier](./doc/modules/sallenkey.png "Sallen-Key Amplifier")
 
 When performing a Monte Carlo simulation on this circuit, we need to manually modify the value of each component, 
 and then add the .step command for making several runs on the same circuit. 
@@ -222,7 +222,7 @@ mc.save_netlist('./testfiles/sallenkey_mc.net')
 ```
 When opening the created sallenkey_mc.net file, we can see that the following circuit.
 
-![Sallen-Key Amplifier with Montecarlo](./doc/media/sallenkey_mc.png "Sallen-Key Amplifier with Montecarlo")
+![Sallen-Key Amplifier with Montecarlo](./doc/modules/sallenkey_mc.png "Sallen-Key Amplifier with Montecarlo")
 
 The following updates were made to the circuit:
 - The value of each component was replaced by a function that generates a random value within the specified tolerance.
@@ -262,7 +262,7 @@ wca.save_netlist('./testfiles/sallenkey_wc.asc')
 ```
 When opening the created sallenkey_wc.net file, we can see that the following circuit.
 
-![Sallen-Key Amplifier with WCA](./doc/media/sallenkey_wc.png "Sallen-Key Amplifier with WCA")
+![Sallen-Key Amplifier with WCA](./doc/modules/sallenkey_wc.png "Sallen-Key Amplifier with WCA")
 
 The following updates were made to the circuit:
 - The value of each component was replaced by a function that generates a nominal, minimum and maximum value depending
