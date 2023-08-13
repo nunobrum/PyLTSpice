@@ -496,6 +496,13 @@ class SimRunner(object):
                     _logger.info("Deleting..." + oprawfile.name)
                     oprawfile.unlink()
 
+                if workfile.suffix == '.asc':
+                    # Then needs to delete the .net as well
+                    netfile = workfile.with_suffix('.net')
+                    if netfile.exists():
+                        _logger.info("Deleting..." + netfile.name)
+                        netfile.unlink()
+
             # Delete the file
             if workfile.exists():
                 _logger.info("Deleting..." + workfile.name)

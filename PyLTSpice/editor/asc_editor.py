@@ -158,7 +158,12 @@ class AscEditor(BaseEditor):
             raise ComponentNotFoundError(f"Component {device} does not have a Value attribute")
 
     def set_element_model(self, element: str, model: str) -> None:
-        self.set_component_value(element, model)
+        comp_info = self.get_component_info(element)
+        line_no = comp_info['line']
+        tokens = self._asc_file_lines[line_no].split(' ')
+        tokens[1] = model
+        self._asc_file_lines[line_no] = ' '.join(tokens)
+        _logger.info(f"Component {element} updated to {model}")
 
     def get_component_value(self, element: str) -> str:
         comp_info = self.get_component_info(element)
