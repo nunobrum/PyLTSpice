@@ -24,7 +24,7 @@ from .base_editor import BaseEditor, format_eng, ComponentNotFoundError, Paramet
 
 _logger = logging.getLogger("PyLTSpice.AscEditor")
 
-TEXT_REGEX = re.compile(r"TEXT (\d+)\s+(\d+)\s+(Left|Right|Top|Bottom)\s\d+\s*(?P<type>[!;])(?P<text>.*)",
+TEXT_REGEX = re.compile(r"TEXT (-?\d+)\s+(-?\d+)\s+(Left|Right|Top|Bottom)\s\d+\s*(?P<type>[!;])(?P<text>.*)",
                         re.IGNORECASE)
 TEXT_REGEX_X = 1
 TEXT_REGEX_Y = 2

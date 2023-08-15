@@ -176,7 +176,7 @@ def main():
 
         if options.range is None:
             # Automatic calculation of the range
-            axisXmin = mu - (options.sigma+1)*sd
+            axisXmin = mu - (options.sigma + 1) * sd
             axisXmax = mu + (options.sigma + 1) * sd
 
             if mn < axisXmin:

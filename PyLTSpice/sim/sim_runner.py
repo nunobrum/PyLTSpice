@@ -484,6 +484,12 @@ class SimRunner(object):
                 if logfile.exists():
                     _logger.info("Deleting..." + logfile.name)
                     logfile.unlink()
+
+                # Delete the log.raw file if exists
+                lograwfile = workfile.with_suffix('.log.raw')
+                if lograwfile.exists():
+                    _logger.info("Deleting..." + lograwfile.name)
+                    lograwfile.unlink()
                 # Delete the raw file if exists
                 rawfile = workfile.with_suffix('.raw')
                 if rawfile.exists():
