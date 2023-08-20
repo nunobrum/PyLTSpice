@@ -2,7 +2,7 @@
 # coding=utf-8
 from typing import Union, Optional
 
-from editor.base_editor import BaseEditor
+from ...editor.base_editor import BaseEditor
 # -------------------------------------------------------------------------------
 #    ____        _   _____ ____        _
 #   |  _ \ _   _| | |_   _/ ___| _ __ (_) ___ ___
@@ -21,15 +21,10 @@ from editor.base_editor import BaseEditor
 # -------------------------------------------------------------------------------
 
 from .tolerance_deviations import ToleranceDeviations, DeviationType
-from ..sim_runner import AnyRunner
-from ..simulator import Simulator
 
 
 class WorstCaseAnalysis(ToleranceDeviations):
     """Class to automate Monte-Carlo simulations"""
-
-    def __init__(self, circuit_file: Union[str, BaseEditor], runner: Optional[AnyRunner] = None):
-        super().__init__(circuit_file, runner)
 
     def set_component_deviation(self, ref: str, index):
         val, dev = self.get_component_value_deviation_type(ref)  # get there present value
@@ -42,7 +37,7 @@ class WorstCaseAnalysis(ToleranceDeviations):
         if new_val != val:
             self.set_component_value(ref, new_val)  # update the value
 
-    def prepare_testbench(self):
+    def prepare_testbench(self, *args, **kwargs):
         """Prepares the simulation by setting the tolerances for the components"""
         index = 0
         for ref in self.device_deviations:

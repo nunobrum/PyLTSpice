@@ -23,9 +23,11 @@ from collections import OrderedDict
 from functools import wraps
 from typing import Union, Optional
 
+from log.logfile_data import LogfileData
 from ...sim.sim_runner import AnyRunner
 from ...editor.base_editor import BaseEditor
 from ...sim.simulator import Simulator
+from ...log.ltsteps import LTSpiceLogReader
 
 
 class SimAnalysis(object):
@@ -60,12 +62,47 @@ class SimAnalysis(object):
 
     def run(self, **kwargs):
         """
-        Runs the simulations. See runner.run for details on keyword arguments.
+        Runs the simulations. See runner.run() method for details on keyword arguments.
         """
         sim = self.runner.run(self.editor, **kwargs)
         self.simulations.append(sim)
+        self.runner.wait_completion()
+        if 'callback' in kwargs:
+            return (sim.callback_return if sim is not None else None for sim in self.simulations)
 
     @wraps(BaseEditor.reset_netlist)
     def reset_netlist(self):
         self.editor.reset_netlist()
-        self.num_runs = 0
+
+    def cleanup_files(self):
+        """Clears all simulation files. Typically used after a simulation run and analysis."""
+        self.runner.file_cleanup()
+
+    def simulation(self, index: int) -> Simulator:
+        """Returns a simulation object"""
+        return self.simulations[index]
+
+    def __getitem__(self, item):
+        return self.simulations[item]
+
+    def read_logfiles(self) -> LogfileData:
+        """Reads the log files and returns a dictionary with the results"""
+        all_stepset = {}
+        all_dataset = OrderedDict()
+        for sim in self.simulations:
+            if sim is None:
+                continue
+            log_results = LTSpiceLogReader(sim.log_file)
+            for param in log_results.stepset:
+                if param not in all_stepset:
+                    all_stepset[param] = log_results.stepset[param]
+                else:
+                    all_stepset[param].extend(log_results.stepset[param])
+            for param in log_results.dataset:
+                if param not in all_dataset:
+                    all_dataset[param] = log_results.dataset[param]
+                else:
+                    all_dataset[param].extend(log_results.dataset[param])
+        # Now reusing the last log_results object to store the results
+        return LogfileData(all_stepset, all_dataset)
+

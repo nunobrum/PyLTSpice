@@ -19,7 +19,6 @@
 # -------------------------------------------------------------------------------
 import os.path
 import zipfile
-from PyLTSpice.client_server.sim_client import SimClient
 import logging
 
 # In order for this, to work, you need to have a server running. To start a server, run the following command:
@@ -27,6 +26,8 @@ import logging
 
 _logger = logging.getLogger("PyLTSpice.SimClient")
 _logger.setLevel(logging.DEBUG)
+
+from PyLTSpice.client_server.sim_client import SimClient
 
 server = SimClient('http://localhost', 9000)
 print(server.session_id)

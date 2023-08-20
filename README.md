@@ -348,12 +348,12 @@ Options:
                         Name of the image File. extension 'png'    
  ```
 
-### rawconvert.py ###
+### rawconvert.exe ###
 
 A tool to convert .raw files into csv or Excel files.
 
 ```
-Usage: raw_convert.py [options] <rawfile> <trace_list>
+Usage: raw_convert.exe [options] <rawfile> <trace_list>
 
 Options:
   --version             show program's version number and exit
@@ -366,9 +366,47 @@ Options:
   -s SEPARATOR, --sep=SEPARATOR
                         Value separator for CSV output. Default: "\t" <TAB>
                         Example: -d ";"
-
-
 ```
+
+### run_server.exe ###
+
+This module is used to run a server that can be used to run simulations in a remote machine. The server will run in the
+background and will wait for a client to connect. The client will send a netlist to the server and the server will run
+the simulation and return the results to the client. The client on the remote machine is a script instancing the
+SimClient class. An example of its usage is shown below:
+
+```python
+import zipfile
+from PyLTSpice.client_server.sim_client import SimClient
+
+server = SimClient('http://localhost', 9000)
+runid = server.run("./testfiles/testfile.net")
+
+for runid in server:  # Ma
+    zip_filename = server.get_runno_data(runid)
+    with zipfile.ZipFile(zip_filename, 'r') as zipf:  # Extract the contents of the zip file
+        print(zipf.namelist())  # Debug printing the contents of the zip file
+        zipf.extract(zipf.namelist()[0])  # Normally the raw file comes first
+```
+usage: run_server [-h] [-p PORT] [-o OUTPUT] [-l PARALLEL] simulator
+
+Run the LTSpice Server. This is a command line interface to the SimServer class.The SimServer class is used to run
+simulations in parallel using a server-client architecture.The server is a machine that runs the SimServer class and
+the client is a machine that runs the SimClient class.The argument is the simulator to be used (LTSpice, NGSpice,
+XYCE, etc.)
+
+positional arguments:
+  simulator             Simulator to be used (LTSpice, NGSpice, XYCE, etc.)
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -p PORT, --port PORT  Port to run the server. Default is 9000
+  -o OUTPUT, --output OUTPUT
+                        Output folder for the results. Default is the current folder
+  -l PARALLEL, --parallel PARALLEL
+                        Maximum number of parallel simulations. Default is 4
+```
+
 
 ### SemiDevOpReader.py ###
 
@@ -411,6 +449,9 @@ _Make sure to initialize the root logger before importing the library to be able
 * Alternative contact : nuno.brum@gmail.com
 
 ## History ##
+* Version 4.1.1*
+  * Completing the Worst-Case Analysis functions. Adding a dedicated example for it.
+  * Refactoring the LTSpiceLogReader class in order to use it on the Analysis toolkit
 
 * Version 4.1.0 *(requires Python 3.8 or higher)*
     * Adding a new class to manipulate directly the .asc files.
@@ -420,19 +461,19 @@ _Make sure to initialize the root logger before importing the library to be able
     * Restructured the folder structure to be more in line with the Python standards.
     * Added an Examples folder with some examples on how to use the library.
 
-* Version 4.0.6\
+* Version 4.0.6
     * Fixing issue with the write_netlist() function when receiving a string instead of a pathlib.Path object.
     * Changing the regular expression for the resistor in order to accept the R= prefix on the values.
 
-* Version 4.0.5\
+* Version 4.0.5
     * Accepting fixes from aanas-sayed@GitHub that fixes issues with running the LTSpice in Linux.
 
-* Version 4.0.4\
+* Version 4.0.4
     * Improved usage of the logging library. (Thanks @TSprech for vastly improving the logging)
     * Included RunTask number in the log messages.
     * Included milliseconds in the time elapsed calculation.
 
-* Version 4.0.3\
+* Version 4.0.3
     * Fixing issue in elapsed time calculation.
     * Fixing issue with the import of LTSpiceLogReader from LTSteps.py
 

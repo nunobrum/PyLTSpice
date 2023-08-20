@@ -1,9 +1,5 @@
 #!/usr/bin/env python
 # coding=utf-8
-from dataclasses import dataclass
-from typing import Union, Optional, Dict
-
-from editor.base_editor import BaseEditor
 # -------------------------------------------------------------------------------
 #    ____        _   _____ ____        _
 #   |  _ \ _   _| | |_   _/ ___| _ __ (_) ___ ___
@@ -20,8 +16,11 @@ from editor.base_editor import BaseEditor
 # Created:     10-08-2023
 # Licence:     refer to the LICENSE file
 # -------------------------------------------------------------------------------
+from dataclasses import dataclass
+from typing import Union, Optional, Dict
 
-from .sim_analysis import SimAnalysis, AnyRunner, Simulator
+from ...editor.base_editor import BaseEditor
+from .sim_analysis import SimAnalysis, AnyRunner
 from enum import Enum
 
 
@@ -120,7 +119,7 @@ class ToleranceDeviations(SimAnalysis):
             self.prepare_testbench()
         self.editor.write_netlist(filename)
 
-    def prepare_testbench(self):
+    def prepare_testbench(self, *args, **kwargs):
         raise RuntimeError("This method should be implemented in the derived class")
 
     def run(self, max_runs_per_sim: int = 512,  **kwargs):
@@ -130,11 +129,15 @@ class ToleranceDeviations(SimAnalysis):
         the simulation is split in multiple runs.
         """
         self.reset_netlist()
-        self.prepare_testbench()
+        self.prepare_testbench(self.num_runs)
         self.editor.remove_instruction(".step param run -1 %d 1" % self.num_runs)  # Needs to remove this instruction
         for sim_no in range(-1, self.num_runs, max_runs_per_sim):
-            run_stepping = ".step param run {} {} 1 ".format(sim_no, sim_no + max_runs_per_sim)
+            run_stepping = ".step param run {} {} 1".format(sim_no, sim_no + max_runs_per_sim)
             self.editor.add_instruction(run_stepping)
             sim = self.runner.run(self.editor, **kwargs)
             self.simulations.append(sim)
             self.editor.remove_instruction(run_stepping)
+        self.runner.wait_completion()
+        if 'callback' in kwargs:
+            return (sim.callback_return if sim is not None else None for sim in self.simulations)
+        return None

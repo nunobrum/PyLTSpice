@@ -484,6 +484,12 @@ class SimRunner(object):
                 if logfile.exists():
                     _logger.info("Deleting..." + logfile.name)
                     logfile.unlink()
+
+                # Delete the log.raw file if exists
+                lograwfile = workfile.with_suffix('.log.raw')
+                if lograwfile.exists():
+                    _logger.info("Deleting..." + lograwfile.name)
+                    lograwfile.unlink()
                 # Delete the raw file if exists
                 rawfile = workfile.with_suffix('.raw')
                 if rawfile.exists():
@@ -495,6 +501,13 @@ class SimRunner(object):
                 if oprawfile.exists():
                     _logger.info("Deleting..." + oprawfile.name)
                     oprawfile.unlink()
+
+                if workfile.suffix == '.asc':
+                    # Then needs to delete the .net as well
+                    netfile = workfile.with_suffix('.net')
+                    if netfile.exists():
+                        _logger.info("Deleting..." + netfile.name)
+                        netfile.unlink()
 
             # Delete the file
             if workfile.exists():

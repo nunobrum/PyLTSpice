@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 # coding=utf-8
-from typing import Union, Optional
-
-from editor.base_editor import BaseEditor
 # -------------------------------------------------------------------------------
 #    ____        _   _____ ____        _
 #   |  _ \ _   _| | |_   _/ ___| _ __ (_) ___ ___
@@ -26,8 +23,12 @@ from .tolerance_deviations import ToleranceDeviations, DeviationType
 class Montecarlo(ToleranceDeviations):
     """Class to automate Monte-Carlo simulations"""
 
-    def prepare_testbench(self, num_runs: int = 1000):
-        """Prepares the simulation by setting the tolerances for the components"""
+    def prepare_testbench(self, *args, **kwargs):
+        """
+        Prepares the simulation by setting the tolerances for the components
+        :keyword num_runs: Number of runs to be performed. Default is 1000.
+        :return: None
+        """
         min_max_uni_func = False
         min_max_norm_func = False
         tol_uni_func = False
@@ -87,7 +88,7 @@ class Montecarlo(ToleranceDeviations):
         if min_max_norm_func:
             self.editor.add_instruction(".function nrng(nom,mean,df23) if(run<0, nom, mean*(1+gauss(df2)))")
 
-        self.num_runs = num_runs
-        self.editor.add_instruction(".step param run -1 %d 1" % num_runs)
+        self.num_runs = kwargs.get('num_runs', 1000)
+        self.editor.add_instruction(".step param run -1 %d 1" % self.num_runs)
         self.editor.set_parameter('run', -1)
         self.testbench_prepared = True

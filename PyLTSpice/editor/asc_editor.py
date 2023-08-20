@@ -24,7 +24,7 @@ from .base_editor import BaseEditor, format_eng, ComponentNotFoundError, Paramet
 
 _logger = logging.getLogger("PyLTSpice.AscEditor")
 
-TEXT_REGEX = re.compile(r"TEXT (\d+)\s+(\d+)\s+(Left|Right|Top|Bottom)\s\d+\s*(?P<type>[!;])(?P<text>.*)",
+TEXT_REGEX = re.compile(r"TEXT (-?\d+)\s+(-?\d+)\s+(Left|Right|Top|Bottom)\s\d+\s*(?P<type>[!;])(?P<text>.*)",
                         re.IGNORECASE)
 TEXT_REGEX_X = 1
 TEXT_REGEX_Y = 2
@@ -158,7 +158,12 @@ class AscEditor(BaseEditor):
             raise ComponentNotFoundError(f"Component {device} does not have a Value attribute")
 
     def set_element_model(self, element: str, model: str) -> None:
-        self.set_component_value(element, model)
+        comp_info = self.get_component_info(element)
+        line_no = comp_info['line']
+        tokens = self._asc_file_lines[line_no].split(' ')
+        tokens[1] = model
+        self._asc_file_lines[line_no] = ' '.join(tokens)
+        _logger.info(f"Component {element} updated to {model}")
 
     def get_component_value(self, element: str) -> str:
         comp_info = self.get_component_info(element)
