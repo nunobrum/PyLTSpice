@@ -449,6 +449,9 @@ _Make sure to initialize the root logger before importing the library to be able
 * Alternative contact : nuno.brum@gmail.com
 
 ## History ##
+* Version 4.1.1*
+  * Completing the Worst-Case Analysis functions. Adding a dedicated example for it.
+  * Refactoring the LTSpiceLogReader class in order to use it on the Analysis toolkit
 
 * Version 4.1.0 *(requires Python 3.8 or higher)*
     * Adding a new class to manipulate directly the .asc files.
