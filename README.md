@@ -388,6 +388,7 @@ for runid in server:  # Ma
         print(zipf.namelist())  # Debug printing the contents of the zip file
         zipf.extract(zipf.namelist()[0])  # Normally the raw file comes first
 ```
+```bash
 usage: run_server [-h] [-p PORT] [-o OUTPUT] [-l PARALLEL] simulator
 
 Run the LTSpice Server. This is a command line interface to the SimServer class.The SimServer class is used to run
