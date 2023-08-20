@@ -1,9 +1,5 @@
 #!/usr/bin/env python
 # coding=utf-8
-from dataclasses import dataclass
-from typing import Union, Optional, Dict
-
-from editor.base_editor import BaseEditor
 # -------------------------------------------------------------------------------
 #    ____        _   _____ ____        _
 #   |  _ \ _   _| | |_   _/ ___| _ __ (_) ___ ___
@@ -20,7 +16,10 @@ from editor.base_editor import BaseEditor
 # Created:     10-08-2023
 # Licence:     refer to the LICENSE file
 # -------------------------------------------------------------------------------
+from dataclasses import dataclass
+from typing import Union, Optional, Dict
 
+from ...editor.base_editor import BaseEditor
 from .sim_analysis import SimAnalysis, AnyRunner
 from enum import Enum
 
@@ -120,7 +119,7 @@ class ToleranceDeviations(SimAnalysis):
             self.prepare_testbench()
         self.editor.write_netlist(filename)
 
-    def prepare_testbench(self):
+    def prepare_testbench(self, *args, **kwargs):
         raise RuntimeError("This method should be implemented in the derived class")
 
     def run(self, max_runs_per_sim: int = 512,  **kwargs):
