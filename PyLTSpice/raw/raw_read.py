@@ -416,7 +416,10 @@ class RawRead(object):
         if 'complex' in self.raw_params['Flags'] or self.raw_params['Plotname'] == 'AC Analysis':
             numerical_type = 'complex'
         else:
-            numerical_type = 'real'
+            if 'QSPICE' in self.raw_params['Command']:  # QSPICE uses doubles for everything
+                numerical_type = 'double'
+            else:
+                numerical_type = 'real'
         i = header.index('Variables:')
         ivar = 0
         for line in header[i + 1:-1]:  # Parse the variable names

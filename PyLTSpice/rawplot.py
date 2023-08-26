@@ -40,8 +40,7 @@ def main():
         if 'current' in whattype:
             return 'A'
 
-    directory = os.getcwd()
-    matplotlib.use('wxagg')
+    matplotlib.use('tkagg')
 
     if len(sys.argv) > 2:
         raw_filename = sys.argv[1]
@@ -59,6 +58,7 @@ def main():
         print("{}: {}{}".format(param, " " * (20 - len(param)), str(value).strip()))
 
     if trace_names == '*':
+
         print("Reading all the traces in the raw file")
         trace_names = LTR.get_trace_names()
 
