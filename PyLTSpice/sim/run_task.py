@@ -107,7 +107,7 @@ class RunTask(threading.Thread):
         if self.retcode == 0:
             # simulation successful
             self.print_info(_logger.info, "Simulation Successful. Time elapsed: %s" % sim_time)
-            self.raw_file = self.netlist_file.with_suffix('.raw')
+            self.raw_file = self.netlist_file.with_suffix(self.simulator.raw_extension)
 
             if self.raw_file.exists() and self.log_file.exists():
                 if self.callback:

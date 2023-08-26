@@ -81,6 +81,7 @@ class Simulator(ABC):
     """
     spice_exe = []
     process_name = ""
+    raw_extension = '.raw'
 
     @classmethod
     def create_from(cls, path_to_exe, process_name=None):

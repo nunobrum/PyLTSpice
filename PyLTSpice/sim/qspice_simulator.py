@@ -30,6 +30,8 @@ from .simulator import Simulator, run_function
 class Qspice(Simulator):
     """Stores the simulator location and command line options and is responsible for generating netlists and running
     simulations."""
+    raw_extension = '.qraw'  # In QSPICE all traces have double precision. This means that qraw files are not compatible
+    # with LTSPICE
 
     """Searches on the any usual locations for a simulator"""
     if sys.platform == "linux":
@@ -105,9 +107,8 @@ class Qspice(Simulator):
 
     @classmethod
     def run(cls, netlist_file, cmd_line_switches, timeout):
-        raw_file = Path(netlist_file).with_suffix('.raw').as_posix()
         log_file = Path(netlist_file).with_suffix('.log').as_posix()
-        cmd_run = cls.spice_exe + ['-o', log_file] + ['-r', raw_file] + [netlist_file] + cmd_line_switches
+        cmd_run = cls.spice_exe + ['-o', log_file] + [netlist_file] + cmd_line_switches
         # start execution
         return run_function(cmd_run, timeout=timeout)
 
