@@ -490,11 +490,18 @@ class SimRunner(object):
                 if lograwfile.exists():
                     _logger.info("Deleting..." + lograwfile.name)
                     lograwfile.unlink()
+
                 # Delete the raw file if exists
                 rawfile = workfile.with_suffix('.raw')
                 if rawfile.exists():
                     _logger.info("Deleting..." + rawfile.name)
                     rawfile.unlink()
+
+                # Used for QSPICE Simulator
+                qrawfile = workfile.with_suffix('.qraw')
+                if qrawfile.exists():
+                    _logger.info("Deleting..." + qrawfile.name)
+                    qrawfile.unlink()
 
                 # Delete the op.raw file if exists
                 oprawfile = workfile.with_suffix('.op.raw')
