@@ -380,7 +380,7 @@ class RawRead(object):
         else:
             raise RuntimeError("Unrecognized encoding")
         if self.verbose:
-            _logger.debug("Reading the file with encoding ", self.encoding)
+            _logger.debug(f"Reading the file with encoding: '{self.encoding}' ")
         # Storing the filename as part of the dictionary
         self.raw_params = OrderedDict(Filename=raw_filename)  # Initializing the dict that contains all raw file info
         self.backannotations = []  # Storing backannotations

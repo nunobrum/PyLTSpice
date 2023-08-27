@@ -87,13 +87,13 @@ class ServerSimRunner(threading.Thread):
 
     def add_simulation(self, netlist: Union[str, Path, BaseEditor], *, timeout: float = 600) -> int:
         """"""
-        _logger.debug("starting ", netlist)
+        _logger.debug(f"starting Simulation of {netlist}")
         task = self.runner.run(netlist, wait_resource=True, timeout=timeout, callback=zip_files)
         if task is None:
-            _logger.error("Failed to start task ", netlist)
+            _logger.error(f"Failed to start task {netlist}")
             return -1
         else:
-            _logger.info("Started task ", netlist, " with job_id", task.runno)
+            _logger.info(f"Started task {netlist} with job_id{task.runno}")
             return task.runno
 
     def _erase_files_and_info(self, pos):
@@ -101,7 +101,7 @@ class ServerSimRunner(threading.Thread):
         for filename in ('circuit', 'log', 'raw', 'zipfile'):
             f = task[filename]
             if f.exists():
-                _logger.info("deleting ", f)
+                _logger.info(f"deleting {f}")
                 f.unlink()
         del self.completed_tasks[pos]
 

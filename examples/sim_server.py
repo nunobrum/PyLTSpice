@@ -19,16 +19,22 @@
 # -------------------------------------------------------------------------------
 import sys
 
-from PyLTSpice.client_server.sim_server import SimServer
 import time
 import keyboard
+import logging
 
+from PyLTSpice.client_server.sim_server import SimServer
 from PyLTSpice.sim.ltspice_simulator import LTspice
 simulator = LTspice
 
+_logger = logging.getLogger("PyLTSpice.SimServer")
+_logger.setLevel(logging.DEBUG)
+_logger.addHandler(logging.StreamHandler(sys.stdout))
+
 print("Starting Server")
-server = SimServer(simulator, parallel_sims=4, output_folder='./temp', port=9000)
+server = SimServer(simulator, parallel_sims=4, output_folder='./temp_server', port=9000)
 print("Server Started. Press and hold 'q' to stop")
+
 while server.running():
     time.sleep(0.2)
     # Check whether a key was pressed
