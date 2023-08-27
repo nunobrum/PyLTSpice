@@ -437,6 +437,23 @@ class SimRunner(object):
                 _logger.info("killing ngspice", proc.pid)
                 proc.kill()
 
+    def _maximum_stop_time(self):
+        """
+        This function will return the maximum timeout time of all active tasks.
+        :return: Maximum timeout time or None, if there is no timeout defined.
+        :rtype: float or None
+        """
+        alarm = None
+        for task in self.active_tasks:
+            tout = task.timeout if task.timeout is not None else self.timeout
+            if tout is not None:
+                stop = task.start_time + tout
+                if alarm is None:
+                    alarm = stop
+                elif stop > alarm:
+                    alarm = stop
+        return alarm
+
     def wait_completion(self, timeout=None, abort_all_on_timeout=False) -> bool:
         """
         This function will wait for the execution of all scheduled simulations to complete.
@@ -452,20 +469,15 @@ class SimRunner(object):
         :rtype: bool
         """
         self.update_completed()
-        timeout_counter = 0
-        sim_counters = (self.okSim, self.failSim)
-
+        if timeout is not None:
+            stop_time = clock_function() + timeout
         while len(self.active_tasks) > 0:
             sleep(1)
             self.update_completed()
-            if timeout is not None:
-                if sim_counters == (self.okSim, self.failSim):
-                    timeout_counter += 1
-                    _logger.info(timeout_counter, "timeout counter")
-                else:
-                    timeout_counter = 0
-
-                if timeout_counter > timeout:
+            if timeout is None:
+                stop_time = self._maximum_stop_time()
+            if stop_time is not None:  # This can happen if timeout was set as none everywhere
+                if clock_function() > stop_time:
                     if abort_all_on_timeout:
                         self.kill_all_ltspice()
                     return False
@@ -538,17 +550,9 @@ class SimRunner(object):
                 raise StopIteration
 
             # Then go through the active tasks to get the maximum timeout
-            all_timeout = True
-            now = clock_function()
-            for task in self.active_tasks:
-                tout = task.timeout if task.timeout is not None else self.timeout
-                if tout is not None:
-                    if (now - task.start_time) < tout + 1.0:  # Give one second slack
-                        all_timeout = False
-                else:
-                    all_timeout = False
+            stop_time = self._maximum_stop_time()
 
-            if all_timeout:  # All tasks are on timeout condition
+            if stop_time is not None and clock_function() > stop_time:  # All tasks are on timeout condition
                 raise SimRunnerTimeoutError(f"Exceeded {self.timeout} seconds waiting for tasks to finish")
 
             # Wait for the active tasks to finish with a timeout

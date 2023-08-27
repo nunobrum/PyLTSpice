@@ -24,6 +24,7 @@ import logging
 _logger = logging.getLogger("PyLTSpice.SimServer")
 
 import threading
+from pathlib import Path
 import zipfile
 import io
 from PyLTSpice.client_server.srv_sim_runner import ServerSimRunner
@@ -59,6 +60,7 @@ class SimServer():
             _logger.debug(zip_file.namelist())
             zip_file.extract(circuit_name, self.output_folder)
 
+        circuit_name = Path(self.output_folder) / circuit_name
         _logger.info(f"Running simulation of {circuit_name}")
         runno = self.simulation_manager.add_simulation(circuit_name)
         if runno != -1:
