@@ -387,7 +387,7 @@ class RawRead(object):
         header = []
         binary_start = 6
         while True:
-            ch = raw_file.read(sz_enc).decode(encoding=self.encoding)
+            ch = raw_file.read(sz_enc).decode(encoding=self.encoding, errors='replace')
             binary_start += sz_enc
             if ch == '\n':
                 if self.encoding == 'utf_8':  # must remove the \r
