@@ -32,7 +32,7 @@ classifiers=[
 # All the following settings are optional:
 where = ["."]  # ["."] by default
 include = ["*"]  # ["*"] by default
-exclude = ["tests"]  # empty by default
+exclude = [".idea", "doc", "doc_build", ".vscode", ".git"]  # empty by default
 namespaces = true  # true by default
 
 

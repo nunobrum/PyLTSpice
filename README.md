@@ -453,6 +453,7 @@ _Make sure to initialize the root logger before importing the library to be able
 ## History ##
 * Version 4.1.2
   * Adding support for the new QSPICE simulator
+  * Improving the timeout mechanism on the SimRunner class
   * Minor bug fixes
 
 * Version 4.1.1
