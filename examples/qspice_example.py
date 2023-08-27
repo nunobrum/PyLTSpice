@@ -1,3 +1,4 @@
+from PyLTSpice import RawRead
 from PyLTSpice.sim.sim_runner import SimRunner
 from PyLTSpice.editor.spice_editor import SpiceEditor
 from PyLTSpice.sim.qspice_simulator import Qspice
@@ -6,6 +7,9 @@ from PyLTSpice.utils.sweep_iterators import sweep_log
 
 def processing_data(raw_file, log_file):
     print("Handling the simulation data of %s, log file %s" % (raw_file, log_file))
+    raw_data = RawRead(raw_file)
+    vout = raw_data.get_wave('V(out)')
+    return raw_file, vout.max()
 
 
 # select spice model
@@ -25,9 +29,16 @@ for cap in sweep_log(1e-12, 10e-6, 10):
     sim.run(netlist, callback=processing_data, run_filename=f'testfile_qspice_{sim_no}.net')
     sim_no += 1
 
-sim.wait_completion()
+# Reading the data
+results = {}
+for raw_file, vout_max in sim:  # Iterate over the results of the callback function
+    results[raw_file.name] = vout_max
+# The block above can be replaced by the following line
+# results = {raw_file.name: vout_max for raw_file, vout_max in sim}
+
+print(results)
 
 # Sim Statistics
 print('Successful/Total Simulations: ' + str(sim.okSim) + '/' + str(sim.runno))
-input("Press enter to cleanup the files")
+
 sim.file_cleanup()
