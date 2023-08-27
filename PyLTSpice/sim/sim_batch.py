@@ -99,7 +99,7 @@ __copyright__ = "Copyright 2020, Fribourg Switzerland"
 
 import os
 from pathlib import Path
-from typing import Callable, Any, Union
+from typing import Callable, Any, Union, Type
 import logging
 _logger = logging.getLogger("PyLTSpice.SimBatch")
 
@@ -136,7 +136,7 @@ class SimCommander(SpiceEditor):
         self.runner = SimRunner(simulator=simulator, parallel_sims=parallel_sims, timeout=timeout, verbose=verbose,
                                 output_folder=netlist_file.parent.as_posix())
 
-    def setLTspiceRunCommand(self, spice_tool: Union[str, Simulator]) -> None:
+    def setLTspiceRunCommand(self, spice_tool: Union[str, Type[Simulator]]) -> None:
         """
         *(Deprecated)*
         Manually setting the LTSpice run command.

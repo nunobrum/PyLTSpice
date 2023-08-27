@@ -190,7 +190,7 @@ class SimRunner(object):
         self.wait_completion(abort_all_on_timeout=True)  # Kill all pending simulations
         _logger.debug("Exiting SimCommander")
 
-    def set_run_command(self, spice_tool: Union[str, Simulator]) -> None:
+    def set_run_command(self, spice_tool: Union[str, Type[Simulator]]) -> None:
         """
         Manually setting the LTSpice run command
 
@@ -202,12 +202,12 @@ class SimRunner(object):
         """
         if isinstance(spice_tool, str):
             self.simulator = Simulator.create_from(spice_tool)
-        elif isinstance(spice_tool, Simulator):
+        elif issubclass(spice_tool, Simulator):
             self.simulator = spice_tool
         else:
             raise TypeError("Expecting str or Simulator objects")
 
-    def SetRunCommand(self, spice_tool: Union[str, Simulator]) -> None:
+    def SetRunCommand(self, spice_tool: Union[str, Type[Simulator]]) -> None:
         """
         *(Deprecated)*
         Use set_run_command() method.
@@ -509,7 +509,7 @@ class SimRunner(object):
         sim_file = workfile.with_suffix(ext)
         SimRunner._del_file_if_exists(sim_file)
 
-    def file_cleanup(self):
+    def cleanup_files(self):
         """
         Will delete all log and raw files that were created by the script. This should only be executed at the end
         of data processing.
@@ -517,7 +517,6 @@ class SimRunner(object):
         self.update_completed()  # Updates the active_tasks and completed_tasks lists
 
         for task in self.completed_tasks:
-            task : RunTask = task
             netlistfile = task.netlist_file
             self._del_file_if_exists(netlistfile)  # Delete the netlist file if still exists
             self._del_file_if_exists(task.log_file)  # Delete the log file if was created
@@ -531,6 +530,10 @@ class SimRunner(object):
                 if netlistfile.suffix == '.asc':  # If simulated from an asc file, delete the .net file
                     # Then needs to delete the .net as well
                     self._del_file_ext_if_exists(netlistfile, '.net')
+
+    def file_cleanup(self):
+        """(Deprecated) Use cleanup_files() instead"""
+        self.cleanup_files()  # Alias for backward compatibility, this will be deleted in the future
 
     def __iter__(self):
         self._iterator_counter = 0  # Reset the iterator counter. Note: nested iterators are not supported

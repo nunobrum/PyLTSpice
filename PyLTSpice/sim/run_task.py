@@ -63,7 +63,7 @@ def format_time_difference(time_diff):
 class RunTask(threading.Thread):
     """This is an internal Class and should not be used directly by the User."""
 
-    def __init__(self, simulator: Simulator, runno, netlist_file: Path,
+    def __init__(self, simulator: Type[Simulator], runno, netlist_file: Path,
                  callback: Union[Type[ProcessCallback], Callable[[Path, Path], Any]],
                  switches, timeout: float = None, verbose=True):
         super().__init__(name=f"RunTask#{runno}")
