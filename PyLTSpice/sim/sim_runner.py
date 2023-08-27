@@ -105,7 +105,7 @@ import logging
 _logger = logging.getLogger("PyLTSpice.SimRunner")
 
 from .process_callback import ProcessCallback
-from ..sim.run_task import RunTask
+from ..sim.run_task import RunTask, clock_function
 from ..sim.simulator import Simulator
 from ..editor.base_editor import BaseEditor
 
@@ -133,7 +133,8 @@ class SimRunner(object):
     :param parallel_sims: Defines the number of parallel simulations that can be executed at the same time. Ideally this
                           number should be aligned to the number of CPUs (processor cores) available on the machine.
     :type parallel_sims: int, optional
-    :param timeout: Timeout parameter as specified on the os subprocess.run() function
+    :param timeout: Timeout parameter as specified on the os subprocess.run() function. Default is 600 seconds, i.e.
+        10 minutes. For no timeout, set to None.
     :type timeout: float, optional
     :param verbose: If True, it enables a richer printout of the program execution.
     :type verbose: bool, optional
@@ -144,12 +145,10 @@ class SimRunner(object):
 
     """
 
-    def __init__(self, parallel_sims: int = 4, timeout=None, verbose=True, output_folder: str = None, simulator=None):
-        """
-        Class Constructor. It serves to start batches of simulations.
-        See Class documentation for more information.
-        """
-        self.workfiles = []
+    def __init__(self, *, simulator=None, parallel_sims: int = 4, timeout: float = 600.0, verbose=True,
+                 output_folder: str = None):
+        # The '*' in the parameter list forces the user to use named parameters for the rest of the parameters.
+        # This is a good practice to avoid confusion.
         self.verbose = verbose
         self.timeout = timeout
         self.cmdline_switches = []
@@ -162,8 +161,9 @@ class SimRunner(object):
             self.output_folder = None
 
         self.parallel_sims = parallel_sims
-        self.sim_tasks = []
-        # Create another logger for the SimRunner class
+        self.active_tasks = []
+        self.completed_tasks = []
+        self._iterator_counter = 0  # Note: Nested iterators are not supported
 
         # master_log_filename = self.circuit_radic + '.masterlog' TODO: create the JSON or YAML file
         _logger.info("SimRunner started")
@@ -299,12 +299,11 @@ class SimRunner(object):
         else:
             raise TypeError("'netlist' parameter shall be a SpiceEditor, pathlib.Path or a plain str")
 
-        self.workfiles.append(run_netlist_file)
         return run_netlist_file
 
     def run(self, netlist: Union[str, Path, BaseEditor], *, wait_resource: bool = True,
             callback: Union[Type[ProcessCallback], Callable[[Path, Path], Any]] = None, switches=None,
-            timeout: float = 600, run_filename: str = None) -> Union[RunTask, None]:
+            timeout: float = None, run_filename: str = None) -> Union[RunTask, None]:
         """
         Executes a simulation run with the conditions set by the user.
         Conditions are set by the set_parameter, set_component_value or add_instruction functions.
@@ -328,7 +327,8 @@ class SimRunner(object):
         :type: callback: function(raw_file: Path, log_file: Path), optional
         :param switches: Command line switches override
         :type switches: list
-        :param timeout: Timeout to be used in waiting for resources. Default time is 600 seconds, i.e. 10 minutes.
+        :param timeout: Timeout to be used in waiting for resources. Default time is value defined in this class
+            constructor.
         :type timeout: float, optional
         :param run_filename: Name to be used for the log and raw file.
         :type run_filename: str or Path
@@ -338,15 +338,18 @@ class SimRunner(object):
             switches = []
         run_netlist_file = self._prepare_sim(netlist, run_filename)
 
+        if timeout is None:
+            timeout = self.timeout
+
         t0 = clock()  # Store the time for timeout calculation
-        while clock() - t0 < timeout:
+        while clock() - t0 < timeout + 1:  # Give one second slack in relation to the task timeout
             cmdline_switches = switches or self.cmdline_switches  # If switches are passed, they override the ones
             # inside the class.
 
             if (wait_resource is False) or (self.active_threads() < self.parallel_sims):
                 t = RunTask(self.simulator, self.runno, run_netlist_file, callback, cmdline_switches,
                             timeout=self.timeout, verbose=self.verbose)
-                self.sim_tasks.append(t)
+                self.active_tasks.append(t)
                 t.start()
                 sleep(0.01)  # Give slack for the thread to start
                 return t  # Returns the task object
@@ -357,7 +360,8 @@ class SimRunner(object):
                 _logger.warning("Timeout on launching simulation %d." % self.runno)
             return None
 
-    def run_now(self, netlist: Union[str, Path, BaseEditor], *, switches=None, run_filename: str = None) -> (str, str):
+    def run_now(self, netlist: Union[str, Path, BaseEditor], *, switches=None, run_filename: str = None,
+                timeout: float = None) -> (str, str):
         """
         Executes a simulation run with the conditions set by the user.
         Conditions are set by the set_parameter, set_component_value or add_instruction functions.
@@ -370,6 +374,9 @@ class SimRunner(object):
         :type switches: list
         :param run_filename: Name to be used for the log and raw file.
         :type run_filename: str or Path
+        :param timeout: Timeout to be used in waiting for resources. Default time is value defined in this class
+            constructor.
+        :type timeout: float, optional
         :returns: the raw and log filenames
         """
         if switches is None:
@@ -377,51 +384,46 @@ class SimRunner(object):
         run_netlist_file = self._prepare_sim(netlist, run_filename)
 
         cmdline_switches = switches or self.cmdline_switches  # If switches are passed, they override the ones inside
-
         # the class.
+
+        if timeout is None:
+            timeout = self.timeout
 
         def dummy_callback(raw, log):
             """Dummy call back that does nothing"""
             return None
 
         t = RunTask(self.simulator, self.runno, run_netlist_file, dummy_callback, cmdline_switches,
-                    timeout=self.timeout, verbose=self.verbose)
-        t.start()
-        sleep(0.01)  # Give slack for the thread to start
-        while t.is_alive():
-            sleep(0.1)  # Waits for the task to terminate
+                    timeout=timeout, verbose=self.verbose)
+        t.join(timeout + 1)  # Give one second slack in relation to the task timeout
 
         return t.raw_file, t.log_file  # Returns the raw and log file
 
     def active_threads(self):
         """Returns the number of active sim_tasks"""
-        count = 0
-        for t in self.sim_tasks:
-            if t.is_alive():
-                count += 1
-        return count
+        self.update_completed()
+        return len(self.active_tasks)
 
-    def updated_stats(self, release_tasks: bool = True):
+    def update_completed(self):
         """
-        This function updates the OK/Fail statistics and releases finished RunTask objects from memory.
+        This function updates the active_tasks and completed_tasks lists. It moves the finished task from the
+        active_tasks list to the completed_tasks list.
+        It should be called periodically to update the status of the simulations.
 
-        :param release_tasks: Boolean indicating whether the tasks are to be released.
-        :type release_tasks: bool
         :returns: Nothing
         """
         i = 0
-        while i < len(self.sim_tasks):
-            if self.sim_tasks[i].is_alive():
+        while i < len(self.active_tasks):
+            if self.active_tasks[i].is_alive():
                 i += 1
             else:
-                if self.sim_tasks[i].retcode == 0:
+                if self.active_tasks[i].retcode == 0:
                     self.okSim += 1
                 else:
                     # simulation failed
                     self.failSim += 1
-                if release_tasks:
-                    task = self.sim_tasks.pop(i)
-                    task.join()
+                task = self.active_tasks.pop(i)
+                self.completed_tasks.append(task)
 
     def kill_all_ltspice(self):
         """Function to terminate LTSpice in windows"""
@@ -449,13 +451,13 @@ class SimRunner(object):
         :returns: True if all simulations were executed successfully
         :rtype: bool
         """
-        self.updated_stats()
+        self.update_completed()
         timeout_counter = 0
         sim_counters = (self.okSim, self.failSim)
 
-        while len(self.sim_tasks) > 0:
+        while len(self.active_tasks) > 0:
             sleep(1)
-            self.updated_stats()
+            self.update_completed()
             if timeout is not None:
                 if sim_counters == (self.okSim, self.failSim):
                     timeout_counter += 1
@@ -470,82 +472,85 @@ class SimRunner(object):
 
         return self.failSim == 0
 
+    @staticmethod
+    def _del_file_if_exists(workfile: Path):
+        """
+        Deletes a file if it exists.
+        :param workfile: File to be deleted
+        :type workfile: Path
+        :return: Nothing
+        """
+        if workfile.exists():
+            _logger.info("Deleting..." + workfile.name)
+            workfile.unlink()
+
+    @staticmethod
+    def _del_file_ext_if_exists(workfile: Path, ext: str):
+        """
+        Deletes a file extension if it exists.
+        :param workfile: File to be deleted
+        :type workfile: Path
+        :param ext: Extension to be deleted
+        :type ext: str
+        :return: Nothing
+        """
+        sim_file = workfile.with_suffix(ext)
+        SimRunner._del_file_if_exists(sim_file)
+
     def file_cleanup(self):
         """
         Will delete all log and raw files that were created by the script. This should only be executed at the end
         of data processing.
         """
-        self.updated_stats()
-        while len(self.workfiles):
-            workfile = self.workfiles.pop(0)
-            if workfile.suffix == '.net' or workfile.suffix == '.asc':
-                # Delete the log file if exists
-                logfile = workfile.with_suffix('.log')
-                if logfile.exists():
-                    _logger.info("Deleting..." + logfile.name)
-                    logfile.unlink()
+        self.update_completed()  # Updates the active_tasks and completed_tasks lists
 
-                # Delete the log.raw file if exists
-                lograwfile = workfile.with_suffix('.log.raw')
-                if lograwfile.exists():
-                    _logger.info("Deleting..." + lograwfile.name)
-                    lograwfile.unlink()
+        for task in self.completed_tasks:
+            task : RunTask = task
+            netlistfile = task.netlist_file
+            self._del_file_if_exists(netlistfile)  # Delete the netlist file if still exists
+            self._del_file_if_exists(task.log_file)  # Delete the log file if was created
+            self._del_file_if_exists(task.raw_file)  # Delete the raw file if was created
 
-                # Delete the raw file if exists
-                rawfile = workfile.with_suffix('.raw')
-                if rawfile.exists():
-                    _logger.info("Deleting..." + rawfile.name)
-                    rawfile.unlink()
+            if netlistfile.suffix == '.net' or netlistfile.suffix == '.asc':
+                # Delete the files that have been potentially created by LTSpice
+                for ext in ('.log.raw', '.op.raw'):
+                    self._del_file_ext_if_exists(netlistfile, ext)
 
-                # Used for QSPICE Simulator
-                qrawfile = workfile.with_suffix('.qraw')
-                if qrawfile.exists():
-                    _logger.info("Deleting..." + qrawfile.name)
-                    qrawfile.unlink()
-
-                # Delete the op.raw file if exists
-                oprawfile = workfile.with_suffix('.op.raw')
-                if oprawfile.exists():
-                    _logger.info("Deleting..." + oprawfile.name)
-                    oprawfile.unlink()
-
-                if workfile.suffix == '.asc':
+                if netlistfile.suffix == '.asc':  # If simulated from an asc file, delete the .net file
                     # Then needs to delete the .net as well
-                    netfile = workfile.with_suffix('.net')
-                    if netfile.exists():
-                        _logger.info("Deleting..." + netfile.name)
-                        netfile.unlink()
-
-            # Delete the file
-            if workfile.exists():
-                _logger.info("Deleting..." + workfile.name)
-                workfile.unlink()
+                    self._del_file_ext_if_exists(netlistfile, '.net')
 
     def __iter__(self):
+        self._iterator_counter = 0  # Reset the iterator counter. Note: nested iterators are not supported
         return self
 
     def __next__(self):
-        t0 = clock()
         while True:
-            i = 0
-            while i < len(self.sim_tasks):
-                if self.sim_tasks[i].is_alive():
-                    i += 1
-                else:
-                    if self.sim_tasks[i].retcode == 0:
-                        self.okSim += 1
-                    else:
-                        # simulation failed
-                        self.failSim += 1
-                    task = self.sim_tasks.pop(i)
-                    ret = task.get_results()
-                    task.join()
-                    return ret
+            self.update_completed()  # Updates the active_tasks and completed_tasks lists
+            # First go through the completed tasks
+            if self._iterator_counter < len(self.completed_tasks):
+                ret = self.completed_tasks[self._iterator_counter]
+                self._iterator_counter += 1
+                return ret.get_results()
 
-            if i == 0:
-                # when there aren't any pending jobs left, exit the iterator
+            # Then check if there are any active tasks
+            if len(self.active_tasks) == 0:
                 raise StopIteration
 
-            sleep(0.2)  # Go asleep for a sec
-            if self.timeout and ((clock() - t0) > self.timeout):
+            # Then go through the active tasks to get the maximum timeout
+            all_timeout = True
+            now = clock_function()
+            for task in self.active_tasks:
+                tout = task.timeout if task.timeout is not None else self.timeout
+                if tout is not None:
+                    if (now - task.start_time) < tout + 1.0:  # Give one second slack
+                        all_timeout = False
+                else:
+                    all_timeout = False
+
+            if all_timeout:  # All tasks are on timeout condition
                 raise SimRunnerTimeoutError(f"Exceeded {self.timeout} seconds waiting for tasks to finish")
+
+            # Wait for the active tasks to finish with a timeout
+            sleep(0.2)  # Go asleep for a while
+

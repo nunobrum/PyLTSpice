@@ -23,11 +23,11 @@ from collections import OrderedDict
 from functools import wraps
 from typing import Union, Optional
 
-from log.logfile_data import LogfileData
-from ...sim.sim_runner import AnyRunner
+from ..sim_runner import AnyRunner
+from ..simulator import Simulator
 from ...editor.base_editor import BaseEditor
-from ...sim.simulator import Simulator
 from ...log.ltsteps import LTSpiceLogReader
+from ...log.logfile_data import LogfileData
 
 
 class SimAnalysis(object):

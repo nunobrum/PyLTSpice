@@ -39,7 +39,7 @@ from .simulator import Simulator
 END_LINE_TERM = '\n'
 
 if sys.version_info.major >= 3 and sys.version_info.minor >= 6:
-    clock_function = time.perf_counter
+    clock_function = time.time
 else:
     clock_function = time.clock
 
@@ -65,7 +65,7 @@ class RunTask(threading.Thread):
 
     def __init__(self, simulator: Simulator, runno, netlist_file: Path,
                  callback: Union[Type[ProcessCallback], Callable[[Path, Path], Any]],
-                 switches, timeout=None, verbose=True):
+                 switches, timeout: float = None, verbose=True):
         super().__init__(name=f"RunTask#{runno}")
         self.start_time = None
         self.stop_time = None

@@ -173,11 +173,13 @@ class SimCommander(SpiceEditor):
 
     def updated_stats(self):
         """
+        *(Deprecated)*
         This function updates the OK/Fail statistics and releases finished RunTask objects from memory.
 
         :returns: Nothing
         """
-        return self.runner.updated_stats()
+        self.runner.active_threads()
+        return
 
     def wait_completion(self, timeout=None, abort_all_on_timeout=False) -> bool:
         return self.runner.wait_completion(timeout, abort_all_on_timeout)
