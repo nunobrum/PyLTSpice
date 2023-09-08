@@ -146,7 +146,7 @@ class SimStepper(object):
             if l:
                 total *= l
             else:
-                _logger.debug(step, " is empty")
+                _logger.debug(f"'{step}' is empty.")
         return total
 
     def run_all(self, callback: Callable[[str, str], Any] = None, use_loadbias='Auto', wait_completion=True):

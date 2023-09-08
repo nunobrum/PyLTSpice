@@ -306,8 +306,9 @@ class SpiceCircuit(BaseEditor):
         regex = component_replace_regexs.get(prefix, None)  # Obtain RegX to make the update
 
         if regex is None:
-            _logger.error("Component must start with one of these letters:\n", ','.join(REPLACE_REGXES.keys()))
-            _logger.error("Got '{}'".format(component))
+            error_msg = f"Component must start with one of these letters: {','.join(REPLACE_REGXES.keys())}\n" \
+                        f"Got {component}"
+            _logger.error(error_msg)
             return
 
         if isinstance(value, (int, float)):
@@ -415,8 +416,9 @@ class SpiceCircuit(BaseEditor):
         regex = component_replace_regexs.get(prefix, None)  # Obtain RegX to make the update
 
         if regex is None:
-            _logger.warning("Component must start with one of these letters:\n", ','.join(REPLACE_REGXES.keys()))
-            _logger.warning("Got '{}'".format(component))
+            error_msg = f"Component must start with one of these letters: {','.join(REPLACE_REGXES.keys())}\n" \
+                        f"Got {component}"
+            _logger.warning(error_msg)
             raise NotImplementedError("Unsuported prefix {}".format(prefix))
 
         line_no = self._get_line_starting_with(component)

@@ -140,8 +140,9 @@ def reformat_LTSpice_export(export_file: str, tabular_file: str):
                     for param in step.split():
                         header_keys.append(param.split('=')[0])
                     param_header = "\t".join(header_keys)
-                    fout.write("Run\t%s\t%s" % (param_header, headers))
-                    _logger.debug("Run\t%s\t%s" % (param_header, headers))
+                    msg = "Run\t%s\t%s" % (param_header, headers)
+                    fout.write(msg)
+                    _logger.debug(msg)
                     go_header = False
                     # print("%s\t%s"% (run_no, param_values))
         else:
@@ -266,7 +267,7 @@ class LTSpiceLogReader(LogfileData):
                 r"^(?P<name>\w+)(:\s+.*)?=(?P<value>[\d\.E+\-\(\)dB,°]+)(( FROM (?P<from>[\d\.E+-]*) TO (?P<to>[\d\.E+-]*))|( at (?P<at>[\d\.E+-]*)))?",
                 re.IGNORECASE)
 
-        _logger.debug("Processing LOG file", log_filename)
+        _logger.debug(f"Processing LOG file:{log_filename}")
         with open(log_filename, 'r', encoding=self.encoding) as fin:
             line = fin.readline()
 
@@ -424,7 +425,7 @@ class LTSpiceLogReader(LogfileData):
                             headers = [dataname] + tokens[2:]
                             measurements = []
                     else:
-                        _logger.debug("->", line)
+                        _logger.debug("->" + line)
 
                 line = fin.readline()  # advance to the next line
 

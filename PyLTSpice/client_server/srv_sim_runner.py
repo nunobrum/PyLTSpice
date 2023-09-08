@@ -48,52 +48,49 @@ class ServerSimRunner(threading.Thread):
     by this class.
     """
 
-    def __init__(self, parallel_sims: int = 4, timeout=None, verbose=True, output_folder: str = None, simulator=None):
+    def __init__(self, parallel_sims: int = 4, timeout: float = None, verbose=True, output_folder: str = None, simulator=None):
         super().__init__(name="SimManager")
-        self.runner = SimRunner(parallel_sims, timeout, verbose, output_folder, simulator)
-        self.completed_tasks: List[Dict[str, Any]] = []
+        self.runner = SimRunner(simulator=simulator, parallel_sims=parallel_sims, timeout=timeout,
+                                verbose=verbose, output_folder=output_folder)
+        self.completed_tasks: List[Dict[str, Any]] = []  # This is a list of dictionaries with the information of the completed tasks
         self._stop = False
 
     def run(self) -> None:
         """This function makes a direct manipulation of the structures of SimRunner. This option is """
         while True:
-            i = 0
-            while i < len(self.runner.sim_tasks):
-                task = self.runner.sim_tasks[i]
-                if task.is_alive():
-                    i += 1
-                else:
-                    zip_filename = task.callback_return
-                    self.completed_tasks.append({
-                        'runno': task.runno,
-                        'retcode': task.retcode,
-                        'circuit': task.netlist_file,
-                        'raw': task.raw_file,
-                        'log': task.log_file,
-                        'zipfile': zip_filename,
-                        'start': task.start_time,
-                        'stop': task.stop_time,
-                    })
-                    _logger.debug(task, "is finished")
-                    del self.runner.sim_tasks[i]
-                    _logger.debug(self.completed_tasks[-1])
-                    _logger.debug(len(self.completed_tasks))
+            self.runner.update_completed()
+            while len(self.runner.completed_tasks) > 0:
+                task = self.runner.completed_tasks.pop(0)
+                zip_filename = task.callback_return
+                self.completed_tasks.append({
+                    'runno': task.runno,
+                    'retcode': task.retcode,
+                    'circuit': task.netlist_file,
+                    'raw': task.raw_file,
+                    'log': task.log_file,
+                    'zipfile': zip_filename,
+                    'start': task.start_time,
+                    'stop': task.stop_time,
+                })
+                _logger.debug(f"Task {task} is finished")
+                _logger.debug(self.completed_tasks[-1])
+                _logger.debug(len(self.completed_tasks))
 
             time.sleep(0.2)
             if self._stop is True:
                 break
         self.runner.wait_completion()
-        self.runner.file_cleanup()
+        self.runner.file_cleanup()  # Delete things that have been left behind
 
     def add_simulation(self, netlist: Union[str, Path, BaseEditor], *, timeout: float = 600) -> int:
         """"""
-        _logger.debug("starting ", netlist)
+        _logger.debug(f"starting Simulation of {netlist}")
         task = self.runner.run(netlist, wait_resource=True, timeout=timeout, callback=zip_files)
         if task is None:
-            _logger.error("Failed to start task ", netlist)
+            _logger.error(f"Failed to start task {netlist}")
             return -1
         else:
-            _logger.info("Started task ", netlist, " with job_id", task.runno)
+            _logger.info(f"Started task {netlist} with job_id{task.runno}")
             return task.runno
 
     def _erase_files_and_info(self, pos):
@@ -101,7 +98,7 @@ class ServerSimRunner(threading.Thread):
         for filename in ('circuit', 'log', 'raw', 'zipfile'):
             f = task[filename]
             if f.exists():
-                _logger.info("deleting ", f)
+                _logger.info(f"deleting {f}")
                 f.unlink()
         del self.completed_tasks[pos]
 

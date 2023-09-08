@@ -19,7 +19,7 @@
 # -------------------------------------------------------------------------------
 
 from collections import OrderedDict
-from typing import Union, Optional, Iterable
+from typing import Union, Optional, Iterable, Type
 
 from editor.base_editor import BaseEditor, ComponentNotFoundError
 from .sim_analysis import SimAnalysis, AnyRunner, Simulator
@@ -44,7 +44,7 @@ class FailureMode(SimAnalysis):
         * Integrated Circuits
             # The failure modes are defined by the user by using the add_failure_mode() method
     """
-    def __init__(self, circuit_file: Union[str, BaseEditor], simulator: Optional[Simulator] = None,
+    def __init__(self, circuit_file: Union[str, BaseEditor], simulator: Optional[Type[Simulator]] = None,
                  runner: Optional[AnyRunner] = None):
         SimAnalysis.__init__(self, circuit_file, simulator, runner)
         self.resistors = self.editor.get_components('R')

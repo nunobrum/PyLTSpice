@@ -23,11 +23,11 @@ from collections import OrderedDict
 from functools import wraps
 from typing import Union, Optional
 
-from log.logfile_data import LogfileData
-from ...sim.sim_runner import AnyRunner
+from ..sim_runner import AnyRunner
+from ..simulator import Simulator
 from ...editor.base_editor import BaseEditor
-from ...sim.simulator import Simulator
 from ...log.ltsteps import LTSpiceLogReader
+from ...log.logfile_data import LogfileData
 
 
 class SimAnalysis(object):
@@ -65,10 +65,11 @@ class SimAnalysis(object):
         Runs the simulations. See runner.run() method for details on keyword arguments.
         """
         sim = self.runner.run(self.editor, **kwargs)
-        self.simulations.append(sim)
-        self.runner.wait_completion()
-        if 'callback' in kwargs:
-            return (sim.callback_return if sim is not None else None for sim in self.simulations)
+        if sim is not None:
+            self.simulations.append(sim)
+            self.runner.wait_completion()
+            if 'callback' in kwargs:
+                return sim.get_results()
 
     @wraps(BaseEditor.reset_netlist)
     def reset_netlist(self):
@@ -78,7 +79,7 @@ class SimAnalysis(object):
         """Clears all simulation files. Typically used after a simulation run and analysis."""
         self.runner.file_cleanup()
 
-    def simulation(self, index: int) -> Simulator:
+    def simulation(self, index: int):
         """Returns a simulation object"""
         return self.simulations[index]
 

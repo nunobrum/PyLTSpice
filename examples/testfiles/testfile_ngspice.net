@@ -1,0 +1,7 @@
+* C:\sandbox\PyLTSpice_GitHub_nunobrum\tests\rc_example.asc
+V1 in 0 10V
+R1 out in 1k
+C1 out 0 1u
+.op
+.print op V(out)
+.end

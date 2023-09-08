@@ -380,14 +380,14 @@ class RawRead(object):
         else:
             raise RuntimeError("Unrecognized encoding")
         if self.verbose:
-            _logger.debug("Reading the file with encoding ", self.encoding)
+            _logger.debug(f"Reading the file with encoding: '{self.encoding}' ")
         # Storing the filename as part of the dictionary
         self.raw_params = OrderedDict(Filename=raw_filename)  # Initializing the dict that contains all raw file info
         self.backannotations = []  # Storing backannotations
         header = []
         binary_start = 6
         while True:
-            ch = raw_file.read(sz_enc).decode(encoding=self.encoding)
+            ch = raw_file.read(sz_enc).decode(encoding=self.encoding, errors='replace')
             binary_start += sz_enc
             if ch == '\n':
                 if self.encoding == 'utf_8':  # must remove the \r
@@ -416,7 +416,10 @@ class RawRead(object):
         if 'complex' in self.raw_params['Flags'] or self.raw_params['Plotname'] == 'AC Analysis':
             numerical_type = 'complex'
         else:
-            numerical_type = 'real'
+            if 'QSPICE' in self.raw_params['Command']:  # QSPICE uses doubles for everything
+                numerical_type = 'double'
+            else:
+                numerical_type = 'real'
         i = header.index('Variables:')
         ivar = 0
         for line in header[i + 1:-1]:  # Parse the variable names

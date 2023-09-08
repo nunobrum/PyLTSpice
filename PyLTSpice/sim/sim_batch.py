@@ -99,7 +99,7 @@ __copyright__ = "Copyright 2020, Fribourg Switzerland"
 
 import os
 from pathlib import Path
-from typing import Callable, Any, Union
+from typing import Callable, Any, Union, Type
 import logging
 _logger = logging.getLogger("PyLTSpice.SimBatch")
 
@@ -136,7 +136,7 @@ class SimCommander(SpiceEditor):
         self.runner = SimRunner(simulator=simulator, parallel_sims=parallel_sims, timeout=timeout, verbose=verbose,
                                 output_folder=netlist_file.parent.as_posix())
 
-    def setLTspiceRunCommand(self, spice_tool: Union[str, Simulator]) -> None:
+    def setLTspiceRunCommand(self, spice_tool: Union[str, Type[Simulator]]) -> None:
         """
         *(Deprecated)*
         Manually setting the LTSpice run command.
@@ -173,11 +173,13 @@ class SimCommander(SpiceEditor):
 
     def updated_stats(self):
         """
+        *(Deprecated)*
         This function updates the OK/Fail statistics and releases finished RunTask objects from memory.
 
         :returns: Nothing
         """
-        return self.runner.updated_stats()
+        self.runner.active_threads()
+        return
 
     def wait_completion(self, timeout=None, abort_all_on_timeout=False) -> bool:
         return self.runner.wait_completion(timeout, abort_all_on_timeout)

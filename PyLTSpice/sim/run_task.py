@@ -39,7 +39,7 @@ from .simulator import Simulator
 END_LINE_TERM = '\n'
 
 if sys.version_info.major >= 3 and sys.version_info.minor >= 6:
-    clock_function = time.perf_counter
+    clock_function = time.time
 else:
     clock_function = time.clock
 
@@ -63,9 +63,9 @@ def format_time_difference(time_diff):
 class RunTask(threading.Thread):
     """This is an internal Class and should not be used directly by the User."""
 
-    def __init__(self, simulator: Simulator, runno, netlist_file: Path,
+    def __init__(self, simulator: Type[Simulator], runno, netlist_file: Path,
                  callback: Union[Type[ProcessCallback], Callable[[Path, Path], Any]],
-                 switches, timeout=None, verbose=True):
+                 switches, timeout: float = None, verbose=True):
         super().__init__(name=f"RunTask#{runno}")
         self.start_time = None
         self.stop_time = None
@@ -107,7 +107,7 @@ class RunTask(threading.Thread):
         if self.retcode == 0:
             # simulation successful
             self.print_info(_logger.info, "Simulation Successful. Time elapsed: %s" % sim_time)
-            self.raw_file = self.netlist_file.with_suffix('.raw')
+            self.raw_file = self.netlist_file.with_suffix(self.simulator.raw_extension)
 
             if self.raw_file.exists() and self.log_file.exists():
                 if self.callback:

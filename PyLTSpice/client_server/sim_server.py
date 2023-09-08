@@ -24,6 +24,7 @@ import logging
 _logger = logging.getLogger("PyLTSpice.SimServer")
 
 import threading
+from pathlib import Path
 import zipfile
 import io
 from PyLTSpice.client_server.srv_sim_runner import ServerSimRunner
@@ -48,7 +49,7 @@ class SimServer():
         self.server_thread.start()
 
     def run(self, session_id, circuit_name, zip_data):
-        _logger.info("Run ", session_id, circuit_name)
+        _logger.info(f"Run {session_id} : {circuit_name}")
         if session_id not in self.sessions:
             return -1  # This indicates that no job is started
         # Create a buffer from the zip data
@@ -59,6 +60,7 @@ class SimServer():
             _logger.debug(zip_file.namelist())
             zip_file.extract(circuit_name, self.output_folder)
 
+        circuit_name = Path(self.output_folder) / circuit_name
         _logger.info(f"Running simulation of {circuit_name}")
         runno = self.simulation_manager.add_simulation(circuit_name)
         if runno != -1:
@@ -69,7 +71,7 @@ class SimServer():
         """Returns an unique key that represents the session. It will be later used to sort the sim_tasks belonging
         to the session."""
         session_id = str(uuid.uuid4())  # Needs to be a string, otherwise the rpc client can't handle it
-        _logger.info("Starting session ", session_id)
+        _logger.info(f"Starting session {session_id}")
         self.sessions[session_id] = []
         return session_id
 
@@ -85,7 +87,7 @@ class SimServer():
 
             * 'stop' - server time
         """
-        _logger.debug("collecting status for ", session_id)
+        _logger.debug(f"collecting status for {session_id}")
         ret = []
         for task_info in self.simulation_manager.completed_tasks:
             _logger.debug(task_info)
@@ -93,7 +95,7 @@ class SimServer():
             if runno in self.sessions[session_id]:
                 ret.append(runno)  # transfers the dictionary from the simulation_manager completed task
                 # to the return dictionary 
-        _logger.debug("returning status", ret)
+        _logger.debug(f"returning status {ret}")
         return ret
 
     def get_files(self, session_id, runno) -> Tuple[str, Binary]:
@@ -114,13 +116,13 @@ class SimServer():
 
     def close_session(self, session_id):
         """Cleans all the pending sim_tasks with """
-        _logger.info("Closing session ", session_id)
+        _logger.info(f"Closing session {session_id}")
         for runno in self.sessions[session_id]:
             self.simulation_manager.erase_files_of_runno(runno)
         return True  # Needs to return always something. None is not supported
 
     def stop_server(self):
-        _logger.info("stopping...ServerInterface")
+        _logger.debug("stopping...ServerInterface")
         self.simulation_manager.stop()
         self.server.shutdown()
         _logger.info("stopped...ServerInterface")

@@ -31,6 +31,7 @@ def all_loggers():
         "PyLTSpice.SimStepper",
         "PyLTSpice.SpiceEditor",
         "PyLTSpice.XYCESimulator",
+        "PyLTSpice.QSpiceSimulator",
         "PyLTSpice.SimBatch",
         "PyLTSpice.AscEditor",
         "PyLTSpice.LTSpiceSimulator",

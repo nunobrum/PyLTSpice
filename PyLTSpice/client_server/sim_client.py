@@ -108,7 +108,7 @@ class SimClient(object):
         self.server = xmlrpc.client.ServerProxy(f'{host_address}:{port}')
         # print(self.server.system.listMethods())
         self.session_id = self.server.start_session()
-        _logger.info("started ", self.session_id)
+        _logger.info(f"Started {self.session_id}")
         self.started_jobs = OrderedDict()  # This list keeps track of started jobs on the server
         self.stored_jobs = OrderedDict()  # This list keeps track of finished simulations that haven't yet been transferred.
         self.completed_jobs = 0
@@ -195,5 +195,5 @@ class SimClient(object):
         raise StopIteration
 
     def close_session(self):
-        _logger.info("closing session ", self.session_id)
+        _logger.info(f"closing session {self.session_id}")
         self.server.close_session(self.session_id)
