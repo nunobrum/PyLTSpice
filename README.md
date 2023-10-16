@@ -200,12 +200,12 @@ and then add the .step command for making several runs on the same circuit.
 To simplify this process, the AscEditor class can be used as exemplified below:
 
 ```python
-from PyLTSpice import AscEditor  # Imports the class that manipulates the asc file
+from PyLTSpice import AscEditor, SimRunner  # Imports the class that manipulates the asc file
 from PyLTSpice.sim.tookit.montecarlo import Montecarlo  # Imports the Montecarlo toolkit class
 
 sallenkey = AscEditor("./testfiles/sallenkey.asc")  # Reads the asc file into memory
-
-mc = Montecarlo(sallenkey)  # Instantiates the Montecarlo class, with the asc file already in memory
+runner = SimRunner(output_folder='./temp_mc')  # Instantiates the runner class, with the output folder already set
+mc = Montecarlo(sallenkey, runner)  # Instantiates the Montecarlo class, with the asc file already in memory
 
 # The following lines set the default tolerances for the components
 mc.set_tolerance('R', 0.01)  # 1% tolerance, default distribution is uniform
@@ -217,10 +217,16 @@ mc.set_tolerance('R1', 0.05)  # 5% tolerance for R1 only. This only overrides th
 
 # Tolerances can be set for parameters as well
 mc.set_parameter_deviation('Vos', 3e-4, 5e-3, 'uniform')  # The keyword 'distribution' is optional
-mc.prepare_testbench(1000)  # Prepares the testbench for 1000 simulations
+mc.prepare_testbench(num_runs=1000)  # Prepares the testbench for 1000 simulations
 
 # Finally the netlist is saved to a file
 mc.save_netlist('./testfiles/sallenkey_mc.net')
+
+mc.run(100)  # Runs the simulation with splits of 100 runs each
+logs = mc.read_logfiles()   # Reads the log files and stores the results in the results attribute
+logs.export_data('./temp_mc/data.csv')  # Exports the data to a csv file
+logs.plot_histogram('fcut')  # Plots the histograms for the results
+mc.cleanup_files()  # Deletes the temporary files
 ```
 When opening the created sallenkey_mc.net file, we can see that the following circuit.
 
@@ -241,12 +247,12 @@ gauss(x) function.
 Similarly, the worst case analysis can also be setup by using the class WorstCaseAnalysis, as exemplified below:
 
 ```python
-from PyLTSpice import AscEditor  # Imports the class that manipulates the asc file
+from PyLTSpice import AscEditor, SimRunner  # Imports the class that manipulates the asc file
 from PyLTSpice.sim.tookit.worst_case import WorstCaseAnalysis
 
 sallenkey = AscEditor("./testfiles/sallenkey.asc")  # Reads the asc file into memory
-
-wca = WorstCaseAnalysis(sallenkey)  # Instantiates the Worst Case Analysis class
+runner = SimRunner(output_folder='./temp_wca')  # Instantiates the runner class, with the output folder already set
+wca = WorstCaseAnalysis(sallenkey, runner)  # Instantiates the Worst Case Analysis class
 
 # The following lines set the default tolerances for the components
 wca.set_tolerance('R', 0.01)  # 1% tolerance
@@ -261,6 +267,17 @@ wca.set_parameter_deviation('Vos', 3e-4, 5e-3)
 
 # Finally the netlist is saved to a file
 wca.save_netlist('./testfiles/sallenkey_wc.asc')
+
+
+wca.run()  # Runs the simulation with splits of 100 runs each
+logs = wca.read_logfiles()   # Reads the log files and stores the results in the results attribute
+logs.export_data('./temp_wca/data.csv')  # Exports the data to a csv file
+
+print("Worst case results:")
+for param in ('fcut', 'fcut_FROM'):
+    print(f"{param}: min:{logs.min_measure_value(param)} max:{logs.max_measure_value(param)}")
+
+wca.cleanup_files()  # Deletes the temporary files
 ```
 When opening the created sallenkey_wc.net file, we can see that the following circuit.
 
@@ -289,7 +306,7 @@ written. There are two possible usages of this module, either programmatically b
 accessing data through the class as exemplified here:
 
 ```python
-from PyLTSpice.LTSteps import LTSpiceLogReader
+from PyLTSpice.log.ltsteps import LTSpiceLogReader
 
 data = LTSpiceLogReader("Batch_Test_AD820_15.log")
 
@@ -411,8 +428,8 @@ _Make sure to initialize the root logger before importing the library to be able
 ## To whom do I talk to? ##
 
 * Tools website : [https://www.nunobrum.com/pyltspice.html](https://www.nunobrum.com/pyltspice.html)
-* Repo owner : [me@nunobrum.com](me@nunobrum.com)
-* Alternative contact : nuno.brum@gmail.com
+* Repo owner : [me@nunobrum.com](mailto:me@nunobrum.com)
+* Alternative contact : [nuno.brum@gmail.com](mailto:nuno.brum@gmail.com)
 
 ## History ##
 * Version 5.0
