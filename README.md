@@ -51,20 +51,20 @@ the fact that LTSpice is automatically selected to perform all simulations.
 
 ## How to Install ##
 
-`pip install PyLTSpice`
+`pip install PyLTSpice `
 
 ### Updating PyLTSpice ###
 
-`pip install --upgrade PyLTSpice`
+`pip install --upgrade PyLTSpice `
 
 ### Using GITHub ###
 
-`git clone https://github.com/nunobrum/PyLTSpice.git`
+`git clone https://github.com/nunobrum/PyLTSpice.git `
 
 If using this method it would be good to add the path where you cloned the site to python path.
 
-`import sys`  
-`sys.path.append(<path to PyLTSpice>)`
+`import sys `  
+`sys.path.append(<path to PyLTSpice>) `
 
 ## How to use ##
 
@@ -381,17 +381,17 @@ documentation is directly included in the source file docstrings.
 
 ## Debug Logging
 
-The library uses the standard`logging` module. Three convenience functions have been added for easily changing logging
-settings across the entire library.`PyLTSpice.all_loggers()` returns a list of all the logger's
-names,`PyLTSpice.set_log_level(logging.DEBUG)`
-would set the library's logging level to debug, and`PyLTSpice.add_log_handler(my_handler)` would add`my_handler` as a
+The library uses the standard `logging` module. Three convenience functions have been added for easily changing logging
+settings across the entire library. `PyLTSpice.all_loggers()` returns a list of all the logger's
+names, `PyLTSpice.set_log_level(logging.DEBUG)`
+would set the library's logging level to debug, and `PyLTSpice.add_log_handler(my_handler)` would add `my_handler` as a
 handler for
 all loggers.
 
 ### Single Module Logging
 
 It is also possible to set the logging settings for a single module by using its name acquired from
-the`PyLTSpice.all_loggers()`
+the `PyLTSpice.all_loggers()`
 function. For example:
 
 ```python
@@ -405,7 +405,7 @@ PyLTSpice.set_log_level(logging.DEBUG)  # Set PyLTSpice's global log level
 logging.getLogger("PyLTSpice.RawRead").level = logging.WARNING  # Set the log level for only RawRead to warning
 ```
 
-Would set only`PyLTSpice.RawRead` file's logging level to warning while the other modules would remain at debug level.
+Would set only `PyLTSpice.RawRead` file's logging level to warning while the other modules would remain at debug level.
 _Make sure to initialize the root logger before importing the library to be able to see the logs._
 
 ## To whom do I talk to? ##
@@ -563,7 +563,7 @@ _Make sure to initialize the root logger before importing the library to be able
   * Histogram.py now has an option to make the histogram directly from values stored in the clipboard
 
 * Version 0.5
-  * The LTSpice_RawReader.py now uses the`struct.unpack` function for a faster execution
+  * The LTSpice_RawReader.py now uses the `struct.unpack` function for a faster execution
 
 * Version 0.4
   * Added LTSpiceBatch.py to the collection of tools
