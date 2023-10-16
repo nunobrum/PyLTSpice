@@ -21,12 +21,12 @@ the fact that LTSpice is automatically selected to perform all simulations.
   parameters as well as the simulation commands. These methods allow to update a netlist without having to open the
   schematic in LTSpice. The simulations can then be run in batch mode (see sim_runner.py).
 
-    -`set_element_model('D1', '1N4148') # Replaces the Diode D1 with the model 1N4148`
-    -`set_component_value('R2', '33k') # Replaces the value of R2 by 33k`
-    -`set_parameters(run=1, TEMP=80) # Creates or updates the netlist to have .PARAM run=1 or .PARAM TEMP=80`
-    -`add_instructions(".STEP run -1 1023 1", ".dc V1 -5 5")`
-    -`remove_instruction(".STEP run -1 1023 1")  # Removes previously added instruction`
-    -`reset_netlist() # Resets all edits done to the netlist.`
+    - `set_element_model('D1', '1N4148') # Replaces the Diode D1 with the model 1N4148`
+    - `set_component_value('R2', '33k') # Replaces the value of R2 by 33k`
+    - `set_parameters(run=1, TEMP=80) # Creates or updates the netlist to have .PARAM run=1 or .PARAM TEMP=80`
+    - `add_instructions(".STEP run -1 1023 1", ".dc V1 -5 5")`
+    - `remove_instruction(".STEP run -1 1023 1")  # Removes previously added instruction`
+    - `reset_netlist() # Resets all edits done to the netlist.`
 
 * __sim_runner.py__
   A python script that can be used to run LTSpice simulations in batch mode without having to open the LTSpice GUI.
