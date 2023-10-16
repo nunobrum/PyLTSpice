@@ -15,7 +15,7 @@ mc.set_tolerance('R1', 0.05)  # 5% tolerance for R1 only. This only overrides th
 
 # Tolerances can be set for parameters as well
 mc.set_parameter_deviation('Vos', 3e-4, 5e-3, 'uniform')  # The keyword 'distribution' is optional
-mc.prepare_testbench(1000)  # Prepares the testbench for 1000 simulations
+mc.prepare_testbench(num_runs=1000)  # Prepares the testbench for 1000 simulations
 
 # Finally the netlist is saved to a file
 mc.save_netlist('./testfiles/sallenkey_mc.net')

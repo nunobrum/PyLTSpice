@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
 # Convenience direct imports
-from .raw.raw_read import RawRead, SpiceReadException
-from .raw.raw_write import RawWrite, Trace
-from .editor.spice_editor import SpiceEditor, SpiceCircuit
-from .editor.asc_editor import AscEditor
-from .sim.sim_runner import SimRunner
-from .sim.sim_batch import SimCommander
+from spicelib.raw.raw_read import RawRead, SpiceReadException
+from spicelib.raw.raw_write import RawWrite, Trace
+from PyLTSpice.editor.spice_editor import SpiceEditor, SpiceCircuit
+from PyLTSpice.editor.asc_editor import AscEditor
+from PyLTSpice.sim.sim_runner import SimRunner
+from spicelib.simulators.ltspice_simulator import LTspice
+from PyLTSpice.sim.sim_batch import SimCommander
 
 
 def all_loggers():

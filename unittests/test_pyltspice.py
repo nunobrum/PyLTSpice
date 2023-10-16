@@ -49,7 +49,6 @@ from PyLTSpice.sim.sim_batch import SimCommander
 from PyLTSpice.raw.raw_read import RawRead
 from PyLTSpice.editor.spice_editor import SpiceEditor
 from PyLTSpice.sim.sim_runner import SimRunner
-from PyLTSpice.sim.ltspice_simulator import LTspice
 
 def has_ltspice_detect():
     from PyLTSpice.sim.ltspice_simulator import LTspice
@@ -133,8 +132,8 @@ class test_pyltspice(unittest.TestCase):
         for measure in log.get_measure_names():
             print(measure, '=', log.get_measure_value(measure))
         self.assertEqual(log.get_measure_value('fcutac'), 8479370.0)
-        self.assertEqual(str(log.get_measure_value('vout1m')), '6.02059dB,-5.37934e-08°')
-        self.assertEqual(log.get_measure_value('vout1m').mag, 6.02059)
+        self.assertEqual(str(log.get_measure_value('vout1m')), '(6.02059dB,0°)')
+        self.assertEqual(log.get_measure_value('vout1m').mag_db(), 6.02059)
 
     @unittest.skipIf(skip_ltspice_tests, "Skip if not in windows environment")
     def test_run_from_spice_editor(self):
