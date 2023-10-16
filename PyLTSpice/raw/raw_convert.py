@@ -42,7 +42,7 @@ will try to find the trace name with the I() qualifier.
 
 from optparse import OptionParser
 import clipboard
-from PyLTSpice.raw.raw_read import LTSpiceRawRead
+from spicelib.raw.raw_read import RawRead as LTSpiceRawRead
 
 
 def main():

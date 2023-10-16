@@ -1,6 +1,8 @@
 # README #
 
-PyLTSpice is a toolchain of python utilities design to interact with LTSpice and NGSpice Electronic Simulator.
+PyLTSpice is a toolchain of python utilities design to interact with LTSpice Electronic Simulator.
+It is mostly based on the spicelib package, being the main difference to it is 
+the fact that LTSpice is automatically selected to perform all simulations.
 
 ## What is contained in this repository ##
 
@@ -19,12 +21,12 @@ PyLTSpice is a toolchain of python utilities design to interact with LTSpice and
   parameters as well as the simulation commands. These methods allow to update a netlist without having to open the
   schematic in LTSpice. The simulations can then be run in batch mode (see sim_runner.py).
 
-    - `set_element_model('D1', '1N4148') # Replaces the Diode D1 with the model 1N4148 `
-    - `set_component_value('R2', '33k') # Replaces the value of R2 by 33k`
-    - `set_parameters(run=1, TEMP=80) # Creates or updates the netlist to have .PARAM run=1 or .PARAM TEMP=80`
-    - `add_instructions(".STEP run -1 1023 1", ".dc V1 -5 5") `
-    - `remove_instruction(".STEP run -1 1023 1")  # Removes previously added instruction`
-    - `reset_netlist() # Resets all edits done to the netlist.`
+    -`set_element_model('D1', '1N4148') # Replaces the Diode D1 with the model 1N4148`
+    -`set_component_value('R2', '33k') # Replaces the value of R2 by 33k`
+    -`set_parameters(run=1, TEMP=80) # Creates or updates the netlist to have .PARAM run=1 or .PARAM TEMP=80`
+    -`add_instructions(".STEP run -1 1023 1", ".dc V1 -5 5")`
+    -`remove_instruction(".STEP run -1 1023 1")  # Removes previously added instruction`
+    -`reset_netlist() # Resets all edits done to the netlist.`
 
 * __sim_runner.py__
   A python script that can be used to run LTSpice simulations in batch mode without having to open the LTSpice GUI.
@@ -49,20 +51,20 @@ PyLTSpice is a toolchain of python utilities design to interact with LTSpice and
 
 ## How to Install ##
 
-`pip install PyLTSpice `
+`pip install PyLTSpice`
 
 ### Updating PyLTSpice ###
 
-`pip install --upgrade PyLTSpice `
+`pip install --upgrade PyLTSpice`
 
 ### Using GITHub ###
 
-`git clone https://github.com/nunobrum/PyLTSpice.git `
+`git clone https://github.com/nunobrum/PyLTSpice.git`
 
 If using this method it would be good to add the path where you cloned the site to python path.
 
-`import sys `  
-`sys.path.append(<path to PyLTSpice>) `
+`import sys`  
+`sys.path.append(<path to PyLTSpice>)`
 
 ## How to use ##
 
@@ -80,7 +82,7 @@ GNU V3 License
 The example below reads the data from a Spice Simulation called
 "TRAN - STEP.raw" and displays all steps of the "I(R1)" trace in a matplotlib plot
 
- ```python
+```python
 from PyLTSpice import RawRead
 
 from matplotlib import pyplot as plt
@@ -99,14 +101,14 @@ for step in range(len(steps)):
 
 plt.legend()  # order a legend
 plt.show()
- ```   
+```   
 
 ### RawWrite ###
 
 The following example writes a RAW file with a 3 milliseconds transient simulation sine with a 10kHz and a cosine with
 9.997kHz
 
- ```python
+```python
 import numpy as np
 from PyLTSpice import Trace, RawWrite
 
@@ -118,7 +120,7 @@ LW.add_trace(tx)
 LW.add_trace(vy)
 LW.add_trace(vz)
 LW.save("teste_snippet1.raw")
- ```   
+```   
 
 ### SpiceEditor, AscEditor and SimRunner.py ###
 
@@ -321,7 +323,7 @@ script will scan the directory and process the newest log, txt or out file found
 
 This module uses the data inside on the filename to produce a histogram image.
 
- ```
+```
 Usage: Histogram.py [options] LOG_FILE TRACE
 
 Options:
@@ -346,7 +348,7 @@ Options:
   -C, --clipboard       If the data from the clipboard is to be used.
   -i IMAGEFILE, --image=IMAGEFILE
                         Name of the image File. extension 'png'    
- ```
+```
 
 ### rawconvert.exe ###
 
@@ -370,45 +372,7 @@ Options:
 
 ### run_server.exe ###
 
-This module is used to run a server that can be used to run simulations in a remote machine. The server will run in the
-background and will wait for a client to connect. The client will send a netlist to the server and the server will run
-the simulation and return the results to the client. The client on the remote machine is a script instancing the
-SimClient class. An example of its usage is shown below:
-
-```python
-import zipfile
-from PyLTSpice.client_server.sim_client import SimClient
-
-server = SimClient('http://localhost', 9000)
-runid = server.run("./testfiles/testfile.net")
-
-for runid in server:  # Ma
-    zip_filename = server.get_runno_data(runid)
-    with zipfile.ZipFile(zip_filename, 'r') as zipf:  # Extract the contents of the zip file
-        print(zipf.namelist())  # Debug printing the contents of the zip file
-        zipf.extract(zipf.namelist()[0])  # Normally the raw file comes first
-```
-
-```bash
-usage: run_server [-h] [-p PORT] [-o OUTPUT] [-l PARALLEL] simulator
-
-Run the LTSpice Server. This is a command line interface to the SimServer class.The SimServer class is used to run
-simulations in parallel using a server-client architecture.The server is a machine that runs the SimServer class and
-the client is a machine that runs the SimClient class.The argument is the simulator to be used (LTSpice, NGSpice,
-XYCE, etc.)
-
-positional arguments:
-  simulator             Simulator to be used (LTSpice, NGSpice, XYCE, etc.)
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -p PORT, --port PORT  Port to run the server. Default is 9000
-  -o OUTPUT, --output OUTPUT
-                        Output folder for the results. Default is the current folder
-  -l PARALLEL, --parallel PARALLEL
-                        Maximum number of parallel simulations. Default is 4
-```
-
+This command line tool was moved to the spicelib package.
 
 ### SemiDevOpReader.py ###
 
@@ -417,17 +381,17 @@ documentation is directly included in the source file docstrings.
 
 ## Debug Logging
 
-The library uses the standard `logging` module. Three convenience functions have been added for easily changing logging
-settings across the entire library. `PyLTSpice.all_loggers()` returns a list of all the logger's
-names, `PyLTSpice.set_log_level(logging.DEBUG)`
-would set the library's logging level to debug, and `PyLTSpice.add_log_handler(my_handler)` would add `my_handler` as a
+The library uses the standard`logging` module. Three convenience functions have been added for easily changing logging
+settings across the entire library.`PyLTSpice.all_loggers()` returns a list of all the logger's
+names,`PyLTSpice.set_log_level(logging.DEBUG)`
+would set the library's logging level to debug, and`PyLTSpice.add_log_handler(my_handler)` would add`my_handler` as a
 handler for
 all loggers.
 
 ### Single Module Logging
 
 It is also possible to set the logging settings for a single module by using its name acquired from
-the `PyLTSpice.all_loggers()`
+the`PyLTSpice.all_loggers()`
 function. For example:
 
 ```python
@@ -441,7 +405,7 @@ PyLTSpice.set_log_level(logging.DEBUG)  # Set PyLTSpice's global log level
 logging.getLogger("PyLTSpice.RawRead").level = logging.WARNING  # Set the log level for only RawRead to warning
 ```
 
-Would set only `PyLTSpice.RawRead` file's logging level to warning while the other modules would remain at debug level.
+Would set only`PyLTSpice.RawRead` file's logging level to warning while the other modules would remain at debug level.
 _Make sure to initialize the root logger before importing the library to be able to see the logs._
 
 ## To whom do I talk to? ##
@@ -451,6 +415,11 @@ _Make sure to initialize the root logger before importing the library to be able
 * Alternative contact : nuno.brum@gmail.com
 
 ## History ##
+* Version 5.0
+  * Making this library dependent on spicelib while trying to maintain backward compatibility as much as possible. 
+  PyLTspice will be kept alive and its update will be linked to the spicelib. The main difference is that using
+  PyLTspice will avert the need of having to select a simulator in all run commands.
+
 * Version 4.1.2
   * Adding support for the new QSPICE simulator
   * Improving the timeout mechanism on the SimRunner class
@@ -594,7 +563,7 @@ _Make sure to initialize the root logger before importing the library to be able
   * Histogram.py now has an option to make the histogram directly from values stored in the clipboard
 
 * Version 0.5
-  * The LTSpice_RawReader.py now uses the `struct.unpack` function for a faster execution
+  * The LTSpice_RawReader.py now uses the`struct.unpack` function for a faster execution
 
 * Version 0.4
   * Added LTSpiceBatch.py to the collection of tools

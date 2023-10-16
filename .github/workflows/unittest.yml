@@ -32,6 +32,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install numpy
+          pip install spicelib
       - name: Test sweep_iterators.py
         run: |
           python ./unittests/sweep_iterators_unittest.py

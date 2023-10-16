@@ -21,6 +21,7 @@ dependencies = [
     "clipboard",
     "matplotlib",
     "keyboard",
+    "spicelib>=0.6",
 ]
 classifiers=[
     "Programming Language :: Python :: 3",
@@ -34,14 +35,6 @@ where = ["."]  # ["."] by default
 include = ["*"]  # ["*"] by default
 exclude = [".idea", "doc", "doc_build", ".vscode", ".git"]  # empty by default
 namespaces = true  # true by default
-
-
-[project.scripts]
-ltsteps = "PyLTSpice.LTSteps:main"
-histogram = "PyLTSpice.Histogram:main"
-rawplot = "PyLTSpice.rawplot:main"
-rawconvert = "PyLTSpice.raw.raw_convert:main"
-run_server = "PyLTSpice.run_server:main"
 
 [project.urls]
 "Homepage" = "https://github.com/nunobrum/PyLTSpice"
