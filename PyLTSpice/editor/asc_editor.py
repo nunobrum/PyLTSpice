@@ -19,4 +19,5 @@ import logging
 
 _logger = logging.getLogger("PyLTSpice.AscEditor")
 _logger.info("This is maintained for backward compatibility. Use spicelib.editor.asc_editor instead")
-from spicelib.editor.asc_editor import AscEditor
+
+from spicelib.editor.asc_editor import *
