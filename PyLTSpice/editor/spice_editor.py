@@ -23,6 +23,8 @@ _logger = logging.getLogger("PyLTSpice.SpiceEditor")
 _logger.info("This is maintained for compatibility issues. Use spicelib.editor.spice_editor instead")
 from spicelib.editor.spice_editor import SpiceEditor as SpiceEditorBase, SpiceCircuit
 from spicelib.simulators.ltspice_simulator import LTspice
+
+
 class SpiceEditor(SpiceEditorBase):
 
     def __init__(self, netlist_file: Union[str, Path], encoding='autodetect', create_blank=False):

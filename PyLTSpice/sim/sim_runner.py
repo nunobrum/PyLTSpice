@@ -133,7 +133,7 @@ class SimRunner(SimRunnerBase):
 
     """
 
-    def __init__(self, *, simulator=None, parallel_sims: int = 4, timeout: float = 600.0, verbose=True,
+    def __init__(self, *, simulator=None, parallel_sims: int = 4, timeout: float = 600.0, verbose=False,
                  output_folder: str = None):
         # The '*' in the parameter list forces the user to use named parameters for the rest of the parameters.
         # This is a good practice to avoid confusion.

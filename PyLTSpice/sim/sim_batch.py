@@ -123,7 +123,7 @@ class SimCommander(SpiceEditor):
     Please check the SimRunner class for more information.
     """
 
-    def __init__(self, netlist_file: Union[str, Path], parallel_sims: int = 4, timeout=None, verbose=True,
+    def __init__(self, netlist_file: Union[str, Path], parallel_sims: int = 4, timeout=None, verbose=False,
                  encoding='autodetect', simulator=None):
         if simulator is None:
             from ..sim.ltspice_simulator import LTspice  # In case no simulator is given
