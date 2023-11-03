@@ -432,6 +432,12 @@ _Make sure to initialize the root logger before importing the library to be able
 * Alternative contact : [nuno.brum@gmail.com](mailto:nuno.brum@gmail.com)
 
 ## History ##
+
+* Version 5.1
+  * Important Bugfix on the LTComplex class.
+  * Fixes and enhancing the analysis toolkit.
+  * Deprecating SpiceEditor.write_netlist in favour of save_netlist()
+
 * Version 5.0
   * Making this library dependent on spicelib while trying to maintain backward compatibility as much as possible. 
   PyLTspice will be kept alive and its update will be linked to the spicelib. The main difference is that using

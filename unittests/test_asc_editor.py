@@ -19,18 +19,18 @@ class ASC_Editor_Test(unittest.TestCase):
         self.assertEqual(self.edt.get_component_value('R1'), '10k', "Tested R1 Value")  # add assertion here
         self.assertListEqual(self.edt.get_components(), ['Vin', 'R1', 'R2', 'D1'], "Tested get_components")  # add assertion here
         self.edt.set_component_value('R1', '33k')
-        self.edt.write_netlist(test_dir + 'test_components_output.asc')
+        self.edt.save_netlist(test_dir + 'test_components_output.asc')
         self.equalFiles(test_dir + 'test_components_output.asc', golden_dir + 'test_components_output.asc')
         self.assertEqual(self.edt.get_component_value('R1'), '33k', "Tested R1 Value")  # add assertion here
         self.edt.remove_component('R1')
-        self.edt.write_netlist(test_dir + 'test_components_output_1.asc')
+        self.edt.save_netlist(test_dir + 'test_components_output_1.asc')
         self.equalFiles(test_dir + 'test_components_output_1.asc', golden_dir + 'test_components_output_1.asc')
 
     def test_parameter_edit(self):
         self.assertEqual(self.edt.get_parameter('TEMP'), '0', "Tested TEMP Parameter")  # add assertion here
         self.edt.set_parameter('TEMP', 25)
         self.assertEqual(self.edt.get_parameter('TEMP'), '25', "Tested TEMP Parameter")  # add assertion here
-        self.edt.write_netlist(test_dir + 'test_parameter_output.asc')
+        self.edt.save_netlist(test_dir + 'test_parameter_output.asc')
         self.equalFiles(test_dir + 'test_parameter_output.asc', golden_dir + 'test_parameter_output.asc')
         self.edt.set_parameter('TEMP', 0)  # reset to 0
         self.assertEqual(self.edt.get_parameter('TEMP'), '0.0', "Tested TEMP Parameter")  # add assertion here
@@ -41,10 +41,10 @@ class ASC_Editor_Test(unittest.TestCase):
         self.edt.add_instruction('.save I(R1)')
         self.edt.add_instruction('.save I(R2)')
         self.edt.add_instruction('.save I(D1)')
-        self.edt.write_netlist(test_dir + 'test_instructions_output.asc')
+        self.edt.save_netlist(test_dir + 'test_instructions_output.asc')
         self.equalFiles(test_dir + 'test_instructions_output.asc', golden_dir + 'test_instructions_output.asc')
         self.edt.remove_instruction('.save I(R1)')
-        self.edt.write_netlist(test_dir + 'test_instructions_output_1.asc')
+        self.edt.save_netlist(test_dir + 'test_instructions_output_1.asc')
         self.equalFiles(test_dir + 'test_instructions_output_1.asc', golden_dir + 'test_instructions_output_1.asc')
 
     def equalFiles(self, file1, file2):

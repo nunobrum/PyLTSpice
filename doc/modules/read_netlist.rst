@@ -14,7 +14,7 @@ The rationale for this division is to allow to manipulate not only elements that
 manipulate elements that exit inside of sub-circuits. In Example 2 there is small example where the value of a component
 inside a subcircuit is changed.
 
-When all the changes are made, the write_netlist(<filename>) needs to be called in order for the updates to be registered.
+When all the changes are made, the save_netlist(<filename>) needs to be called in order for the updates to be registered.
 
 Do not update the original file. It is always safer to keep the original file unchanged. This helps when debuging problems,
 and also allows the script to revert to the initial condition by using the reset_netlist() method.
@@ -39,7 +39,7 @@ Example 1: Setting parameters inside a flat netlist.
         ".param run = 0"
     )
 
-    net.write_netlist("Batch_Test_Modified.net")  # writes the modified netlist to the indicated file
+    net.save_netlist("Batch_Test_Modified.net")  # writes the modified netlist to the indicated file
     
 
 Example 2: Updating components inside a subcircuit
@@ -52,7 +52,7 @@ Example 2: Updating components inside a subcircuit
 
     net.set_component_value('R1', 1000)      # Sets the value of R1 to 1k
     net.set_component_value('XU1:Ra', '1k')  # Sets the value of Ra inside of XU1 to 1k
-    net.write_netlist("Batch_Test_Modified.net")
+    net.save_netlist("Batch_Test_Modified.net")
 
 See the class documentation for more details :
 
