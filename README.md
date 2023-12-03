@@ -432,6 +432,10 @@ _Make sure to initialize the root logger before importing the library to be able
 * Alternative contact : [nuno.brum@gmail.com](mailto:nuno.brum@gmail.com)
 
 ## History ##
+Version 5.2
+  * SimAnalysis supporting both Qspice and LTSpice logfiles.
+  * FastWorstCaseAnalysis algorithm implemented
+  * Fix on the log reading of fourier data.
 
 * Version 5.1
   * Important Bugfix on the LTComplex class.
