@@ -20,7 +20,7 @@ mc.prepare_testbench(num_runs=1000)  # Prepares the testbench for 1000 simulatio
 # Finally the netlist is saved to a file
 mc.save_netlist('./testfiles/sallenkey_mc.net')
 
-mc.run(100)  # Runs the simulation with splits of 100 runs each
+mc.run_testbench(runs_per_sim=100)  # Runs the simulation with splits of 100 runs each
 logs = mc.read_logfiles()   # Reads the log files and stores the results in the results attribute
 logs.export_data('./temp_mc/data.csv')  # Exports the data to a csv file
 logs.plot_histogram('fcut')  # Plots the histograms for the results
