@@ -432,7 +432,11 @@ _Make sure to initialize the root logger before importing the library to be able
 * Alternative contact : [nuno.brum@gmail.com](mailto:nuno.brum@gmail.com)
 
 ## History ##
-Version 5.2
+* Version 5.3
+  * Correction on the run_montecarlo.py and run_worst_case.py examples.
+  * Fixes on the spicelib (Version 1.0.3)
+
+* Version 5.2
   * SimAnalysis supporting both Qspice and LTSpice logfiles.
   * FastWorstCaseAnalysis algorithm implemented
   * Fix on the log reading of fourier data.

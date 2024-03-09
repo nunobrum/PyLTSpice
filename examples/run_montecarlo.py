@@ -22,6 +22,18 @@ mc.save_netlist('./testfiles/sallenkey_mc.net')
 
 mc.run_testbench(runs_per_sim=100)  # Runs the simulation with splits of 100 runs each
 logs = mc.read_logfiles()   # Reads the log files and stores the results in the results attribute
-logs.export_data('./temp_mc/data.csv')  # Exports the data to a csv file
+logs.obtain_amplitude_and_phase_from_complex_values()  # Splits the complex values into real and imaginary parts
+logs.export_data('./temp_mc/data_testbench.csv')  # Exports the data to a csv file
 logs.plot_histogram('fcut')  # Plots the histograms for the results
 mc.cleanup_files()  # Deletes the temporary files
+
+print("=====================================")
+# Now using the second method, where the simulations are ran one by one
+mc.clear_simulation_data()  # Clears the simulation data
+mc.reset_netlist()  # Resets the netlist to the original
+mc.run_analysis(num_runs=1000)  # Runs the 1000 simulations
+logs = mc.read_logfiles()   # Reads the log files and stores the results in the results attribute
+logs.export_data('./temp_mc/data_sims.csv')  # Exports the data to a csv file
+logs.plot_histogram('fcut')  # Plots the histograms for the results
+mc.cleanup_files()  # Deletes the temporary files
+
