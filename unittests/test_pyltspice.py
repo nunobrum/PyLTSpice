@@ -132,7 +132,9 @@ class test_pyltspice(unittest.TestCase):
         for measure in log.get_measure_names():
             print(measure, '=', log.get_measure_value(measure))
         self.assertEqual(log.get_measure_value('fcutac'), 8479370.0)
-        self.assertEqual(str(log.get_measure_value('vout1m')), '(6.02059dB,0°)')
+        vout1m = log.get_measure_value('vout1m')
+        self.assertEqual(vout1m.mag_db(), 6.02059)
+        self.assertAlmostEqual(vout1m.ph_rad(), 0, 5)
         self.assertEqual(log.get_measure_value('vout1m').mag_db(), 6.02059)
 
     @unittest.skipIf(skip_ltspice_tests, "Skip if not in windows environment")

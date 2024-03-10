@@ -6,7 +6,7 @@ requires = [
 build-backend = "setuptools.build_meta"
 [project]
 name = "PyLTSpice"
-version = "5.2"
+version = "5.2.1"
 authors = [
   { name="Nuno Brum", email="me@nunobrum.com" },
 ]
@@ -15,7 +15,7 @@ readme = "README.md"
 license = { file="LICENSE" }
 requires-python = ">=3.8"
 dependencies = [
-    "spicelib>=1.0.3",
+    "spicelib>=1.0.4",
 ]
 classifiers=[
     "Programming Language :: Python :: 3",
@@ -33,3 +33,5 @@ namespaces = true  # true by default
 [project.urls]
 "Homepage" = "https://github.com/nunobrum/PyLTSpice"
 "Bug Tracker" = "https://github.com/nunobrum/PyLTSpice/issues"
+"Repository" = "https://github.com/nunobrum/PyLTSpice.git"
+"Author" = "https://www.nunobrum.com/"
