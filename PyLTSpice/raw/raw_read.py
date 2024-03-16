@@ -207,7 +207,7 @@ __author__ = "Nuno Canto Brum <nuno.brum@gmail.com>"
 __copyright__ = "Copyright 2022, Fribourg Switzerland"
 
 import logging
-_logger = logging.getLogger("PyLTSpice.RawRead")
+_logger = logging.getLogger("spicelib.RawRead")
 _logger.info("This is maintained for backward compatibility. Use spicelib.raw.raw_read instead")
 
 from spicelib.raw.raw_read import RawRead

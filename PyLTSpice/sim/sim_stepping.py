@@ -23,7 +23,7 @@ __author__ = "Nuno Canto Brum <nuno.brum@gmail.com>"
 __copyright__ = "Copyright 2017, Fribourg Switzerland"
 
 import logging
-_logger = logging.getLogger("PyLTSpice.SimStepper")
+_logger = logging.getLogger("spicelib.SimStepper")
 _logger.info("This module is maintained for compatibility reasons."
              " Please use the new SimStepper class from PyLTSpice.sim.sim_stepping instead")
 

@@ -12,7 +12,7 @@
 # -------------------------------------------------------------------------------
 import logging
 
-_logger = logging.getLogger("PyLTSpice.LTSteps")
+_logger = logging.getLogger("spicelib.LTSteps")
 _logger.info("This module is maintained for backward compatibility. Use spicelib.log.ltsteps instead")
 
 from spicelib.log.ltsteps import reformat_LTSpice_export, LTSpiceExport, LTSpiceLogReader

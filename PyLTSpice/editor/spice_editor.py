@@ -19,7 +19,7 @@ import logging
 from pathlib import Path
 from typing import Union, Callable, Any
 
-_logger = logging.getLogger("PyLTSpice.SpiceEditor")
+_logger = logging.getLogger("spicelib.SpiceEditor")
 _logger.info("This is maintained for compatibility issues. Use spicelib.editor.spice_editor instead")
 from spicelib.editor.spice_editor import SpiceEditor as SpiceEditorBase, SpiceCircuit
 from spicelib.simulators.ltspice_simulator import LTspice

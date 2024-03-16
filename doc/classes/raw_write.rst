@@ -1,7 +1,7 @@
 RawWrite
 ========
 
-.. autoclass:: PyLTSpice.raw.raw_write.RawWrite
+.. autoclass:: spicelib.raw.raw_write.RawWrite
    :members:
    :undoc-members:
    :show-inheritance:

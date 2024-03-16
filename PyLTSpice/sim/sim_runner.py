@@ -101,7 +101,7 @@ from pathlib import Path
 import logging
 from typing import Union
 
-_logger = logging.getLogger("PyLTSpice.SimRunner")
+_logger = logging.getLogger("spicelib.SimRunner")
 
 from spicelib.sim.sim_runner import SimRunner as SimRunnerBase
 from spicelib.sim.simulator import Simulator

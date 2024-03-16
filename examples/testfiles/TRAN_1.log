@@ -1,6 +1,6 @@
 LTspice 24.0.9 for Windows
 Circuit: * C:\sandbox\PyLTSpice\examples\testfiles\TRAN.asc
-Start Time: Sun Mar 10 17:30:56 2024
+Start Time: Sat Mar 16 10:34:56 2024
 solver = Normal
 Maximum thread count: 16
 tnom = 27
@@ -14,5 +14,5 @@ t3: v(out)=0.950225 at 0.003
 t4: v(out)=0.981665 at 0.004
 t5: v(out)=0.993262 at 0.005
 
-Total elapsed time: 0.008 seconds.
+Total elapsed time: 0.009 seconds.
 

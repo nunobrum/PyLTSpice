@@ -9,7 +9,7 @@ There are two possible usages of this module, either programmatically by running
 
 .. code-block:: python
 
-	from PyLTSpice.LTSteps import LTSpiceLogReader
+	from PyLTSpice.log.ltsteps import LTSpiceLogReader
 
 	data = LTSpiceLogReader("Batch_Test_AD820_15.log")
 
@@ -30,4 +30,4 @@ There are two possible usages of this module, either programmatically by running
 
 	print("Total number of measurements found :", data.measure_count)
 
-For more information, see :py:class:`PyLTSpice.LTSteps.LTSpiceLogReader`
+For more information, see :py:class:`PyLTSpice.log.ltsteps.LTSpiceLogReader`

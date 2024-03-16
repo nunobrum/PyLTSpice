@@ -1,11 +1,11 @@
 LTspice 24.0.9 for Windows
 Circuit: * C:\sandbox\PyLTSpice\examples\testfiles\AC.asc
-Start Time: Sun Mar 10 17:30:30 2024
+Start Time: Sat Mar 16 10:34:30 2024
 solver = Normal
 Maximum thread count: 16
 tnom = 27
 temp = 27
 method = modified trap
 .OP point found by inspection.
-Total elapsed time: 0.004 seconds.
+Total elapsed time: 0.049 seconds.
 

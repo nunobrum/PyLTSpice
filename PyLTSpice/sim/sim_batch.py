@@ -101,7 +101,7 @@ import os
 from pathlib import Path
 from typing import Callable, Any, Union, Type
 import logging
-_logger = logging.getLogger("PyLTSpice.SimBatch")
+_logger = logging.getLogger("spicelib.SimBatch")
 
 from spicelib.editor.spice_editor import SpiceEditor
 from spicelib.sim.simulator import Simulator
@@ -109,7 +109,6 @@ from spicelib.sim.run_task import RunTask
 from spicelib.sim.sim_runner import SimRunner
 
 END_LINE_TERM = '\n'
-
 
 
 class SimCommander(SpiceEditor):

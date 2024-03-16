@@ -8,6 +8,7 @@ from PyLTSpice.editor.asc_editor import AscEditor
 from PyLTSpice.sim.sim_runner import SimRunner
 from spicelib.simulators.ltspice_simulator import LTspice
 from PyLTSpice.sim.sim_batch import SimCommander
+from PyLTSpice.log.ltsteps import LTSpiceLogReader
 
 
 def all_loggers():
@@ -18,24 +19,20 @@ def all_loggers():
     :rtype: list[str]
     """
     return [
-        "PyLTSpice.RunTask",
-        "PyLTSpice.LTSteps",
-        "PyLTSpice.SimClient",
-        "PyLTSpice.SimServer",
-        "PyLTSpice.ServerSimRunner",
-        "PyLTSpice.LTSteps",
-        "PyLTSpice.RawRead",
-        "PyLTSpice.LTSpiceSimulator",
-        "PyLTSpice.NGSpiceSimulator",
-        "PyLTSpice.SimBatch",
-        "PyLTSpice.SimRunner",
-        "PyLTSpice.SimStepper",
-        "PyLTSpice.SpiceEditor",
-        "PyLTSpice.XYCESimulator",
-        "PyLTSpice.QSpiceSimulator",
-        "PyLTSpice.SimBatch",
-        "PyLTSpice.AscEditor",
-        "PyLTSpice.LTSpiceSimulator",
+        "spicelib.RunTask",
+        "spicelib.SimClient",
+        "spicelib.SimServer",
+        "spicelib.ServerSimRunner",
+        "spicelib.LTSteps",
+        "spicelib.RawRead",
+        "spicelib.LTSpiceSimulator",
+        "spicelib.SimBatch",
+        "spicelib.SimRunner",
+        "spicelib.SimStepper",
+        "spicelib.SpiceEditor",
+        "spicelib.SimBatch",
+        "spicelib.AscEditor",
+        "spicelib.LTSpiceSimulator",
     ]
 
 

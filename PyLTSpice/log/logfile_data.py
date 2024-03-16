@@ -12,6 +12,6 @@
 
 import logging
 
-_logger = logging.getLogger("PyLTSpice.LTSteps")
+_logger = logging.getLogger("spicelib.LTSteps")
 _logger.info("This module is deprecated. Use spicelib.log.logfile_data instead")
 from spicelib.log.logfile_data import LogfileData, LTComplex

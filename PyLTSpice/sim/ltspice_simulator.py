@@ -23,7 +23,7 @@ import os
 from pathlib import Path
 from typing import Union
 import logging
-_logger = logging.getLogger("PyLTSpice.LTSpiceSimulator")
+_logger = logging.getLogger("spicelib.LTSpiceSimulator")
 _logger.info("This is maintained for backward compatibility. Use spicelib.sim.ltspice_simulator instead")
 from spicelib.sim.simulator import run_function
 from spicelib.simulators.ltspice_simulator import LTspice

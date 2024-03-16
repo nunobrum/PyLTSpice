@@ -432,10 +432,15 @@ _Make sure to initialize the root logger before importing the library to be able
 * Alternative contact : [nuno.brum@gmail.com](mailto:nuno.brum@gmail.com)
 
 ## History ##
-* Version 5.3.1
+* Version 5.2.3
+  * Updating loggers to use the "spicelib" IDs.
+  * Fixing autodoc errors
+  * Correcting Version references
+
+* Version 5.2.2
   * Fixes on the unittests after the spicelib update to 1.0.4
 
-* Version 5.3
+* Version 5.2.1
   * Correction on the run_montecarlo.py and run_worst_case.py examples.
   * Fixes on the spicelib (Version 1.0.3)
 

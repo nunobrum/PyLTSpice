@@ -1,7 +1,7 @@
 LTSpiceLogReader
 ================
 
-.. autoclass:: PyLTSpice.LTSteps.LTSpiceLogReader
+.. autoclass:: spicelib.log.ltsteps.LTSpiceLogReader
    :members:
    :undoc-members:
    :show-inheritance:
