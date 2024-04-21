@@ -10,6 +10,7 @@ import PyLTSpice
 test_dir = '../examples/testfiles/' if os.path.abspath(os.curdir).endswith('unittests') else './examples/testfiles/'
 golden_dir = './golden/' if os.path.abspath(os.curdir).endswith('unittests') else './unittests/golden/'
 
+
 class ASC_Editor_Test(unittest.TestCase):
 
     def setUp(self):
@@ -17,7 +18,8 @@ class ASC_Editor_Test(unittest.TestCase):
 
     def test_component_editing(self):
         self.assertEqual(self.edt.get_component_value('R1'), '10k', "Tested R1 Value")  # add assertion here
-        self.assertListEqual(self.edt.get_components(), ['Vin', 'R1', 'R2', 'D1'], "Tested get_components")  # add assertion here
+        self.assertListEqual(self.edt.get_components(), ['Vin', 'R1', 'R2', 'D1'],
+                             "Tested get_components")  # add assertion here
         self.edt.set_component_value('R1', '33k')
         self.edt.save_netlist(test_dir + 'test_components_output.asc')
         self.equalFiles(test_dir + 'test_components_output.asc', golden_dir + 'test_components_output.asc')
