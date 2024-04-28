@@ -460,6 +460,7 @@ _Make sure to initialize the root logger before importing the library to be able
 ## History ##
 * Version 5.3.1
   * Updates on the README.md file. Issue #137
+  * Rich format is only used if the user has it already installed. Issue #136
 * Version 5.3.0
   * Hierarchical Support (Aligning with the spicelib 1.1.1)
 * Version 5.2.3

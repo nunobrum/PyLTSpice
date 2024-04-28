@@ -1,11 +1,15 @@
 # coding=utf-8
 import logging
-from rich.logging import RichHandler
+try:
+    from rich.logging import RichHandler
+except ImportError:
+    RichHandler = None
 import PyLTSpice
 
 from PyLTSpice import SimRunner, SpiceEditor
 PyLTSpice.set_log_level(logging.DEBUG)
-PyLTSpice.add_log_handler(RichHandler())
+if RichHandler:
+    PyLTSpice.add_log_handler(RichHandler())
 
 from time import sleep
 from random import random
