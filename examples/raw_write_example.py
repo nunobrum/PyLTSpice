@@ -1,8 +1,8 @@
-import numpy as np
-from PyLTSpice import RawRead, Trace, RawWrite
-
 
 def test_readme_snippet():
+    # -- Start of RawWrite Example --
+    import numpy as np
+    from PyLTSpice import RawRead, Trace, RawWrite
     LW = RawWrite(fastacces=False)
     tx = Trace('time', np.arange(0.0, 3e-3, 997E-11))
     vy = Trace('N001', np.sin(2 * np.pi * tx.data * 10000))
@@ -11,9 +11,13 @@ def test_readme_snippet():
     LW.add_trace(vy)
     LW.add_trace(vz)
     LW.save("./testfiles/teste_snippet1.raw")
+    # -- End of RawWrite Example --
 
 
 def test_trc2raw():  # Convert Teledyne-Lecroy trace files to raw files
+    # -- Start of Lecroy Raw File into LTspice raw file Example --
+    import numpy as np
+    from PyLTSpice import RawRead, Trace, RawWrite
     f = open(r"./testfiles/Current_Lock_Front_Right_8V.trc")
     raw_type = ''  # Initialization of parameters that need to be overridden by the file header
     wave_size = 0
@@ -33,9 +37,13 @@ def test_trc2raw():  # Convert Teledyne-Lecroy trace files to raw files
         LW.add_trace(Trace('Ampl', [x[1] for x in data]))
         LW.save("teste_trc.raw")
     f.close()
+    # -- End of Lecroy Raw File into LTspice raw file Example --
 
 
 def test_axis_sync():  # Test axis sync
+    # -- Start of Combining two different time axis --
+    import numpy as np
+    from PyLTSpice import RawRead, Trace, RawWrite
     LW = RawWrite()
     tx = Trace('time', np.arange(0.0, 3e-3, 997E-11))
     vy = Trace('N001', np.sin(2 * np.pi * tx.data * 10000))
@@ -64,9 +72,12 @@ def test_axis_sync():  # Test axis sync
             print(v[ii], vy[ii], v[ii] - vy[ii])
     print(max_error)
     """
+    # -- End of Combining two different Raw Files --
 
 
 def test_write_ac():
+    # -- Start of Writing .AC raw files Example --
+    from PyLTSpice import RawRead, Trace, RawWrite
     LW = RawWrite()
     LR = RawRead("./testfiles/PI_Filter.raw")
     LR1 = RawRead("./testfiles/PI_Filter_resampled.raw")
@@ -76,9 +87,12 @@ def test_write_ac():
     LW.save("./testfiles/PI_filter_rewritten.raw")
     LW.flag_fastaccess = True
     LW.save("./testfiles/PI_filter_rewritten_fast.raw")
+    # -- End of Writing .AC raw files Example --
 
 
 def test_write_tran():
+    # -- Start of creating a subset of a raw file --
+    from PyLTSpice import RawRead, Trace, RawWrite
     LR = RawRead("./testfiles/TRAN - STEP.raw")
     LW = RawWrite()
     LW.add_traces_from_raw(LR, ('V(out)', 'I(C1)'))
@@ -86,9 +100,12 @@ def test_write_tran():
     LW.save("./testfiles/TRAN - STEP0_normal.raw")
     LW.flag_fastaccess = True
     LW.save("./testfiles/TRAN - STEP0_fast.raw")
+    # -- End of creating a subset of a raw file --
 
 
 def test_combine_tran():
+    # -- Start of Combining two different Raw Files --
+    from PyLTSpice import RawRead, RawWrite
     LW = RawWrite()
     for tag, raw in (
             ("AD820_15", "./testfiles/Batch_Test_AD820_15.raw"),
@@ -102,6 +119,7 @@ def test_combine_tran():
         LW.add_traces_from_raw(LR, ("V(out)", "I(R1)"), rename_format="{}_{tag}", tag=tag, force_axis_alignment=True)
     LW.flag_fastaccess = False
     LW.save("./testfiles/Batch_Test_Combine.raw")
+    # -- End of Combining two different Raw Files --
 
 
 test_readme_snippet()

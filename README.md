@@ -87,7 +87,7 @@ from PyLTSpice import RawRead
 
 from matplotlib import pyplot as plt
 
-LTR = RawRead("TRAN - STEP.raw")
+LTR = RawRead("./testfiles/TRAN - STEP.raw")
 
 print(LTR.get_trace_names())
 print(LTR.get_raw_property())
@@ -101,7 +101,8 @@ for step in range(len(steps)):
 
 plt.legend()  # order a legend
 plt.show()
-```   
+```
+-- in examples/raw_read_example.py   
 
 ### RawWrite ###
 
@@ -110,8 +111,7 @@ The following example writes a RAW file with a 3 milliseconds transient simulati
 
 ```python
 import numpy as np
-from PyLTSpice import Trace, RawWrite
-
+from PyLTSpice import RawRead, Trace, RawWrite
 LW = RawWrite(fastacces=False)
 tx = Trace('time', np.arange(0.0, 3e-3, 997E-11))
 vy = Trace('N001', np.sin(2 * np.pi * tx.data * 10000))
@@ -119,8 +119,9 @@ vz = Trace('N002', np.cos(2 * np.pi * tx.data * 9970))
 LW.add_trace(tx)
 LW.add_trace(vy)
 LW.add_trace(vz)
-LW.save("teste_snippet1.raw")
+LW.save("./testfiles/teste_snippet1.raw")
 ```   
+-- in examples/raw_write_example.py [RawWrite Example]
 
 ### SpiceEditor, AscEditor and SimRunner.py ###
 
@@ -136,20 +137,24 @@ Here follows an example of operation.
 from PyLTSpice import SimRunner
 from PyLTSpice import SpiceEditor
 
+# Force another simulatior
+simulator = r"C:\Program Files\LTC\LTspiceXVII\XVIIx64.exe"
+
 # select spice model
 LTC = SimRunner(output_folder='./temp')
-LTC.create_netlist('Batch_Test.asc')
-netlist = SpiceEditor('Batch_Test.net')
+LTC.create_netlist('./testfiles/Batch_Test.asc')
+netlist = SpiceEditor('./testfiles/Batch_Test.net')
 # set default arguments
-netlist.set_parameters(res=0, cap=100e-6, run=-1)
+netlist.set_parameters(res=0, cap=100e-6)
 netlist.set_component_value('R2', '2k')  # Modifying the value of a resistor
 netlist.set_component_value('R1', '4k')
 netlist.set_element_model('V3', "SINE(0 1 3k 0 0 0)")  # Modifying the
 netlist.set_component_value('XU1:C2', 20e-12)  # modifying a define simulation
 netlist.add_instructions(
     "; Simulation settings",
-    ".save V(Vin) I(R1)",
+    ";.param run = 0"
 )
+netlist.set_parameter('run', 0)
 
 for opamp in ('AD712', 'AD820'):
     netlist.set_element_model('XU1', opamp)
@@ -181,6 +186,7 @@ enter = input("Press enter to delete created files")
 if enter == '':
     LTC.file_cleanup()
 ```
+-- in examples/sim_runner_example.py
 
 The example above is using the SpiceEditor to create and modify a spice netlist, but it is also possible to use the
 AscEditor to directly modify the .asc file. The edited .asc file can then be opened by the LTSpice GUI and the
@@ -222,12 +228,26 @@ mc.prepare_testbench(num_runs=1000)  # Prepares the testbench for 1000 simulatio
 # Finally the netlist is saved to a file
 mc.save_netlist('./testfiles/sallenkey_mc.net')
 
-mc.run(100)  # Runs the simulation with splits of 100 runs each
+mc.run_testbench(runs_per_sim=100)  # Runs the simulation with splits of 100 runs each
 logs = mc.read_logfiles()   # Reads the log files and stores the results in the results attribute
-logs.export_data('./temp_mc/data.csv')  # Exports the data to a csv file
+logs.obtain_amplitude_and_phase_from_complex_values()  # Splits the complex values into real and imaginary parts
+logs.export_data('./temp_mc/data_testbench.csv')  # Exports the data to a csv file
 logs.plot_histogram('fcut')  # Plots the histograms for the results
 mc.cleanup_files()  # Deletes the temporary files
+
+print("=====================================")
+# Now using the second method, where the simulations are ran one by one
+mc.clear_simulation_data()  # Clears the simulation data
+mc.reset_netlist()  # Resets the netlist to the original
+mc.run_analysis(num_runs=1000)  # Runs the 1000 simulations
+logs = mc.read_logfiles()   # Reads the log files and stores the results in the results attribute
+logs.export_data('./temp_mc/data_sims.csv')  # Exports the data to a csv file
+logs.plot_histogram('fcut')  # Plots the histograms for the results
+mc.cleanup_files()  # Deletes the temporary files
+
 ```
+-- in examples/run_montecarlo.py
+
 When opening the created sallenkey_mc.net file, we can see that the following circuit.
 
 ![Sallen-Key Amplifier with Montecarlo](./doc/modules/sallenkey_mc.png "Sallen-Key Amplifier with Montecarlo")
@@ -268,8 +288,8 @@ wca.set_parameter_deviation('Vos', 3e-4, 5e-3)
 # Finally the netlist is saved to a file
 wca.save_netlist('./testfiles/sallenkey_wc.asc')
 
+wca.run_testbench()  # Runs the simulation with splits of 100 runs each
 
-wca.run()  # Runs the simulation with splits of 100 runs each
 logs = wca.read_logfiles()   # Reads the log files and stores the results in the results attribute
 logs.export_data('./temp_wca/data.csv')  # Exports the data to a csv file
 
@@ -279,6 +299,8 @@ for param in ('fcut', 'fcut_FROM'):
 
 wca.cleanup_files()  # Deletes the temporary files
 ```
+-- in examples/run_worst_case.py
+
 When opening the created sallenkey_wc.net file, we can see that the following circuit.
 
 ![Sallen-Key Amplifier with WCA](./doc/modules/sallenkey_wc.png "Sallen-Key Amplifier with WCA")
@@ -306,9 +328,12 @@ written. There are two possible usages of this module, either programmatically b
 accessing data through the class as exemplified here:
 
 ```python
+#!/usr/bin/env python
+# coding=utf-8
+
 from PyLTSpice.log.ltsteps import LTSpiceLogReader
 
-data = LTSpiceLogReader("Batch_Test_AD820_15.log")
+data = LTSpiceLogReader("./testfiles/Batch_Test_AD820_15.log")
 
 print("Number of steps  :", data.step_count)
 step_names = data.get_step_vars()
@@ -324,6 +349,7 @@ for i in range(data.step_count):
 
 print("Total number of measures found :", data.measure_count)
 ```
+-- in examples/ltsteps_example.py
 
 The second possibility is to use the module directly on the command line
 
