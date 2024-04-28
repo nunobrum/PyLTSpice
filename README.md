@@ -458,6 +458,8 @@ _Make sure to initialize the root logger before importing the library to be able
 * Alternative contact : [nuno.brum@gmail.com](mailto:nuno.brum@gmail.com)
 
 ## History ##
+* Version 5.3.1
+  * Updates on the README.md file. Issue #137
 * Version 5.3.0
   * Hierarchical Support (Aligning with the spicelib 1.1.1)
 * Version 5.2.3
