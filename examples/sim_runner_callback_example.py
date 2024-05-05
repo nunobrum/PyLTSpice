@@ -6,7 +6,7 @@ except ImportError:
     RichHandler = None
 import PyLTSpice
 
-from PyLTSpice import SimRunner, SpiceEditor
+from PyLTSpice import SimRunner, AscEditor
 PyLTSpice.set_log_level(logging.DEBUG)
 if RichHandler:
     PyLTSpice.add_log_handler(RichHandler())
@@ -26,13 +26,13 @@ def processing_data(raw_file, log_file):
 runner = SimRunner(output_folder='./temp_batch3')  # Configures the simulator to use and output
 # folder
 
-netlist = SpiceEditor("./testfiles/Batch_Test.asc")  # Open the Spice Model, and creates the .net
+netlist = AscEditor("./testfiles/Batch_Test.asc")  # Open the Spice Model, and creates the .net
 # set default arguments
 netlist.set_parameters(res=0, cap=100e-6)
 netlist.set_component_value('R2', '2k')  # Modifying the value of a resistor
 netlist.set_component_value('R1', '4k')
 netlist.set_element_model('V3', "SINE(0 1 3k 0 0 0)")  # Modifying the
-netlist.set_component_value('XU1:C2', 20e-12)  # modifying a
+netlist.set_component_value('U1:C2', 20e-12)  # modifying a
 # define simulation
 netlist.add_instructions(
     "; Simulation settings",
@@ -43,12 +43,12 @@ netlist.set_parameter('run', 0)
 use_run_now = False
 
 for opamp in ('AD712', 'AD820'):
-    netlist.set_element_model('XU1', opamp)
+    netlist.set_element_model('U1', opamp)
     for supply_voltage in (5, 10, 15):
         netlist.set_component_value('V1', supply_voltage)
         netlist.set_component_value('V2', -supply_voltage)
         # overriding the automatic netlist naming
-        run_netlist_file = "{}_{}_{}.net".format(netlist.netlist_file.stem, opamp, supply_voltage)
+        run_netlist_file = "{}_{}_{}.net".format(netlist.circuit_file.stem, opamp, supply_voltage)
         if use_run_now:
             runner.run_now(netlist, run_filename=run_netlist_file)
         else:
