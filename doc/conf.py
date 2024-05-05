@@ -20,11 +20,21 @@ print(sys.path)
 # -- Project information -----------------------------------------------------
 
 project = 'PyLTSpice'
-copyright = '2023, Nuno Brum'
+copyright = '2024, Nuno Brum'
 author = 'Nuno Brum'
 
-# The full version, including alpha/beta/rc tags
-release = '5.0'
+release = '5.3.0'
+
+try:
+	# Read the version from the .toml file
+	from toml import load
+	with open('../pyproject.toml') as f:
+		pyproject = load(f)
+		project = pyproject['project']['name']
+		release = pyproject['project']['version']
+		author = pyproject['project']['authors'][0]['name']
+except:
+	pass
 
 
 # -- General configuration ---------------------------------------------------
