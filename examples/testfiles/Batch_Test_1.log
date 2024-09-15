@@ -1,6 +1,6 @@
-LTspice 24.0.9 for Windows
+LTspice 24.0.11 for Windows
 Circuit: * C:\sandbox\PyLTSpice\examples\testfiles\Batch_Test.asc
-Start Time: Sat Mar 16 10:34:41 2024
+Start Time: Sun Sep 15 18:34:45 2024
 solver = Normal
 Maximum thread count: 16
 tnom = 27
@@ -52,5 +52,5 @@ gain: vout_rms/vin_rms=1.99808
 vout1m: v(out)=-0.0187828 at 0.001
 period: time=1.49937e-10 at 1.49937e-10
 
-Total elapsed time: 0.054 seconds.
+Total elapsed time: 0.055 seconds.
 

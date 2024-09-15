@@ -1,6 +1,6 @@
-LTspice 24.0.9 for Windows
+LTspice 24.0.11 for Windows
 Circuit: * C:\sandbox\PyLTSpice\examples\testfiles\TRAN - STEP.asc
-Start Time: Sat Mar 16 10:34:58 2024
+Start Time: Sun Sep 15 18:35:00 2024
 solver = Normal
 Maximum thread count: 16
 
@@ -57,5 +57,5 @@ Measurement: t5
      3	0.393469	0.005
      4	3.93469	0.005
 
-Total elapsed time: 0.022 seconds.
+Total elapsed time: 0.023 seconds.
 

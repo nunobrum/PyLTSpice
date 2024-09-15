@@ -1,11 +1,11 @@
-LTspice 24.0.9 for Windows
+LTspice 24.0.11 for Windows
 Circuit: * C:\sandbox\PyLTSpice\examples\testfiles\DC op point.asc
-Start Time: Sat Mar 16 10:34:43 2024
+Start Time: Sun Sep 15 18:34:47 2024
 solver = Normal
 Maximum thread count: 16
 tnom = 27
 temp = 27
 method = modified trap
 Direct Newton iteration for .op point succeeded.
-Total elapsed time: 0.003 seconds.
+Total elapsed time: 0.004 seconds.
 

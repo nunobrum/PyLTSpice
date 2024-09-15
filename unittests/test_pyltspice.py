@@ -53,7 +53,9 @@ from PyLTSpice.sim.sim_runner import SimRunner
 def has_ltspice_detect():
     from PyLTSpice.sim.ltspice_simulator import LTspice
     ltspice = LTspice
-    return isinstance(ltspice.spice_exe, list) and os.path.exists(ltspice.spice_exe[0])
+    return (isinstance(ltspice.spice_exe, list) and
+            len(ltspice.spice_exe) > 0 and
+            any(os.path.exists(exe) for exe in ltspice.spice_exe))
 
 
 # ------------------------------------------------------------------------------
