@@ -458,6 +458,9 @@ _Make sure to initialize the root logger before importing the library to be able
 * Alternative contact : [nuno.brum@gmail.com](mailto:nuno.brum@gmail.com)
 
 ## History ##
+* Version 5.3.2
+  * Correction on the readthedocs webhook configuration
+  * Alignement with the spicelib 1.2.1
 * Version 5.3.1
   * Bugfixes 
     * Updates on the README.md file. Issue #137
