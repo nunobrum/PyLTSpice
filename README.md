@@ -453,11 +453,24 @@ _Make sure to initialize the root logger before importing the library to be able
 
 ## To whom do I talk to? ##
 
-* Tools website : [https://www.nunobrum.com/pyltspice.html](https://www.nunobrum.com/pyltspice.html)
-* Repo owner : [me@nunobrum.com](mailto:me@nunobrum.com)
-* Alternative contact : [nuno.brum@gmail.com](mailto:nuno.brum@gmail.com)
+For support and improvement requests please open an Issue in [GitHub spicelib issues](https://github.com/nunobrum/spicelib/issues)
 
 ## History ##
+* Version 5.4.0
+  * Adding possibility of manipulating parameters on sub-circuits
+  * Supporting subcircuit names with dots.
+  * Overall documentation improvements (thanks @hb020)
+  * Major improvement in Documentation
+  * Introduced a read-only property that blocks libraries from being updated.
+  * Support for LTspice log files with the option : expanded netlist
+  * Supporting library symbols using BLOCK primitive
+  * Improved unittest on the .ASC hierarchical design
+  * SimRunner simulation iterator only returns successful simulations in order to simplify error management
+  * In QschEditor, the replacement of unique dot instructions (ex: .TRAN .AC .NOISE) is only done if the existing instruction is not commented.
+  * RunTask.get_results() now returns None if a callback function is provided and the simulation has failed.
+  * BigFix: Inclusion of encrypted libraries would crash
+  * Bugfix: Prefix were case sensitive in SpiceEditor
+  * Bugfix: Parsing netlists with extensions other than .net didn't work properly
 * Version 5.3.2
   * Correction on the readthedocs webhook configuration
   * Alignement with the spicelib 1.2.1
