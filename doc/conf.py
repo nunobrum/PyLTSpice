@@ -23,7 +23,7 @@ project = 'PyLTSpice'
 copyright = '2024, Nuno Brum'
 author = 'Nuno Brum'
 
-release = '5.4.0'
+release = '5.4.2'
 
 try:
 	# Read the version from the .toml file

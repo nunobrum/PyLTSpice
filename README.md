@@ -456,6 +456,16 @@ _Make sure to initialize the root logger before importing the library to be able
 For support and improvement requests please open an Issue in [GitHub spicelib issues](https://github.com/nunobrum/spicelib/issues)
 
 ## History ##
+* Version 5.4.2
+  * Imported changes from spicelib 1.4.1 (Summary)
+    * Added `get_all_parameter_names()` function to all editors (#159)
+    * Compatibility with LTspice 24+
+    * Fixed Problem with .PARAM regex.
+    * Documenting the user library paths
+    * AscEditor: Adding support to DATAFLAG
+    * LTSteps: Supporting new LTspice data export format
+* Version 5.4.1
+  * Fixing Issue #146
 * Version 5.4.0
   * Adding possibility of manipulating parameters on sub-circuits
   * Supporting subcircuit names with dots.
