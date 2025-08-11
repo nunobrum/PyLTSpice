@@ -6,6 +6,8 @@ PyLTSpice is a toolchain of python utilities design to interact with LTSpice Ele
 It is mostly based on the spicelib package, being the main difference to it is 
 the fact that LTSpice is automatically selected to perform all simulations.
 
+[Ad] For finding the best values for passive components I've created the [WizEIA Calculator](https://WizEIA.com).
+
 ## What is contained in this repository ##
 
 * __LTSteps.py__
