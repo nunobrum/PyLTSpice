@@ -1,5 +1,7 @@
 # README #
 
+_Current Version 4.5.3_ 
+
 PyLTSpice is a toolchain of python utilities design to interact with LTSpice Electronic Simulator.
 It is mostly based on the spicelib package, being the main difference to it is 
 the fact that LTSpice is automatically selected to perform all simulations.
@@ -456,6 +458,8 @@ _Make sure to initialize the root logger before importing the library to be able
 For support and improvement requests please open an Issue in [GitHub spicelib issues](https://github.com/nunobrum/spicelib/issues)
 
 ## History ##
+* Version 5.4.3
+  * See spicelib version 1.4.5 
 * Version 5.4.2
   * Imported changes from spicelib 1.4.1 (Summary)
     * Added `get_all_parameter_names()` function to all editors (#159)

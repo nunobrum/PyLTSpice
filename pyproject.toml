@@ -6,16 +6,16 @@ requires = [
 build-backend = "setuptools.build_meta"
 [project]
 name = "PyLTSpice"
-version = "5.4.2"
+version = "5.4.3"
 authors = [
   { name="Nuno Brum", email="me@nunobrum.com" },
 ]
 description = "A set of tools to Automate LTSpice simulations"
 readme = "README.md"
 license = { file="LICENSE" }
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = [
-    "spicelib>=1.4.1",
+    "spicelib>=1.4.5",
 ]
 classifiers=[
     "Programming Language :: Python :: 3",
