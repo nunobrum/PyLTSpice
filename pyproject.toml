@@ -12,14 +12,13 @@ authors = [
 ]
 description = "A set of tools to Automate LTSpice simulations"
 readme = "README.md"
-license = { file="LICENSE" }
+license = "GPL-3.0"
 requires-python = ">=3.9"
 dependencies = [
     "spicelib>=1.4.5",
 ]
 classifiers=[
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     "Operating System :: OS Independent",
 ]
 
