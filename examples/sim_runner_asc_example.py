@@ -20,7 +20,7 @@ netlist.add_instructions(
 )
 netlist.set_parameter('run', 0)
 
-for opamp in ('AD712', 'AD820'):
+for opamp in ('AD712', 'AD820_ALT'):
     netlist.set_element_model('U1', opamp)
     for supply_voltage in (5, 10, 15):
         netlist.set_component_value('V1', supply_voltage)

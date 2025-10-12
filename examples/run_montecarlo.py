@@ -1,5 +1,9 @@
+import logging
+
 from PyLTSpice import AscEditor, SimRunner  # Imports the class that manipulates the asc file
 from PyLTSpice.sim.tookit.montecarlo import Montecarlo  # Imports the Montecarlo toolkit class
+
+logging.basicConfig(level=logging.INFO)
 
 sallenkey = AscEditor("./testfiles/sallenkey.asc")  # Reads the asc file into memory
 runner = SimRunner(output_folder='./temp_mc')  # Instantiates the runner class, with the output folder already set
@@ -16,9 +20,6 @@ mc.set_tolerance('R1', 0.05)  # 5% tolerance for R1 only. This only overrides th
 # Tolerances can be set for parameters as well
 mc.set_parameter_deviation('Vos', 3e-4, 5e-3, 'uniform')  # The keyword 'distribution' is optional
 mc.prepare_testbench(num_runs=1000)  # Prepares the testbench for 1000 simulations
-
-# Finally the netlist is saved to a file
-mc.save_netlist('./testfiles/sallenkey_mc.net')
 
 mc.run_testbench(runs_per_sim=100)  # Runs the simulation with splits of 100 runs each
 logs = mc.read_logfiles()   # Reads the log files and stores the results in the results attribute

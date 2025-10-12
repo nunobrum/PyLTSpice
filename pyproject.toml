@@ -6,7 +6,7 @@ requires = [
 build-backend = "setuptools.build_meta"
 [project]
 name = "PyLTSpice"
-version = "5.4.3"
+version = "5.4.4"
 authors = [
   { name="Nuno Brum", email="me@nunobrum.com" },
 ]
@@ -15,7 +15,7 @@ readme = "README.md"
 license = "GPL-3.0"
 requires-python = ">=3.9"
 dependencies = [
-    "spicelib>=1.4.5",
+    "spicelib>=1.4.6",
 ]
 classifiers=[
     "Programming Language :: Python :: 3",

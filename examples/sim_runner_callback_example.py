@@ -32,7 +32,7 @@ netlist.set_parameters(res=0, cap=100e-6)
 netlist.set_component_value('R2', '2k')  # Modifying the value of a resistor
 netlist.set_component_value('R1', '4k')
 netlist.set_element_model('V3', "SINE(0 1 3k 0 0 0)")  # Modifying the
-netlist.set_component_value('U1:C2', 20e-12)  # modifying a
+
 # define simulation
 netlist.add_instructions(
     "; Simulation settings",

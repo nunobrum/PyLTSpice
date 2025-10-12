@@ -3,8 +3,9 @@
 # Convenience direct imports
 from spicelib.raw.raw_read import RawRead, SpiceReadException
 from spicelib.raw.raw_write import RawWrite, Trace
-from spicelib.editor.spice_editor import SpiceEditor, SpiceCircuit
-from spicelib.editor.asc_editor import AscEditor
+from spicelib.editor.spice_editor import SpiceCircuit
+from PyLTSpice.editor.spice_editor import SpiceEditor
+from PyLTSpice.editor.asc_editor import AscEditor
 from PyLTSpice.sim.sim_runner import SimRunner
 from spicelib.simulators.ltspice_simulator import LTspice
 from PyLTSpice.sim.sim_batch import SimCommander
