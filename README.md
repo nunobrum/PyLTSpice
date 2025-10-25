@@ -1,6 +1,6 @@
 # README #
 
-_Current Version 4.5.3_ 
+_Current Version 5.4.4_ 
 
 PyLTSpice is a toolchain of python utilities design to interact with LTSpice Electronic Simulator.
 It is mostly based on the spicelib package, being the main difference to it is 
