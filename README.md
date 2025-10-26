@@ -1,6 +1,6 @@
 # README #
 
-_Current Version 5.4.4_ 
+_Current Version 5.4.5_ 
 
 PyLTSpice is a toolchain of python utilities design to interact with LTSpice Electronic Simulator.
 It is mostly based on the spicelib package, being the main difference to it is 
@@ -460,19 +460,21 @@ _Make sure to initialize the root logger before importing the library to be able
 For support and improvement requests please open an Issue in [GitHub spicelib issues](https://github.com/nunobrum/spicelib/issues)
 
 ## History ##
-* Version 5.4.4
+* Version 5.4.5 (spicelib 1.4.7)
+  * Implementing a lazy loading approach in RawRead 
+  * Fixing Issue #256 - Correct add_component() in SpiceEditor
+  * Support for string parameters - PyLTspice issue 154
+* Version 5.4.4 (spicelib 1.4.6)
   * Fixing Issue #151
-  * Alignment with spicelib 1.4.6
 * Version 5.4.3
-  * See spicelib version 1.4.5 
-* Version 5.4.2
-  * Imported changes from spicelib 1.4.1 (Summary)
-    * Added `get_all_parameter_names()` function to all editors (#159)
-    * Compatibility with LTspice 24+
-    * Fixed Problem with .PARAM regex.
-    * Documenting the user library paths
-    * AscEditor: Adding support to DATAFLAG
-    * LTSteps: Supporting new LTspice data export format
+  * See spicelib version 1.4.5
+* Version 5.4.2 (spicelib 1.4.4)
+  * Added `get_all_parameter_names()` function to all editors (#159)
+  * Compatibility with LTspice 24+
+  * Fixed Problem with .PARAM regex.
+  * Documenting the user library paths
+  * AscEditor: Adding support to DATAFLAG
+  * LTSteps: Supporting new LTspice data export format
 * Version 5.4.1
   * Fixing Issue #146
 * Version 5.4.0
@@ -519,7 +521,7 @@ For support and improvement requests please open an Issue in [GitHub spicelib is
 
 * Version 5.1
   * Important Bugfix on the LTComplex class.
-  * Fixes and enhancing the analysis toolkit.
+  * Fixes and enhance the analysis toolkit.
   * Deprecating SpiceEditor.write_netlist in favour of save_netlist()
 
 * Version 5.0
