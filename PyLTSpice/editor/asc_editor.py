@@ -16,7 +16,6 @@
 # -------------------------------------------------------------------------------
 import logging
 from pathlib import Path
-from typing import Union
 
 _logger = logging.getLogger("spicelib.AscEditor")
 _logger.info("This is maintained for backward compatibility. Use spicelib.editor.asc_editor instead")
@@ -25,7 +24,7 @@ from spicelib.editor.asc_editor import AscEditor as AscEditorBase
 
 class AscEditor(AscEditorBase):
 
-    def save_netlist(self, run_netlist_file: Union[str, Path]) -> None:
+    def save_netlist(self, run_netlist_file: str | Path) -> None:
         """
         Saves the current netlist to a file.
 

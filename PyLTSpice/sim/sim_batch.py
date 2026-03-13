@@ -95,10 +95,12 @@ simulation is finished.
 __author__ = "Nuno Canto Brum <nuno.brum@gmail.com>"
 __copyright__ = "Copyright 2020, Fribourg Switzerland"
 
-import os
-from pathlib import Path
-from typing import Callable, Any, Union, Type
 import logging
+import os
+from collections.abc import Callable
+from pathlib import Path
+from typing import Any
+
 _logger = logging.getLogger("spicelib.SimBatch")
 
 from PyLTSpice.editor.spice_editor import SpiceEditor as BaseSpiceEditor
@@ -120,7 +122,7 @@ class SimCommander(BaseSpiceEditor):
     Please check the SimRunner class for more information.
     """
 
-    def __init__(self, netlist_file: Union[str, Path], parallel_sims: int = 4, timeout=None, verbose=False,
+    def __init__(self, netlist_file: str | Path, parallel_sims: int = 4, timeout=None, verbose=False,
                  encoding='autodetect', simulator=None):
         if simulator is None:
             from ..sim.ltspice_simulator import LTspice  # In case no simulator is given
@@ -133,7 +135,7 @@ class SimCommander(BaseSpiceEditor):
         self.runner = SimRunner(simulator=simulator, parallel_sims=parallel_sims, timeout=timeout, verbose=verbose,
                                 output_folder=netlist_file.parent.as_posix())
 
-    def setLTspiceRunCommand(self, spice_tool: Union[str, Type[Simulator]]) -> None:
+    def setLTspiceRunCommand(self, spice_tool: str | type[Simulator]) -> None:
         """
         *(Deprecated)*
         Manually setting the LTSpice run command.
