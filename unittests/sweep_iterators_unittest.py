@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 @author:        Andreas Kaeberlein
 @copyright:     Copyright 2021

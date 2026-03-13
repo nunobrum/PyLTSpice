@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # Convenience direct imports
 from spicelib.raw.raw_read import RawRead, SpiceReadException
 from spicelib.raw.raw_write import RawWrite, Trace

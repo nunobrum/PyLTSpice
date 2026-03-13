@@ -1,5 +1,3 @@
-# coding=utf-8
-
 import sys
 sys.path.insert(0, '..')    # This is to allow the import from the PyLTSpice folder
 from PyLTSpice import SimRunner, SpiceEditor
