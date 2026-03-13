@@ -47,7 +47,7 @@ for opamp in ('AD712', 'AD820'):
         netlist.set_component_value('V1', supply_voltage)
         netlist.set_component_value('V2', -supply_voltage)
         # overriding the automatic netlist naming
-        run_netlist_file = "{}_{}_{}.net".format(netlist.circuit_file.stem, opamp, supply_voltage)
+        run_netlist_file = f"{netlist.circuit_file.stem}_{opamp}_{supply_voltage}.net"
         if use_run_now:
             runner.run_now(netlist, run_filename=run_netlist_file)
         else:

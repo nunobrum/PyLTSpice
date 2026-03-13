@@ -217,26 +217,26 @@ if __name__ == "__main__":
         # LTC.runs_to_do = range(2)
         LTC.set_parameters(ANA=res)
         raw, log = LTC.run().wait_results()
-        _logger.debug("Raw file '%s' | Log File '%s'" % (raw, log))
+        _logger.debug(f"Raw file '{raw}' | Log File '{log}'")
     # Sim Statistics
     _logger.info('Successful/Total Simulations: ' + str(LTC.okSim) + '/' + str(LTC.runno))
 
 
     def callback_function(raw_file, log_file):
-        _logger.debug("Handling the simulation data of %s, log file %s" % (raw_file, log_file))
+        _logger.debug(f"Handling the simulation data of {raw_file}, log file {log_file}")
 
 
     LTC = SimCommander(meAbsPath + "\\test_files\\testfile.asc", parallel_sims=1)
     tstart = 0
     for tstop in (2, 5, 8, 10):
         tduration = tstop - tstart
-        LTC.add_instruction(".tran {}".format(tduration), )
+        LTC.add_instruction(f".tran {tduration}", )
         if tstart != 0:
-            LTC.add_instruction(".loadbias {}".format(bias_file))
+            LTC.add_instruction(f".loadbias {bias_file}")
             # Put here your parameter modifications
             # LTC.set_parameters(param1=1, param2=2, param3=3)
         bias_file = "sim_loadbias_%d.txt" % tstop
-        LTC.add_instruction(".savebias {} internal time={}".format(bias_file, tduration))
+        LTC.add_instruction(f".savebias {bias_file} internal time={tduration}")
         tstart = tstop
         LTC.run(callback=callback_function)
 

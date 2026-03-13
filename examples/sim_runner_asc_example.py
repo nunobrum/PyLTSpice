@@ -29,7 +29,7 @@ for opamp in ('AD712', 'AD820_ALT'):
         LTC.run(netlist)
 
 for raw, log in LTC:
-    print("Raw file: %s, Log file: %s" % (raw, log))
+    print(f"Raw file: {raw}, Log file: {log}")
     # do something with the data
     # raw_data = RawRead(raw)
     # log_data = LTSteps(log)
