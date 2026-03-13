@@ -1,6 +1,6 @@
 [build-system]
 requires = [
-    "setuptools>=42",
+    "setuptools>=61",
     "wheel"
 ]
 build-backend = "setuptools.build_meta"
@@ -13,9 +13,9 @@ authors = [
 description = "A set of tools to Automate LTSpice simulations"
 readme = "README.md"
 license = "GPL-3.0"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
-    "spicelib>=1.4.7",
+    "spicelib>=1.5.0",
 ]
 classifiers=[
     "Programming Language :: Python :: 3",
