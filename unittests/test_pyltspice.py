@@ -42,7 +42,7 @@ import unittest  # performs test
 # Module libs
 
 sys.path.append(
-    os.path.abspath((os.path.dirname(os.path.abspath(__file__)) + "/../")))  # add project root to lib search path
+    os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + "/../"))  # add project root to lib search path
 from PyLTSpice.log.ltsteps import LTSpiceLogReader
 from PyLTSpice.sim.sim_batch import SimCommander
 from PyLTSpice.raw.raw_read import RawRead
