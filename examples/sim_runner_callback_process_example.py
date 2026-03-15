@@ -60,5 +60,9 @@ if __name__ == "__main__":
 
     # Sim Statistics
     print(f'Successful/Total Simulations: {runner.okSim}/{runner.runno}')
+    
+    enter = input("Press enter to delete created files")
+    if enter == '':
+        runner.file_cleanup()
 
 

@@ -72,3 +72,7 @@ if use_run_now is False:
 
     # Sim Statistics
     print(f'Successful/Total Simulations: {runner.okSim}/{runner.runno}')
+
+enter = input("Press enter to delete created files")
+if enter == '':
+    runner.file_cleanup()

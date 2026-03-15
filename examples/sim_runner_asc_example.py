@@ -1,7 +1,7 @@
 from PyLTSpice import SimRunner
 from PyLTSpice import AscEditor
 
-# Force another simulatior
+# Force another simulator
 simulator = r"C:\Program Files\LTC\LTspiceXVII\XVIIx64.exe"
 
 # select spice model
