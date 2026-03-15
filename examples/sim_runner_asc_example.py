@@ -36,7 +36,7 @@ for raw, log in LTC:
     # ...
 
 # Sim Statistics
-print('Successful/Total Simulations: ' + str(LTC.okSim) + '/' + str(LTC.runno))
+print(f'Successful/Total Simulations: {LTC.okSim}/{LTC.runno}')
 
 enter = input("Press enter to delete created files")
 if enter == '':
