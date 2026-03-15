@@ -71,4 +71,8 @@ if use_run_now is False:
     results = runner.wait_completion(1, abort_all_on_timeout=True)
 
     # Sim Statistics
-    print('Successful/Total Simulations: ' + str(runner.okSim) + '/' + str(runner.runno))
+    print(f'Successful/Total Simulations: {runner.okSim}/{runner.runno}')
+
+enter = input("Press enter to delete created files")
+if enter == '':
+    runner.file_cleanup()

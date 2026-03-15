@@ -1,6 +1,6 @@
 # README #
 
-_Current Version 5.4.5_ 
+_Current Version 5.5.0_ 
 
 PyLTSpice is a toolchain of python utilities design to interact with LTSpice Electronic Simulator.
 It is mostly based on the spicelib package, being the main difference to it is 
@@ -184,7 +184,7 @@ netlist.add_instructions(
 )
 
 # Sim Statistics
-print('Successful/Total Simulations: ' + str(LTC.okSim) + '/' + str(LTC.runno))
+print(f'Successful/Total Simulations: {LTC.okSim}/{LTC.runno}')
 
 enter = input("Press enter to delete created files")
 if enter == '':
@@ -460,6 +460,10 @@ _Make sure to initialize the root logger before importing the library to be able
 For support and improvement requests please open an Issue in [GitHub spicelib issues](https://github.com/nunobrum/spicelib/issues)
 
 ## History ##
+* Version 5.5.0 (spicelib 1.5.0)
+  * Dropping support for Python 3.9
+    * Using f-strings across the entire codebase
+    * Using the new union type hinting syntax across the entire codebase
 * Version 5.4.5 (spicelib 1.4.7)
   * Implementing a lazy loading approach in RawRead 
   * Fixing Issue #256 - Correct add_component() in SpiceEditor

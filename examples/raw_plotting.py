@@ -1,7 +1,6 @@
 import sys
 import matplotlib.pyplot as plt
 import os
-from os.path import split as pathsplit
 from os.path import join as pathjoin
 import numpy as np
 from numpy import abs as mag, angle
@@ -31,14 +30,16 @@ else:
     # filename = 'AC.raw'
     # filename = 'AC - STEP.raw'
     # filename = 'DC op point - STEP.raw'
-    trace_names = ("V(out)",)
+    # trace_names = ("V(out)",)
     filename = 'Noise.raw'
     trace_names = ("V(onoise)",)
     raw_filename = pathjoin(test_directory, filename)
 
 LTR = RawRead(raw_filename, trace_names, verbose=True)
+# Calculate field width from the longest parameter name so the colon lines up vertically
+field_width = max((len(str(p)) for p in LTR.raw_params.keys()), default=0)
 for param, value in LTR.raw_params.items():
-    print("{}: {}{}".format(param, " " * (20 - len(param)), str(value).strip()))
+    print(f"{param:<{field_width}}: {value}")
 
 if trace_names == '*':
     print("Reading all the traces in the raw file")

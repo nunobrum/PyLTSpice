@@ -103,7 +103,7 @@ each executing in parallel a simulation. This is exemplified in the modified exa
     # The timeout counter is reset everytime a simulation is finished.
     
     # Sim Statistics
-    print('Successful/Total Simulations: ' + str(runner.okSim) + '/' + str(runner.runno))
+    print(f'Successful/Total Simulations: {runner.okSim}/{runner.runno}')
 
 If the ``parallel_sims`` parallel simulations is not given, it defaults to 4. This means that a fifth simulation
 will only start when one of the other 4 is finished. If ``parallel_sims`` needs to be adjusted according to the

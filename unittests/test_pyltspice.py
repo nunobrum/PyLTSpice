@@ -112,7 +112,7 @@ class test_pyltspice(unittest.TestCase):
         LTC.wait_completion()
 
         # Sim Statistics
-        print('Successful/Total Simulations: ' + str(LTC.okSim) + '/' + str(LTC.runno))
+        print(f'Successful/Total Simulations: {LTC.okSim}/{LTC.runno}')
         self.assertEqual(LTC.okSim, 6)
         self.assertEqual(LTC.runno, 6)
 
@@ -161,7 +161,7 @@ class test_pyltspice(unittest.TestCase):
             raw, log = LTC.run(netlist).wait_results()
             print(f"Raw file '{raw}' | Log File '{log}'")
         # Sim Statistics
-        print('Successful/Total Simulations: ' + str(LTC.okSim) + '/' + str(LTC.runno))
+        print(f'Successful/Total Simulations: {LTC.okSim}/{LTC.runno}')
 
     @unittest.skipIf(skip_ltspice_tests, "Skip if not in windows environment")
     def test_sim_runner(self):

@@ -221,7 +221,7 @@ if __name__ == "__main__":
         raw, log = LTC.run().wait_results()
         _logger.debug(f"Raw file '{raw}' | Log File '{log}'")
     # Sim Statistics
-    _logger.info('Successful/Total Simulations: ' + str(LTC.okSim) + '/' + str(LTC.runno))
+    _logger.info(f'Successful/Total Simulations: {LTC.okSim}/{LTC.runno}')
 
 
     def callback_function(raw_file, log_file):

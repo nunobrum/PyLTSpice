@@ -1,7 +1,7 @@
 from PyLTSpice import SimRunner
 from PyLTSpice import AscEditor
 
-# Force another simulatior
+# Force another simulator
 simulator = r"C:\Program Files\LTC\LTspiceXVII\XVIIx64.exe"
 
 # select spice model
@@ -36,7 +36,7 @@ for raw, log in LTC:
     # ...
 
 # Sim Statistics
-print('Successful/Total Simulations: ' + str(LTC.okSim) + '/' + str(LTC.runno))
+print(f'Successful/Total Simulations: {LTC.okSim}/{LTC.runno}')
 
 enter = input("Press enter to delete created files")
 if enter == '':
