@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# coding=utf-8
 
 # -------------------------------------------------------------------------------
 #    ____        _   _____ ____        _
@@ -43,7 +42,7 @@ import unittest  # performs test
 # Module libs
 
 sys.path.append(
-    os.path.abspath((os.path.dirname(os.path.abspath(__file__)) + "/../")))  # add project root to lib search path
+    os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + "/../"))  # add project root to lib search path
 from PyLTSpice.log.ltsteps import LTSpiceLogReader
 from PyLTSpice.sim.sim_batch import SimCommander
 from PyLTSpice.raw.raw_read import RawRead
@@ -84,7 +83,7 @@ class test_pyltspice(unittest.TestCase):
         self.measures = {}
 
         def processing_data(raw_file, log_file):
-            print("Handling the simulation data of %s, log file %s" % (raw_file, log_file))
+            print(f"Handling the simulation data of {raw_file}, log file {log_file}")
             self.sim_files.append((raw_file, log_file))
 
         # select spice model
@@ -107,7 +106,7 @@ class test_pyltspice(unittest.TestCase):
                 LTC.set_component_value('V1', supply_voltage)
                 LTC.set_component_value('V2', -supply_voltage)
                 # overriding the automatic netlist naming
-                run_netlist_file = "{}_{}_{}.net".format(LTC.circuit_file.name, opamp, supply_voltage)
+                run_netlist_file = f"{LTC.circuit_file.name}_{opamp}_{supply_voltage}.net"
                 LTC.run(run_filename=run_netlist_file, callback=processing_data)
 
         LTC.wait_completion()
@@ -160,7 +159,7 @@ class test_pyltspice(unittest.TestCase):
             # LTC.runs_to_do = range(2)
             netlist.set_parameters(ANA=res)
             raw, log = LTC.run(netlist).wait_results()
-            print("Raw file '%s' | Log File '%s'" % (raw, log))
+            print(f"Raw file '{raw}' | Log File '{log}'")
         # Sim Statistics
         print('Successful/Total Simulations: ' + str(LTC.okSim) + '/' + str(LTC.runno))
 
@@ -169,7 +168,7 @@ class test_pyltspice(unittest.TestCase):
         """SimRunner and SpiceEditor singletons"""
         # Old legacy class that merged SpiceEditor and SimRunner
         def callback_function(raw_file, log_file):
-            print("Handling the simulation data of %s, log file %s" % (raw_file, log_file))
+            print(f"Handling the simulation data of {raw_file}, log file {log_file}")
 
         LTC = SimRunner(output_folder=test_dir + "temp/")
         SE = SpiceEditor(test_dir + "testfile.net")
@@ -177,13 +176,13 @@ class test_pyltspice(unittest.TestCase):
         tstart = 0
         for tstop in (2, 5, 8, 10):
             tduration = tstop - tstart
-            SE.add_instruction(".tran {}".format(tduration), )
+            SE.add_instruction(f".tran {tduration}", )
             if tstart != 0:
-                SE.add_instruction(".loadbias {}".format(bias_file))
+                SE.add_instruction(f".loadbias {bias_file}")
                 # Put here your parameter modifications
                 # LTC.set_parameters(param1=1, param2=2, param3=3)
             bias_file = test_dir + "sim_loadbias_%d.txt" % tstop
-            SE.add_instruction(".savebias {} internal time={}".format(bias_file, tduration))
+            SE.add_instruction(f".savebias {bias_file} internal time={tduration}")
             tstart = tstop
             LTC.run(SE, callback=callback_function)
 

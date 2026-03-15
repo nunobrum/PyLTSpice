@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# coding=utf-8
 
 # -------------------------------------------------------------------------------
 #    ____        _   _____ ____        _
@@ -96,10 +95,12 @@ simulation is finished.
 __author__ = "Nuno Canto Brum <nuno.brum@gmail.com>"
 __copyright__ = "Copyright 2020, Fribourg Switzerland"
 
-import os
-from pathlib import Path
-from typing import Callable, Any, Union, Type
 import logging
+import os
+from collections.abc import Callable
+from pathlib import Path
+from typing import Any
+
 _logger = logging.getLogger("spicelib.SimBatch")
 
 from PyLTSpice.editor.spice_editor import SpiceEditor as BaseSpiceEditor
@@ -121,7 +122,7 @@ class SimCommander(BaseSpiceEditor):
     Please check the SimRunner class for more information.
     """
 
-    def __init__(self, netlist_file: Union[str, Path], parallel_sims: int = 4, timeout=None, verbose=False,
+    def __init__(self, netlist_file: str | Path, parallel_sims: int = 4, timeout=None, verbose=False,
                  encoding='autodetect', simulator=None):
         if simulator is None:
             from ..sim.ltspice_simulator import LTspice  # In case no simulator is given
@@ -134,7 +135,7 @@ class SimCommander(BaseSpiceEditor):
         self.runner = SimRunner(simulator=simulator, parallel_sims=parallel_sims, timeout=timeout, verbose=verbose,
                                 output_folder=netlist_file.parent.as_posix())
 
-    def setLTspiceRunCommand(self, spice_tool: Union[str, Type[Simulator]]) -> None:
+    def setLTspiceRunCommand(self, spice_tool: str | type[Simulator]) -> None:
         """
         *(Deprecated)*
         Manually setting the LTSpice run command.
@@ -218,26 +219,26 @@ if __name__ == "__main__":
         # LTC.runs_to_do = range(2)
         LTC.set_parameters(ANA=res)
         raw, log = LTC.run().wait_results()
-        _logger.debug("Raw file '%s' | Log File '%s'" % (raw, log))
+        _logger.debug(f"Raw file '{raw}' | Log File '{log}'")
     # Sim Statistics
     _logger.info('Successful/Total Simulations: ' + str(LTC.okSim) + '/' + str(LTC.runno))
 
 
     def callback_function(raw_file, log_file):
-        _logger.debug("Handling the simulation data of %s, log file %s" % (raw_file, log_file))
+        _logger.debug(f"Handling the simulation data of {raw_file}, log file {log_file}")
 
 
     LTC = SimCommander(meAbsPath + "\\test_files\\testfile.asc", parallel_sims=1)
     tstart = 0
     for tstop in (2, 5, 8, 10):
         tduration = tstop - tstart
-        LTC.add_instruction(".tran {}".format(tduration), )
+        LTC.add_instruction(f".tran {tduration}", )
         if tstart != 0:
-            LTC.add_instruction(".loadbias {}".format(bias_file))
+            LTC.add_instruction(f".loadbias {bias_file}")
             # Put here your parameter modifications
             # LTC.set_parameters(param1=1, param2=2, param3=3)
         bias_file = "sim_loadbias_%d.txt" % tstop
-        LTC.add_instruction(".savebias {} internal time={}".format(bias_file, tduration))
+        LTC.add_instruction(f".savebias {bias_file} internal time={tduration}")
         tstart = tstop
         LTC.run(callback=callback_function)
 

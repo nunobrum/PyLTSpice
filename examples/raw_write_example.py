@@ -1,4 +1,3 @@
-
 def test_readme_snippet():
     # -- Start of RawWrite Example --
     import numpy as np

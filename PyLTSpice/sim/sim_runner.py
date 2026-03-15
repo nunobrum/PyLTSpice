@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# coding=utf-8
 
 # -------------------------------------------------------------------------------
 #    ____        _   _____ ____        _
@@ -95,10 +94,8 @@ __copyright__ = "Copyright 2020, Fribourg Switzerland"
 
 __all__ = ['SimRunner']
 
-from pathlib import Path
-
 import logging
-from typing import Union
+from pathlib import Path
 
 _logger = logging.getLogger("spicelib.SimRunner")
 
@@ -150,7 +147,7 @@ class SimRunner(SimRunnerBase):
         super().__init__(simulator=simulator, parallel_sims=parallel_sims, timeout=timeout, verbose=verbose,
                          output_folder=output_folder)
 
-    def create_netlist(self, asc_file: Union[str, Path], cmd_line_args: list = None):
+    def create_netlist(self, asc_file: str | Path, cmd_line_args: list = None):
         """Creates a .net from an .asc using the LTSpice -netlist command line"""
         if not isinstance(asc_file, Path):
             asc_file = Path(asc_file)

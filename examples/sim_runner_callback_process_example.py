@@ -1,5 +1,3 @@
-# coding=utf-8
-
 import sys
 sys.path.insert(0, '..')    # This is to allow the import from the PyLTSpice folder
 from PyLTSpice import SimRunner, SpiceEditor
@@ -41,7 +39,7 @@ if __name__ == "__main__":
             netlist.set_component_value('V1', supply_voltage)
             netlist.set_component_value('V2', -supply_voltage)
             # overriding the automatic netlist naming
-            run_netlist_file = "{}_{}_{}.net".format(netlist.netlist_file.stem, opamp, supply_voltage)
+            run_netlist_file = f"{netlist.netlist_file.stem}_{opamp}_{supply_voltage}.net"
             runner.run(netlist, run_filename=run_netlist_file, callback=CallbackProc)
 
     for result in runner:

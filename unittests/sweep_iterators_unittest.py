@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 @author:        Andreas Kaeberlein
 @copyright:     Copyright 2021
@@ -24,7 +23,7 @@ import os         # platform independent paths
 import unittest   # performs test
 #
 # Module libs
-sys.path.append(os.path.abspath((os.path.dirname(os.path.abspath(__file__)) + "/../")))   # add project root to lib search path
+sys.path.append(os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + "/../"))   # add project root to lib search path
 from PyLTSpice.utils.sweep_iterators import sweep, sweep_n, sweep_log, sweep_log_n, sweep_iterators  # Python Script under test
 #------------------------------------------------------------------------------
 

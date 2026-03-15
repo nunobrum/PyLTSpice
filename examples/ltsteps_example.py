@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# coding=utf-8
 
 from PyLTSpice.log.ltsteps import LTSpiceLogReader
 

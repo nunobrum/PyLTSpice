@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# coding=utf-8
 # -------------------------------------------------------------------------------
 #    ____        _   _____ ____        _
 #   |  _ \ _   _| | |_   _/ ___| _ __ (_) ___ ___
@@ -16,18 +15,19 @@
 # Licence:     refer to the LICENSE file
 # -------------------------------------------------------------------------------
 import logging
+from collections.abc import Callable
 from pathlib import Path
-from typing import Union, Callable, Any
+from typing import Any
 
 _logger = logging.getLogger("spicelib.SpiceEditor")
 _logger.info("This is maintained for compatibility issues. Use spicelib.editor.spice_editor instead")
-from spicelib.editor.spice_editor import SpiceEditor as SpiceEditorBase, SpiceCircuit
+from spicelib.editor.spice_editor import SpiceEditor as SpiceEditorBase
 from spicelib.simulators.ltspice_simulator import LTspice
 
 
 class SpiceEditor(SpiceEditorBase):
 
-    def __init__(self, netlist_file: Union[str, Path], encoding='autodetect', create_blank=False):
+    def __init__(self, netlist_file: str | Path, encoding='autodetect', create_blank=False):
         netlist_file = Path(netlist_file)
         if netlist_file.suffix == ".asc":
             LTspice.create_netlist(netlist_file)
