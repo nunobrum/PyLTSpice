@@ -1,38 +1,25 @@
-LTspice 24.0.11 for Windows
-Circuit: * C:\sandbox\PyLTSpice\examples\testfiles\DC op point - STEP.asc
-Start Time: Sun Sep 15 18:34:49 2024
+LTspice 26.0.1 for Windows
+Circuit: C:\sandbox\PyLTSpice\examples\testfiles\DC op point - STEP_1.net
+Start Time: Sun Mar 22 16:18:32 2026
 solver = Normal
 Maximum thread count: 16
-
-
-
-Direct Newton iteration for .op point succeeded.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 tnom = 27
 temp = 27
 method = modified trap
-Total elapsed time: 0.011 seconds.
+Compress1stOrder = true
+Compress2ndOrder = true
+Direct Newton iteration succeeded in finding operating point.
+Direct Newton iteration succeeded in finding operating point.
+Direct Newton iteration succeeded in finding operating point.
+Direct Newton iteration succeeded in finding operating point.
+Direct Newton iteration succeeded in finding operating point.
+Direct Newton iteration succeeded in finding operating point.
+Direct Newton iteration succeeded in finding operating point.
+Direct Newton iteration succeeded in finding operating point.
+Direct Newton iteration succeeded in finding operating point.
+Direct Newton iteration succeeded in finding operating point.
+Total elapsed time: 0.079 seconds.
+
+Files loaded:
+C:\sandbox\PyLTSpice\examples\testfiles\DC op point - STEP_1.net
 

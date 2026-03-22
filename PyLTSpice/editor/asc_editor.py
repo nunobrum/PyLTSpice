@@ -29,7 +29,6 @@ class AscEditor(AscEditorBase):
         Saves the current netlist to a file.
 
         :param run_netlist_file: The path to the file where the netlist will be saved.
-        :type run_netlist_file: str or Path
         """
         run_netlist_file = Path(run_netlist_file)
         if run_netlist_file.suffix in ('.net', '.cir'):

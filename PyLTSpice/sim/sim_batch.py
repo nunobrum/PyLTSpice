@@ -142,7 +142,6 @@ class SimCommander(BaseSpiceEditor):
 
         :param spice_tool: String containing the path to the spice tool to be used, or alternatively the Simulator
                            object.
-        :type spice_tool: str or Simulator
         :return: Nothing
         :rtype: None
         """
@@ -165,8 +164,8 @@ class SimCommander(BaseSpiceEditor):
         for option in args:
             self.runner.add_command_line_switch(option)
 
-    def run(self, run_filename: str = None, wait_resource: bool = True,
-            callback: Callable[[str, str], Any] = None, timeout: float = 600) -> RunTask:
+    def run(self, wait_resource: bool = True, callback: Callable[[str, str], Any] = None, timeout: float = 600,
+            run_filename: str = None, simulator=None):
         return self.runner.run(self, wait_resource=wait_resource, callback=callback, timeout=timeout,
                                run_filename=run_filename)
 

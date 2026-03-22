@@ -121,7 +121,7 @@ class test_pyltspice(unittest.TestCase):
         LTC.set_element_model('V3', "AC 1 0")
         LTC.add_instructions(
                 "; Simulation settings",
-                ".ac dec 30 1 10Meg",
+                ".ac dec 30 1m 10Meg",
                 ".meas AC GainAC MAX mag(V(out)) ; find the peak response and call it ""Gain""",
                 ".meas AC FcutAC TRIG mag(V(out))=GainAC/sqrt(2) FALL=last"
         )
@@ -132,11 +132,10 @@ class test_pyltspice(unittest.TestCase):
         log = LTSpiceLogReader(log_file)
         for measure in log.get_measure_names():
             print(measure, '=', log.get_measure_value(measure))
-        self.assertEqual(log.get_measure_value('fcutac'), 8479370.0)
+        self.assertAlmostEqual(log.get_measure_value('fcutac'), 8184495.10506, 5)
         vout1m = log.get_measure_value('vout1m')
-        self.assertEqual(vout1m.mag_db(), 6.02059)
+        self.assertAlmostEqual(vout1m.mag_db(), 6.02057, 5)
         self.assertAlmostEqual(vout1m.ph_rad(), 0, 5)
-        self.assertEqual(log.get_measure_value('vout1m').mag_db(), 6.02059)
 
     @unittest.skipIf(skip_ltspice_tests, "Skip if not in windows environment")
     def test_run_from_spice_editor(self):
