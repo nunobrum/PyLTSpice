@@ -562,6 +562,7 @@ For support and improvement requests please open an Issue in [GitHub spicelib is
  Version 5.5.1 (spicelib 1.5.1)
   * Solving problems with unittests using LTspice 26.
   * Removing type annotations from docstrings to avoid problems with the new Sphinx version.
+  * Fixes on the documentation to align with spicelib 1.5.1
 * Version 5.5.0 (spicelib 1.5.0)
   * Dropping support for Python 3.9
     * Using f-strings across the entire codebase
