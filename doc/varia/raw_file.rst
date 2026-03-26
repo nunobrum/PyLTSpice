@@ -5,28 +5,32 @@ RAW File Structure
 This section is written to help understand the why the structure of classes is defined as it is.
 
 The RAW file starts with a text preamble that contains information about the names of the traces the order they
-appear on the binary part and some extra information.
+appear and some extra information.
 In the preamble, the lines are always started by one of the following identifiers:
 
    + Title:          => Contains the path of the source .asc file used to make the simulation preceded by *
 
    + Date:           => Date when the simulation started
 
-   + Plotname:       => Name of the simulation. The known Simulation Types are:
-                       * Operation Point
-                       * DC transfer characteristic
+   + Plotname:       => Name of the simulation. Some known Simulation Types are:
                        * AC Analysis
+                       * DC transfer characteristic
+                       * Operating Point
                        * Transient Analysis
-                       * Noise Spectral Density - (V/Hz½ or A/Hz½)
                        * Transfer Function
+                       * Noise Spectral Density
+                       * Frequency Response Analysis
+                       * Noise Spectral Density Curves
+                       * Integrated Noise
 
    + Flags:          => Flags that are used in this plot. The simulation can have any combination of these flags.
-                      * "real" -> The traces in the raw file contain real values. As for exmple on a TRAN simulation.
-                      * "complex" -> Traces in the raw file contain complex values. As for exmple on an AC simulation.
+                      * "real" -> The traces in the raw file contain real values. As for example on a TRAN simulation.
+                      * "complex" -> Traces in the raw file contain complex values. As for example on an AC simulation.
                       * "forward" -> Tells whether the simulation has more than one point. DC transfer
                         characteristic, AC Analysis, Transient Analysis or Noise Spectral Density have the forward flag.
                         Operating Point and Transfer Function don't have this flag activated.
                       * "log" -> The preferred plot view of this data is logarithmic.
+                      * "linear" -> The preferred plot view of this data is linear.
                       * "stepped" -> The simulation had .STEP primitives.
                       * "FastAccess" -> Order of the data is changed to speed up access. See Binary section for details.
 
@@ -40,14 +44,14 @@ In the preamble, the lines are always started by one of the following identifier
 
    + Backannotation: => Backannotation alerts that occurred during simulation
 
-   + Variables:      => a list of variable, one per line as described below
+   + Variables:      => a list of variable, one per line. See section below for details.
 
-   + Binary:         => Start of the binary section. See section below for details.
-
+   + Binary|Values:  => Start of the trace section, resp. in binary form or ASCII form. See section below for details.
+   
 Variables List
 --------------
-The variable list contains the list of measurements saved in the raw file. The order of the variables defines how they are
-stored in the binary section. The format is one variable per line, using the following format:
+The variable list contains the list of measurements saved in the raw file. The order of the variables defines how they
+are stored in the binary section. The format is one variable per line, using the following format:
 
 <tab><ordinal number><tab><measurement><tab><type of measurement>
 
@@ -77,11 +81,10 @@ Here is an example:
     19	Ix(u1:+)   subckt_current
     20	Ix(u1:-)   subckt_current
 
-Binary Section
+Trace Section
 --------------
-The binary section of .RAW file is where the data is usually written, unless the user had explicitly specified an ASCII
-representation. In this case this section is replaced with a "Values" section.
-LTSpice stores data directly onto the disk during simulation, writing per each time or frequency step the list of
+The trace section of .RAW file is where the data is usually written. It is in binary format or in text format.
+Spice stores data directly onto the disk during simulation, writing per each time or frequency step the list of
 values, as exemplified below for a .TRAN simulation.
 
      <timestamp 0><trace1 0><trace2 0><trace3 0>...<traceN 0>
@@ -94,8 +97,8 @@ values, as exemplified below for a .TRAN simulation.
 
      <timestamp T><trace1 T><trace2 T><trace3 T>...<traceN T>
      
-Depending on the type of simulation the type of data changes.
-On TRAN simulations the timestamp is always stored as 8 bytes float (double) and trace values as a 4 bytes (single).
+Depending on the type of simulation, and the configuration of the simulator, when using the binary format, the type of data changes.
+On TRAN simulations the timestamp is always stored as 8 bytes float (double) and trace values as 4 bytes (single).
 On AC simulations the data is stored in complex format, which includes a real part and an imaginary part, each with 8
 bytes.
 The way we determine the size of the data is dividing the total block size by the number of points, then taking only
@@ -104,7 +107,7 @@ the integer part.
 Fast Access
 -----------
 
-Once a simulation is done, the user can ask LTSpice to optimize the data structure in such that variables are stored
+Once a simulation is done, the user can ask the simulator to optimize the data structure in such that variables are stored
 contiguously as illustrated below.
 
      <timestamp 0><timestamp 1>...<timestamp T>
@@ -121,4 +124,11 @@ contiguously as illustrated below.
 
 This can speed up the data reading. Note that this transformation is not done automatically. Transforming data to Fast
 Access must be requested by the user. If the transformation is done, it is registered in the Flags: line in the
-header. PyLTSpice supports both Normal and Fast Access formats
+header. RawReader supports both Normal and Fast Access formats.
+
+Multiple data sets/plots in one RAW file
+-----------------------------------------
+
+Some simulators can create multiple result sets/plots in the same raw file. These are simply individual plots concatenated in the same file.
+
+See :doc:`../modules/read_rawfiles` for more information on this.

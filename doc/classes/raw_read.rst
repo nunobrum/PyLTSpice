@@ -1,7 +1,12 @@
-RawRead
-=======
+RawRead and PlotData
+====================
 
-.. autoclass:: spicelib.raw.raw_read.RawRead
+.. autoclass:: spicelib.RawRead
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. autoclass:: spicelib.PlotData
    :members:
    :undoc-members:
    :show-inheritance:

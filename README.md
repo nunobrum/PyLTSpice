@@ -1,6 +1,6 @@
 # README #
 
-_Current Version 5.5.0_ 
+_Current Version 5.5.1_ 
 
 PyLTSpice is a toolchain of python utilities design to interact with LTSpice Electronic Simulator.
 It is mostly based on the spicelib package, being the main difference to it is 
@@ -310,22 +310,24 @@ When opening the created sallenkey_wc.net file, we can see that the following ci
 ![Sallen-Key Amplifier with WCA](./doc/modules/sallenkey_wc.png "Sallen-Key Amplifier with WCA")
 
 The following updates were made to the circuit:
-- The value of each component was replaced by a function that generates a nominal, minimum and maximum value depending
-on the run parameter and is assigned a unique index number. (R1=0, Vos=1, R2=2, ... V2=7, VIN=8)
-The unique number corresponds to the bit position of the run parameter. Bit 0 corresponds to the minimum value and
-bit 1 corresponds to the maximum value. Calculating all possible permutations of maximum and minimum values for each
-component, we get 2**9 = 512 possible combinations. This maps into a 9 bit binary number, which is the run parameter.
-- The .step param run command was added to the netlist. It starts at -1 which it's the nominal value simulation, then 0
-which corresponds to the minimum value for each component, then it makes all combinations of minimum and maximum values 
-until 511, which is the simulation with all maximum values.
-- A default value for the run parameter was added. This is useful if the .step param run is commented out.
-- The R1 tolerance is different from the other resistors. This is because the tolerance was explicitly set for R1.
-- The wc() function is added to the circuit. This function is used to calculate the worst case value for each component,
-given a tolerance value and its respective index.
-- The wc1() function is added to the circuit. This function is used to calculate the worst case value for each component,
-given a minimum and maximum value and its respective index.
 
-### LTSteps.py ###
+* The value of each component was replaced by a function that generates a nominal, minimum and maximum value depending
+  on the run parameter and is assigned a unique index number. (R1=0, Vos=1, R2=2, ... V2=7, VIN=8)
+  The unique number corresponds to the bit position of the run parameter. Bit 0 corresponds to the minimum value and
+  bit 1 corresponds to the maximum value. Calculating all possible permutations of maximum and minimum values for each
+  component, we get 2**9 = 512 possible combinations. This maps into a 9 bit binary number, which is the run parameter.
+* The .step param run command was added to the netlist. It starts at -1 which it's the nominal value simulation, then 0
+  which corresponds to the minimum value for each component, then it makes all combinations of minimum and maximum
+  values until 511, which is the simulation with all maximum values.
+* A default value for the run parameter was added. This is useful if the .step param run is commented out.
+* The R1 tolerance is different from the other resistors. This is because the tolerance was explicitly set for R1.
+* The wc() function is added to the circuit. This function is used to calculate the worst case value for each component,
+  given a tolerance value and its respective index.
+* The wc1() function is added to the circuit. This function is used to calculate the worst case value for each
+  component,
+  given a minimum and maximum value and its respective index.
+
+### ltsteps
 
 This module defines a class that can be used to parse LTSpice log files where the information about .STEP information is
 written. There are two possible usages of this module, either programmatically by importing the module and then
@@ -357,21 +359,30 @@ print("Total number of measures found :", data.measure_count)
 
 The second possibility is to use the module directly on the command line
 
-# Command Line Interface #
+## Command Line Interface
 
-### ltsteps.exe ###
+The following tools will be installed when you install the library via pip. In windows operating system the command
+lines receive the .exe extension. Other OSes don't have this particularity. The executables are simple links
+to python scripts with the same name, of which the majority can be found in the package's 'scripts' directory.
 
-The <filename> can be either be a log file (.log), a data export file (.txt) or a measurement output file (.meas)
+### ltsteps
+
+```text
+Usage: ltsteps [filename]
+```
+
+The `filename` can be either be a log file (.log), a data export file (.txt) or a measurement output file (.meas)
 This will process all the data and export it automatically into a text file with the extension (tlog, tsv, tmeas)
-where the data read is formatted into a more convenient tab separated format. In case the <logfile> is not provided, the
+where the data read is formatted into a more convenient tab separated format. In case the `filename` is not provided,
+the
 script will scan the directory and process the newest log, txt or out file found.
 
-### histogram.exe ###
+### histogram
 
 This module uses the data inside on the filename to produce a histogram image.
 
-```
-Usage: Histogram.py [options] LOG_FILE TRACE
+ ```text
+Usage: histogram [options] LOG_FILE TRACE
 
 Options:
   --version             show program's version number and exit
@@ -395,14 +406,14 @@ Options:
   -C, --clipboard       If the data from the clipboard is to be used.
   -i IMAGEFILE, --image=IMAGEFILE
                         Name of the image File. extension 'png'    
-```
+ ```
 
-### rawconvert.exe ###
+### raw_convert
 
 A tool to convert .raw files into csv or Excel files.
 
-```
-Usage: raw_convert.exe [options] <rawfile> <trace_list>
+```text
+Usage: raw_convert [options] <rawfile> <trace_list>
 
 Options:
   --version             show program's version number and exit
@@ -415,25 +426,113 @@ Options:
   -s SEPARATOR, --sep=SEPARATOR
                         Value separator for CSV output. Default: "\t" <TAB>
                         Example: -d ";"
+  -D DIALECT, --dialect=DIALECT
+                        Dialect to pass to RawRead (e.g., 'ltspice' ,
+                        'qspice', 'ngspice' ,'xyce')
+
 ```
 
-### run_server.exe ###
+### rawplot
 
-This command line tool was moved to the spicelib package.
+Uses matplotlib to plot the data in the raw file. Matplotlib must be installed for this to work.
 
-### SemiDevOpReader.py ###
+```text
+Usage: rawplot RAW_FILE TRACE_NAME
+```
+
+### run_server
+
+This module is used to run a server that can be used to run simulations in a remote machine. The server will run in the
+background and will wait for a client to connect. The client will send a netlist to the server and the server will run
+the simulation and return the results to the client. The client on the remote machine is a script instancing the
+SimClient class. An example of its usage is shown below:
+
+```python
+import os
+import zipfile
+import logging
+import sys
+from spicelib.client_server.sim_client import SimClient
+
+# In order for this, to work, you need to have a server running. To start a server, run the following command:
+# python -m PyLTSpice.scripts.run_server --port 9000 --parallel 4 --output ./temp LTSpice 300
+
+_logger = logging.getLogger("PyLTSpice.SimClient")
+_logger.setLevel(logging.DEBUG)
+_logger.addHandler(logging.StreamHandler(sys.stdout))
+
+server = SimClient('http://localhost', 9000)
+print(server.session_id)
+runid = server.run("./testfiles/testfile.net")
+print("Got Job id", runid)
+for runid in server:  # May not arrive in the same order as runids were launched
+    zip_filename = server.get_runno_data(runid)
+    print(f"Received {zip_filename} from runid {runid}")
+    if zip_filename is None:
+        print(f"Run id {runid} has no data")
+        continue
+    # the zip file normally contains a `.raw` and a `.log` file, 
+    # but it can instead only hold a `.fail` file in case of a simulation error.    
+    with zipfile.ZipFile(zip_filename, 'r') as zipf:  # Extract the contents of the zip file
+        for name in zipf.namelist():
+            print(f"Extracting {name} from {zip_filename}")
+            zipf.extract(name)
+    os.remove(zip_filename)  # Remove the zip file
+
+server.close_session()
+```
+
+-- in examples/sim_client_example.py [SimClient Example]
+
+```text
+usage: run_server.py [-h] [-p PORT] [-H HOST] [-o OUTPUT] [-l PARALLEL] [{ltspice,ngspice,xyce}] [timeout]
+
+Run the LTSpice Server. This is a command line interface to the SimServer class.The SimServer class is used to run simulations in parallel using a
+server-client architecture.The server is a machine that runs the SimServer class and the client is a machine that runs the SimClient class.The
+argument is the simulator to be used (LTSpice, NGSpice, XYCE, etc.)
+
+positional arguments:
+  {ltspice,ngspice,xyce}
+                        Simulator to be used (LTSpice, NGSpice, XYCE, etc.). Default is LTSpice
+  timeout               Timeout for the simulations. Default is 300 seconds (5 minutes)
+
+options:
+  -h, --help            show this help message and exit
+  -p, --port PORT       Port to run the server. Default is 9000
+  -H, --host HOST       The IP address where the server will listen for requests. Default is 'localhost', which might mean that the server will only
+                        accept requests from the local machine
+  -o, --output OUTPUT   Output folder for the results. Default is the current folder
+  -l, --parallel PARALLEL
+                        Maximum number of parallel simulations. Default is 4
+```
+
+### asc_to_qsch
+
+Converts LTspice schematics into QSPICE schematics. Note that not all LTspice components are supported in QSPICE.
+
+```text
+Usage: asc_to_qsch [options] ASC_FILE [QSCH_FILE]
+
+Options:
+  --version            show program's version number and exit
+  -h, --help           show this help message and exit
+  -a PATH, --add=PATH  Add a path for searching for symbols
+```
+
+## Other functions
+
+### log\semi_dev_op_reader.opLogReader
 
 This module is used to read from LTSpice log files Semiconductor Devices Operating Point Information. A more detailed
-documentation is directly included in the source file docstrings.
+documentation is directly included in the Python Modules documentation under "Semiconductor Operating Point Reader".
 
 ## Debug Logging
 
 The library uses the standard `logging` module. Three convenience functions have been added for easily changing logging
-settings across the entire library. `PyLTSpice.all_loggers()` returns a list of all the logger's
-names, `PyLTSpice.set_log_level(logging.DEBUG)`
-would set the library's logging level to debug, and `PyLTSpice.add_log_handler(my_handler)` would add `my_handler` as a
-handler for
-all loggers.
+settings across the entire library. `spicelib.all_loggers()` returns a list of all the logger's
+names, `spicelib.set_log_level(logging.DEBUG)`
+would set the library's logging level to debug, and `spicelib.add_log_handler(my_handler)` would add `my_handler` as a
+handler for all loggers.
 
 ### Single Module Logging
 
@@ -455,11 +554,14 @@ logging.getLogger("PyLTSpice.RawRead").level = logging.WARNING  # Set the log le
 Would set only `PyLTSpice.RawRead` file's logging level to warning while the other modules would remain at debug level.
 _Make sure to initialize the root logger before importing the library to be able to see the logs._
 
-## To whom do I talk to? ##
+## To whom do I talk?
 
 For support and improvement requests please open an Issue in [GitHub spicelib issues](https://github.com/nunobrum/spicelib/issues)
 
 ## History ##
+ Version 5.5.1 (spicelib 1.5.1)
+  * Solving problems with unittests using LTspice 26.
+  * Removing type annotations from docstrings to avoid problems with the new Sphinx version.
 * Version 5.5.0 (spicelib 1.5.0)
   * Dropping support for Python 3.9
     * Using f-strings across the entire codebase

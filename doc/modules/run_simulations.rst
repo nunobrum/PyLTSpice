@@ -23,8 +23,10 @@ temperature to 80 degrees, and update the values of R1 and R2 to 3.3k.
     netlist.set_parameters(res=0, cap=100e-6)
     netlist.set_component_value('R2', '2k')  # Modifying the value of a resistor
     netlist.set_component_value('R1', '4k')
-    netlist.set_element_model('V3', "SINE(0 1 3k 0 0 0)")  # Modifying the
-    netlist.set_component_value('XU1:C2', 20e-12)  # modifying a
+    # Set component temperature, Tc 50ppm, remove power rating :
+    netlist.set_component_parameters('R1', temp=100, tc=0.000050, pwr=None)
+    netlist.set_element_model('V3', "SINE(0 1 3k 0 0 0)")  # Modifying the model of a voltage source
+    netlist.set_component_value('XU1:C2', 20e-12)  # modifying an internal component value
     # define simulation
     netlist.add_instructions(
             "; Simulation settings",
@@ -80,8 +82,8 @@ each executing in parallel a simulation. This is exemplified in the modified exa
     netlist.set_parameters(res=0, cap=100e-6)
     netlist.set_component_value('R2', '2k')  # Modifying the value of a resistor
     netlist.set_component_value('R1', '4k')
-    netlist.set_element_model('V3', "SINE(0 1 3k 0 0 0)")  # Modifying the
-    netlist.set_component_value('XU1:C2', 20e-12)  # modifying a
+    netlist.set_element_model('V3', "SINE(0 1 3k 0 0 0)")   # Modifying the model of a voltage source
+    netlist.set_component_value('XU1:C2', 20e-12)  # modifying an internal component value
     # define simulation
     netlist.add_instructions(
             "; Simulation settings",
@@ -163,8 +165,9 @@ The RAW file and the LOG file names. Below is an example of a callback function.
     def processing_data(raw_filename, log_filename):
         '''This is a call back function that just prints the filenames'''
         print("Simulation Raw file is %s. The log is %s" % (raw_filename, log_filename)
-        # Other code below either using LTSteps.py or raw_read.py
+        # Other code below either using ltsteps.py or raw_read.py
         log_info = LTSpiceLogReader(log_filename)
+        log_info.read_measures()
         rise, measures = log_info.dataset["rise_time"]
         return rise, measures
 
@@ -204,7 +207,7 @@ In order to use processes, the callback function needs to be encapsulated as a s
 special class called ``ProcessCallback`` and :underline:`very importantly`, all the code used to prepare and launch the
 simulation should be inside a ``if __name__ == "__main__":`` clause.
 
-The reason for this is that since the module is going to be imported two times, first by the python.exe __main__ 
+The reason for this is that since the module is going to be imported two times, first by the python __main__ 
 function and multiple times after by python processes searching for ProcessCallback subclass. The equivalent of the 
 previous code using processes looks like this.
 
@@ -219,8 +222,9 @@ previous code using processes looks like this.
         def callback(raw_file, log_file):  # This function must be called callback
             '''This is a call back function that just prints the filenames'''
             print("Simulation Raw file is %s. The log is %s" % (raw_filename, log_filename)
-            # Other code below either using LTSteps.py or raw_read.py
+            # Other code below either using ltsteps.py or raw_read.py
             log_info = LTSpiceLogReader(log_filename)
+            log_info.read_measures()
             rise, measures = log_info.dataset["rise_time"]
             return rise, measures
 

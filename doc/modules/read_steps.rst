@@ -5,11 +5,11 @@ This module defines a class that can be used to parse LTSpice log files where th
 information is written.
 
 There are two possible usages of this module, either programmatically by running the utility
-:doc:`../utilities/LTSteps`, or by accessing data through the class as exemplified here:
+:doc:`../utilities/ltsteps`, or by accessing data through the class as exemplified here:
 
 .. code-block:: python
 
-	from PyLTSpice.log.ltsteps import LTSpiceLogReader
+	from spicelib.log.ltsteps import LTSpiceLogReader
 
 	data = LTSpiceLogReader("Batch_Test_AD820_15.log")
 
@@ -30,4 +30,4 @@ There are two possible usages of this module, either programmatically by running
 
 	print("Total number of measurements found :", data.measure_count)
 
-For more information, see :py:class:`PyLTSpice.log.ltsteps.LTSpiceLogReader`
+For more information, see :py:class:`spicelib.log.ltsteps.LTSpiceLogReader`

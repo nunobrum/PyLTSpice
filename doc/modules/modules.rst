@@ -2,7 +2,7 @@
 Python Modules
 ==============
 
-PyLTSpice contains several modules for working with netlists, simulations and simulation data.
+spicelib contains several modules for working with netlists, simulations and simulation data.
 
 .. toctree::
    :maxdepth: 1
@@ -13,4 +13,5 @@ PyLTSpice contains several modules for working with netlists, simulations and si
    read_steps
    write_rawfiles
    SemiOpLogReader
+   client_server
    sim_analysis

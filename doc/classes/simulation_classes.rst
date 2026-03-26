@@ -1,17 +1,10 @@
-==================
-Simulation Classes
-==================
+==========================
+Running Simulation Classes
+==========================
 .. toctree::
    :maxdepth: 4
-   
+
    sim_runner
-   sim_simulator
-
-============
-Deprecations
-============
-
-.. toctree::
-   :maxdepth: 4
-
-   sim_batch
+   sim_client
+   sim_server
+   sim_stepper

@@ -1,19 +1,23 @@
-Histogram.py
-============
+histogram
+=============
 This module uses matplotlib to plot an histogram of a gaussian distribution and calculates the project n-sigma interval.
+
+This module is installed on the Scripts folder on your python installation folder or virtual environment.
+Add the Scripts path to your PATH environment variable in order to be able to use this tool in any other location on
+your system.
 
 The data can either collected from the clipboard or from a text file. Use the following command line text to call
 this module.
 
 .. code-block:: text
 
-    python -m PyLTSpice.Histogram [options] [data_file] TRACE
+    histogram [options] [data_file] TRACE
 
 The help can be obtained by calling the script without arguments
 
 .. code-block:: text
 
-    Usage: Histogram.py [options] LOG_FILE TRACE
+    Usage: histogram [options] LOG_FILE TRACE
 
     Options:
       --version             show program's version number and exit

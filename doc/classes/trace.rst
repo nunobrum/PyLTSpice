@@ -1,7 +1,12 @@
-RawRead Trace
-=============
+Axis, Trace and TraceRead
+=========================
 
 .. autoclass:: spicelib.raw.raw_classes.Axis
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. autoclass:: spicelib.Trace
    :members:
    :undoc-members:
    :show-inheritance:

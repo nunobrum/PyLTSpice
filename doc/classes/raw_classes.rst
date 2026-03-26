@@ -6,8 +6,7 @@ Raw and Log File Classes
    :maxdepth: 4
    
    raw_read
-   trace
-   logreader
    raw_write
-   write_trace
+   trace
+   ltlogreader
    
