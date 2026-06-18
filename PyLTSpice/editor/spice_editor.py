@@ -32,7 +32,7 @@ class SpiceEditor(SpiceEditorBase):
         if netlist_file.suffix == ".asc":
             LTspice.create_netlist(netlist_file)
             netlist_file = netlist_file.with_suffix(".net")
-        super().__init__(netlist_file, encoding, create_blank)
+        super().__init__(netlist_file, encoding, create_blank=create_blank)
 
     def run(self, wait_resource: bool = True, callback: Callable[[str, str], Any] = None, timeout: float = 600,
             run_filename: str = None, simulator=None):
