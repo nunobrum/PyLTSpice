@@ -1,6 +1,6 @@
-LTspice 26.0.1 for Windows
+LTspice 26.0.2 for Windows
 Circuit: C:\sandbox\PyLTSpice\examples\testfiles\Batch_Test_1.net
-Start Time: Sun Mar 22 16:18:27 2026
+Start Time: Fri Jun 19 21:14:02 2026
 solver = Normal
 Maximum thread count: 16
 tnom = 27
@@ -9,7 +9,7 @@ method = modified trap
 Compress1stOrder = true
 Compress2ndOrder = true
 Direct Newton iteration succeeded in finding operating point.
-Total elapsed time: 0.087 seconds.
+Total elapsed time: 0.060 seconds.
 
 Files loaded:
 C:\sandbox\PyLTSpice\examples\testfiles\Batch_Test_1.net

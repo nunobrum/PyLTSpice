@@ -1,6 +1,6 @@
-LTspice 26.0.1 for Windows
+LTspice 26.0.2 for Windows
 Circuit: C:\sandbox\PyLTSpice\examples\testfiles\DC op point - STEP_1.net
-Start Time: Sun Mar 22 16:18:32 2026
+Start Time: Fri Jun 19 21:14:06 2026
 solver = Normal
 Maximum thread count: 16
 tnom = 27
@@ -18,7 +18,7 @@ Direct Newton iteration succeeded in finding operating point.
 Direct Newton iteration succeeded in finding operating point.
 Direct Newton iteration succeeded in finding operating point.
 Direct Newton iteration succeeded in finding operating point.
-Total elapsed time: 0.079 seconds.
+Total elapsed time: 0.084 seconds.
 
 Files loaded:
 C:\sandbox\PyLTSpice\examples\testfiles\DC op point - STEP_1.net

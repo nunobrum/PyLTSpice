@@ -1,6 +1,6 @@
 # README #
 
-_Current Version 5.5.1_ 
+_Current Version 6.0.1_ 
 
 PyLTSpice is a toolchain of python utilities design to interact with LTSpice Electronic Simulator.
 It is mostly based on the spicelib package, being the main difference to it is 
@@ -559,7 +559,9 @@ _Make sure to initialize the root logger before importing the library to be able
 For support and improvement requests please open an Issue in [GitHub spicelib issues](https://github.com/nunobrum/spicelib/issues)
 
 ## History ##
- Version 5.5.1 (spicelib 1.5.1)
+* Version 6.0.1 (spicelib 1.6.1)
+  * Fixing Issue #159 - Incompatibilities with spicelib 1.6.0
+* Version 5.5.1 (spicelib 1.5.1)
   * Solving problems with unittests using LTspice 26.
   * Removing type annotations from docstrings to avoid problems with the new Sphinx version.
   * Fixes on the documentation to align with spicelib 1.5.1
