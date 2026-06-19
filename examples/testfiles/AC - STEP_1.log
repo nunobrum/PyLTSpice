@@ -1,6 +1,6 @@
-LTspice 26.0.1 for Windows
+LTspice 26.0.2 for Windows
 Circuit: C:\sandbox\PyLTSpice\examples\testfiles\AC - STEP_1.net
-Start Time: Sun Mar 22 16:18:17 2026
+Start Time: Fri Jun 19 21:13:54 2026
 
 .step r1=1000
 solver = Normal
@@ -16,7 +16,7 @@ Compress2ndOrder = true
 .step r1=10000
 .OP point found by inspection.
 .OP point found by inspection.
-Total elapsed time: 0.027 seconds.
+Total elapsed time: 0.020 seconds.
 
 Files loaded:
 C:\sandbox\PyLTSpice\examples\testfiles\AC - STEP_1.net
