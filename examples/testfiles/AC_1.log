@@ -1,6 +1,6 @@
-LTspice 26.0.1 for Windows
+LTspice 26.0.2 for Windows
 Circuit: C:\sandbox\PyLTSpice\examples\testfiles\AC_1.net
-Start Time: Sun Mar 22 16:18:14 2026
+Start Time: Fri Jun 19 21:13:52 2026
 solver = Normal
 Maximum thread count: 16
 tnom = 27
@@ -10,7 +10,7 @@ Compress1stOrder = true
 Compress2ndOrder = true
 .OP point found by inspection.
 .OP point found by inspection.
-Total elapsed time: 0.031 seconds.
+Total elapsed time: 0.013 seconds.
 
 Files loaded:
 C:\sandbox\PyLTSpice\examples\testfiles\AC_1.net

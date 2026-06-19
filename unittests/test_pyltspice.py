@@ -485,7 +485,12 @@ class test_pyltspice(unittest.TestCase):
                 self.assertAlmostEqual(angle(vout), angle(h), 5,
                                        f"Difference between theoretical value ans simulation at point {point}")
 
-    # 
+    def test_create_blank(self):
+        """SpiceEditor forwards create_blank to the base class without raising"""
+        editor = SpiceEditor("blank.net", create_blank=True)
+        self.assertIsInstance(editor, SpiceEditor)
+
+    #
     # def test_pathlib(self):
     #     """pathlib support"""
     #     import pathlib
