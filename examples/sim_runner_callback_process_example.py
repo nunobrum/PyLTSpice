@@ -39,7 +39,7 @@ if __name__ == "__main__":
             netlist.set_component_value('V1', supply_voltage)
             netlist.set_component_value('V2', -supply_voltage)
             # overriding the automatic netlist naming
-            run_netlist_file = f"{netlist.netlist_file.stem}_{opamp}_{supply_voltage}.net"
+            run_netlist_file = f"{netlist.circuit_file.stem}_{opamp}_{supply_voltage}.net"
             runner.run(netlist, run_filename=run_netlist_file, callback=CallbackProc)
 
     for result in runner:
@@ -49,7 +49,7 @@ if __name__ == "__main__":
     netlist.add_instructions(   # Adding additional instructions
         "; Simulation settings",
         ".ac dec 30 10 1Meg",
-        ".meas AC Gain MAX mag(V(out)) ; find the peak response and call it ""Gain""",
+        ".meas AC GainAC MAX mag(V(out)) ; find the peak response and call it ""Gain""",
         ".meas AC Fcut TRIG mag(V(out))=Gain/sqrt(2) FALL=last"
     )
 
